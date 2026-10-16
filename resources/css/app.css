@@ -1,0 +1,296 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/inter';
+
+@source '../views';
+@source '../../app/Livewire';
+@source '../../app/View';
+@source '../../app/Support/Affichage';
+
+/*
+ * Système visuel INTERNAT
+ * -----------------------
+ * Interface claire et sobre pour un travail administratif prolongé :
+ * fond neutre très clair, encre marine, une seule couleur d'action,
+ * bordures fines, ombres quasi absentes, rayons discrets.
+ * Les couleurs d'état ne servent qu'à signaler un état, jamais à décorer.
+ */
+@theme {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* Surfaces et texte */
+  --color-fond: #f7f8fa;
+  --color-surface: #ffffff;
+  --color-surface-2: #fafbfc;
+  --color-encre: #172033;
+  --color-encre-2: #36425a;
+  --color-discret: #5b6678;
+  --color-bord: #e1e6ed;
+  --color-bord-doux: #edf0f4;
+
+  /* Action et identité */
+  --color-marine: #183153;
+  --color-marine-fonce: #11253f;
+  --color-marine-50: #f3f6fa;
+  --color-marine-100: #e5ebf3;
+  --color-marine-200: #c9d5e5;
+  --color-bleu: #1d4ed8;
+  --color-sarcelle: #0f766e;
+
+  /* États */
+  --color-succes: #15703a;
+  --color-succes-fond: #edf9f1;
+  --color-succes-bord: #c3e9d0;
+  --color-alerte: #a04e06;
+  --color-alerte-fond: #fff7ec;
+  --color-alerte-bord: #f6dcb4;
+  --color-danger: #b42318;
+  --color-danger-fond: #fef3f2;
+  --color-danger-bord: #f9cfcb;
+  --color-info: #1d4ed8;
+  --color-info-fond: #f0f5ff;
+  --color-info-bord: #cddcfb;
+  --color-neutre: #475467;
+  --color-neutre-fond: #f2f4f7;
+  --color-neutre-bord: #dfe3ea;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  --shadow-xs: 0 1px 2px rgb(16 24 40 / 0.04);
+  --shadow-sm: 0 1px 3px rgb(16 24 40 / 0.06), 0 1px 2px rgb(16 24 40 / 0.03);
+  --shadow-md: 0 8px 24px -6px rgb(16 24 40 / 0.12), 0 2px 6px rgb(16 24 40 / 0.04);
+
+  --text-2xs: 0.6875rem;
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.875rem;
+  --text-md: 0.9375rem;
+  --text-lg: 1.0625rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+}
+
+@layer base {
+  html {
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--color-fond);
+    color: var(--color-encre);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: 1.5;
+    font-feature-settings: 'cv11', 'ss01', 'tnum';
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  *,
+  ::before,
+  ::after {
+    border-color: var(--color-bord);
+  }
+
+  /* Focus clavier toujours visible, identique sur tous les composants. */
+  :focus-visible {
+    outline: 2px solid var(--color-bleu);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    margin: 0;
+    font-weight: 600;
+    letter-spacing: -0.006em;
+  }
+
+  ::selection {
+    background: var(--color-marine-100);
+  }
+
+  /* Les éléments pilotés par Alpine restent masqués tant que le script n'est pas prêt. */
+  [x-cloak] {
+    display: none !important;
+  }
+
+  button:not(:disabled),
+  [role='button']:not(:disabled),
+  summary {
+    cursor: pointer;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  /* Champ de saisie : même apparence pour <input>, <select> et <textarea>. */
+  .champ {
+    width: 100%;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-bord);
+    background: var(--color-surface);
+    padding-inline: 0.75rem;
+    font-size: var(--text-base);
+    color: var(--color-encre);
+    box-shadow: var(--shadow-xs);
+    transition: border-color 150ms;
+  }
+
+  .champ::placeholder {
+    color: color-mix(in srgb, var(--color-discret) 80%, transparent);
+  }
+
+  .champ:hover {
+    border-color: var(--color-marine-200);
+  }
+
+  .champ:focus-visible {
+    border-color: var(--color-bleu);
+    outline: 2px solid color-mix(in srgb, var(--color-bleu) 25%, transparent);
+    outline-offset: 0;
+    border-radius: var(--radius-md);
+  }
+
+  .champ:disabled {
+    cursor: not-allowed;
+    background: var(--color-neutre-fond);
+    color: var(--color-discret);
+  }
+
+  .champ[aria-invalid='true'] {
+    border-color: var(--color-danger);
+    outline-color: color-mix(in srgb, var(--color-danger) 20%, transparent);
+  }
+
+  /* Case à cocher et bouton radio natifs, aux couleurs de l'interface. */
+  .case {
+    appearance: none;
+    display: inline-grid;
+    place-content: center;
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+    border: 1px solid var(--color-marine-200);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-xs);
+    transition:
+      background-color 150ms,
+      border-color 150ms;
+  }
+
+  .case[type='radio'] {
+    border-radius: 9999px;
+  }
+
+  .case:hover {
+    border-color: var(--color-marine);
+  }
+
+  .case:checked,
+  .case:indeterminate {
+    border-color: var(--color-marine);
+    background: var(--color-marine);
+  }
+
+  .case[type='checkbox']:checked::after {
+    content: '';
+    width: 0.3rem;
+    height: 0.55rem;
+    margin-top: -0.1rem;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
+  .case[type='checkbox']:indeterminate::after {
+    content: '';
+    width: 0.5rem;
+    height: 2px;
+    background: #fff;
+  }
+
+  .case[type='radio']:checked::after {
+    content: '';
+    width: 0.375rem;
+    height: 0.375rem;
+    border-radius: 9999px;
+    background: #fff;
+  }
+
+  .case:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
+
+@layer utilities {
+  .chiffres {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .defilement-fin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-marine-200) transparent;
+  }
+}
+
+@keyframes apparition {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fondu {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes rotation {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Barre de progression de la navigation Livewire, aux couleurs de l'interface. */
+#nprogress .bar {
+  background: var(--color-marine) !important;
+  height: 2px !important;
+}
+
+#nprogress .peg {
+  box-shadow: none !important;
+}
+
+@media print {
+  body {
+    background: #fff;
+  }
+
+  .non-imprime {
+    display: none !important;
+  }
+}

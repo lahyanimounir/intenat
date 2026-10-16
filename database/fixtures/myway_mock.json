@@ -1,0 +1,125 @@
+{
+  "_commentaire": "Profils ENTIÈREMENT SYNTHÉTIQUES du fournisseur MyWay simulé (développement, tests, démonstration). Aucune donnée réelle. Le mot de passe ci-dessous n'existe que dans ce simulateur.",
+  "profils": [
+    {
+      "email": "salma.bennani@myway.test",
+      "mot_de_passe": "MyWay-Demo-2026",
+      "cef": "2026900000011",
+      "nom": "Bennani",
+      "prenom": "Salma",
+      "cni": "ZZ900011",
+      "tel": "0600900011",
+      "ville": "Settat",
+      "candidatures": [
+        { "nom_efp": "ISTA Démo Les Jardins", "nom_filiere": "Gestion des entreprises", "statut": "Préinscrit" },
+        { "nom_efp": "ISTA Démo Littoral", "nom_filiere": "Développement digital", "statut": "Inscrit Payé" }
+      ]
+    },
+    {
+      "email": "youssef.tazi@myway.test",
+      "mot_de_passe": "MyWay-Demo-2026",
+      "cef": "2026900000012",
+      "nom": "Tazi",
+      "prenom": "Youssef",
+      "cni": "ZZ900012",
+      "tel": "0600900012",
+      "ville": "Berrechid",
+      "candidatures": [
+        { "nom_efp": "ISTA Démo Littoral", "nom_filiere": "Électromécanique des systèmes automatisés", "statut": "Inscrit Payé" }
+      ]
+    },
+    {
+      "email": "nour.lahlou@myway.test",
+      "mot_de_passe": "MyWay-Demo-2026",
+      "cef": "2026900000013",
+      "nom": "Lahlou",
+      "prenom": "Nour",
+      "cni": null,
+      "tel": "0600900013",
+      "ville": "Benslimane",
+      "candidatures": [
+        { "nom_efp": "ista démo les jardins", "nom_filiere": "Infrastructure digitale", "statut": "inscrit payé" }
+      ]
+    },
+    {
+      "email": "candidat.non.paye@myway.test",
+      "mot_de_passe": "MyWay-Demo-2026",
+      "cef": "2026900000014",
+      "nom": "Amrani",
+      "prenom": "Reda",
+      "cni": "ZZ900014",
+      "tel": "0600900014",
+      "ville": "Khouribga",
+      "candidatures": [
+        { "nom_efp": "ISTA Démo Littoral", "nom_filiere": "Génie civil", "statut": "Préinscrit" },
+        { "nom_efp": "ISTA Démo Les Jardins", "nom_filiere": "Génie civil", "statut": "Inscrit" }
+      ]
+    },
+    {
+      "email": "efp.inconnu@myway.test",
+      "mot_de_passe": "MyWay-Demo-2026",
+      "cef": "2026900000015",
+      "nom": "Filali",
+      "prenom": "Hajar",
+      "cni": "ZZ900015",
+      "tel": "0600900015",
+      "ville": "Safi",
+      "candidatures": [
+        { "nom_efp": "ISTA Non Référencé", "nom_filiere": "Assistant administratif", "statut": "Inscrit Payé" }
+      ]
+    },
+    {
+      "email": "cef.invalide@myway.test",
+      "mot_de_passe": "MyWay-Demo-2026",
+      "cef": "12345",
+      "nom": "Naciri",
+      "prenom": "Anas",
+      "cni": "ZZ900016",
+      "tel": "0600900016",
+      "ville": "El Jadida",
+      "candidatures": [
+        { "nom_efp": "ISTA Démo Littoral", "nom_filiere": "Développement digital", "statut": "Inscrit Payé" }
+      ]
+    },
+    {
+      "email": "cef.absent@myway.test",
+      "mot_de_passe": "MyWay-Demo-2026",
+      "nom": "Ouazzani",
+      "prenom": "Imane",
+      "cni": "ZZ900017",
+      "tel": "0600900017",
+      "ville": "Mohammedia",
+      "candidatures": [
+        { "nom_efp": "ISTA Démo Littoral", "nom_filiere": "Gestion des entreprises", "statut": "Inscrit Payé" }
+      ]
+    },
+    {
+      "email": "deux.inscriptions@myway.test",
+      "mot_de_passe": "MyWay-Demo-2026",
+      "cef": "2026900000018",
+      "nom": "Berrada",
+      "prenom": "Karim",
+      "cni": "ZZ900018",
+      "tel": "0600900018",
+      "ville": "Casablanca",
+      "candidatures": [
+        { "nom_efp": "ISTA Démo Littoral", "nom_filiere": "Développement digital", "statut": "Inscrit Payé" },
+        { "nom_efp": "ISTA Démo Les Jardins", "nom_filiere": "Infrastructure digitale", "statut": "Inscrit Payé" }
+      ]
+    },
+    {
+      "email": "ancienne.inscription@myway.test",
+      "mot_de_passe": "MyWay-Demo-2026",
+      "cef": "2026900000019",
+      "nom": "Chraibi",
+      "prenom": "Lina",
+      "cni": "ZZ900019",
+      "tel": null,
+      "ville": null,
+      "candidatures": [
+        { "nom_efp": "ISTA Démo Les Jardins", "nom_filiere": "Gestion des entreprises", "statut": "Inscrit Payé", "annee": "2024-2025" },
+        { "nom_efp": "ISTA Démo Littoral", "nom_filiere": "Développement digital", "statut": "Inscrit Payé", "annee": "2026-2027" }
+      ]
+    }
+  ]
+}

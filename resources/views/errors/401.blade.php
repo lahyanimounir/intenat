@@ -1,0 +1,1 @@
+@include('errors.page', ['code' => 401, 'titre' => 'Session requise', 'message' => $exception->getMessage() && ! in_array($exception->getMessage(), ['This action is unauthorized.', 'Unauthenticated.', 'Not Found', 'Server Error'], true) && false ? $exception->getMessage() : 'Connectez-vous pour ouvrir cette page.', 'action' => 'connexion'])
