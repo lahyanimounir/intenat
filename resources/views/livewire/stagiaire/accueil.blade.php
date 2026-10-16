@@ -5,7 +5,7 @@
 
     $statut = $demande?->statut;
     $inscription = $stagiaire->statut_inscription;
-    $echeance = $statut === StatutDemande::Admis ? Format::tempsRestant($demande->date_limite_confirmation) : null;
+    $aConfirmer = $statut === StatutDemande::Admis;
     $raccourcis = [
         [route('stagiaire.inscription'), 'graduation-cap', 'Mon inscription', $inscription->libelle()],
         [route('stagiaire.dossier'), 'clipboard-check', 'Mon dossier', $demande ? $statut->libelle() : 'Aucune demande'],
@@ -36,9 +36,9 @@
             </x-alerte>
         @endif
 
-        @if ($echeance && ! $echeance['depasse'])
+        @if ($aConfirmer)
             <x-alerte ton="succes" titre="Vous êtes admis : confirmez votre place">
-                Avant le {{ Format::dateHeure($demande->date_limite_confirmation) }} — {{ mb_strtolower($echeance['texte']) }}.
+                Confirmez votre place à l’internat pour la conserver.
                 <x-slot:action><x-bouton variante="primaire" taille="sm" :href="route('stagiaire.dossier')">Confirmer</x-bouton></x-slot:action>
             </x-alerte>
         @endif

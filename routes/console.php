@@ -1,6 +1,5 @@
 <?php
 
-use App\Domain\Admissions\ConfirmationAdmission;
 use App\Domain\Audit\Journal;
 use App\Domain\Campaigns\GestionCampagne;
 use App\Domain\Identity\MyWay\FournisseurIdentiteStagiaire;
@@ -31,11 +30,6 @@ use Illuminate\Validation\Rules\Password;
 | en outre les exécutions simultanées.
 |
 */
-
-Artisan::command('internat:echeances', function (ConfirmationAdmission $confirmation) {
-    $this->info('Rappels envoyés : '.$confirmation->rappelerEcheances());
-    $this->info('Places remises à disposition : '.$confirmation->expirerEcheances());
-})->purpose('Rappelle puis fait expirer les confirmations d\'admission hors délai');
 
 Artisan::command('internat:cloturer-campagnes', function (GestionCampagne $campagnes) {
     $this->info('Campagnes clôturées : '.$campagnes->cloturerLesEchues());
@@ -197,7 +191,6 @@ Artisan::command('internat:myway-diagnostic', function (FournisseurIdentiteStagi
     return 1;
 })->purpose('Indique quel fournisseur MyWay est actif et vérifie la liaison avec le connecteur');
 
-Schedule::command('internat:echeances')->everyFifteenMinutes()->withoutOverlapping()->onOneServer();
 Schedule::command('internat:cloturer-campagnes')->dailyAt('00:10')->withoutOverlapping()->onOneServer();
 Schedule::command('internat:autorisations-mensuelles')->monthlyOn(1, '06:00')->withoutOverlapping()->onOneServer();
 Schedule::command('internat:rappels-paiement')->dailyAt('08:00')->withoutOverlapping()->onOneServer();

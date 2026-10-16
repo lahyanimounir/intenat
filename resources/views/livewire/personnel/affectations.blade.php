@@ -32,9 +32,6 @@
                 <x-tableau.cellule class="chiffres text-encre-2">{{ Format::date($candidat->date_confirmation) }}</x-tableau.cellule>
                 <x-tableau.cellule>
                     <x-oui-non :valeur="$candidat->dossier_physique_depose" oui="Reçu" non="Attendu" />
-                    @if (! $candidat->dossier_physique_depose && $candidat->date_limite_dossier_physique)
-                        <p class="mt-1 text-xs text-discret">avant le {{ Format::date($candidat->date_limite_dossier_physique) }}</p>
-                    @endif
                 </x-tableau.cellule>
                 <x-tableau.cellule>
                     @if ($candidat->dernierPaiement)

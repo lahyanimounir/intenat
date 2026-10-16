@@ -53,7 +53,6 @@ class HebergementController extends Controller
                 'precisions_besoins' => $d->precisions_besoins,
                 'date_confirmation' => $d->date_confirmation,
                 'dossier_physique_depose' => $d->dossier_physique_depose,
-                'date_limite_dossier_physique' => $d->date_limite_dossier_physique?->toDateString(),
                 'paiement' => $paiement ? PaiementController::paiement($paiement) : null,
                 'recu_valide' => $d->paiements->contains(fn ($p) => $p->statut === StatutPaiement::Valide),
                 'occupation_autorisee' => $d->occupationAutorisee(),

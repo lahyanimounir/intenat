@@ -38,8 +38,6 @@ return new class extends Migration
             $table->text('motif_rejet')->nullable();
             $table->text('motif_rectification')->nullable();
             $table->dateTime('date_confirmation')->nullable();
-            $table->dateTime('date_limite_confirmation')->nullable();
-            $table->date('date_limite_dossier_physique')->nullable();
             $table->boolean('dossier_physique_depose')->default(false);
             $table->dateTime('date_depot_physique')->nullable();
             $table->foreignId('dossier_physique_valide_par')->nullable()->constrained('utilisateur')->restrictOnDelete();
@@ -57,7 +55,6 @@ return new class extends Migration
             $table->unique(['campagne_id', 'stagiaire_id']);
             $table->index(['campagne_id', 'statut']);
             $table->index(['campagne_id', 'liste', 'rang']);
-            $table->index(['statut', 'date_limite_confirmation']);
             $table->index('date_soumission');
         });
 

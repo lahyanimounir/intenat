@@ -1,13 +1,54 @@
 /*
  * Script de l'interface INTERNAT.
  *
- * Livewire fournit Alpine.js : rien d'autre n'est chargé. Ce fichier ne déclare
- * que les rares comportements communs qui n'ont pas leur place dans une vue :
- * messages éphémères, demande de confirmation et saisie d'un motif.
+ * Livewire fournit Alpine.js. Ce fichier déclare les comportements communs qui
+ * n'ont pas leur place dans une vue : messages éphémères, confirmation, saisie
+ * d'un motif, et les listes déroulantes recherchables (Tom Select).
  */
+
+import TomSelect from 'tom-select'
 
 document.addEventListener('alpine:init', () => {
   const Alpine = window.Alpine
+
+  /*
+   * Liste déroulante recherchable, pour les longues listes (établissements,
+   * internats, filières…). Le <select> est sous `wire:ignore` : Tom Select gère
+   * l'affichage, et la valeur est synchronisée avec Livewire via $wire.
+   */
+  Alpine.data('selectRecherche', (modele = null, live = false) => ({
+    ts: null,
+    init() {
+      const select = this.$refs.select
+      this.ts = new TomSelect(select, {
+        allowEmptyOption: true,
+        maxOptions: null,
+        sortField: null, // conserve l'ordre fourni par le serveur
+        placeholder: select.dataset.placeholder || 'Rechercher…',
+        controlInput: '<input autocomplete="off" aria-label="Rechercher dans la liste">',
+        render: {
+          no_results: () => '<div class="ts-aucun">Aucun résultat</div>',
+        },
+      })
+
+      const valeur = modele ? this.$wire.get(modele) : select.value
+      if (valeur !== null && valeur !== undefined && valeur !== '') {
+        this.ts.setValue(String(valeur), true)
+      }
+
+      if (modele) {
+        this.ts.on('change', (v) => this.$wire.set(modele, v, live === true))
+        // Le serveur peut changer la valeur (réinitialisation, cascade…) : on suit.
+        this.$wire.$watch(modele, (v) => {
+          const actuel = this.ts.getValue()
+          if (String(v ?? '') !== String(actuel ?? '')) this.ts.setValue(v == null ? '' : String(v), true)
+        })
+      }
+    },
+    destroy() {
+      this.ts?.destroy()
+    },
+  }))
 
   // Messages éphémères : émis par un composant Livewire (`message`) ou repris de la session après une redirection.
   Alpine.data('messages', (initiaux = []) => ({

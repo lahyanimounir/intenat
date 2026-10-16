@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import '@fontsource-variable/inter';
+@import 'tom-select/dist/css/tom-select.css';
 
 @source '../views';
 @source '../../app/Livewire';
@@ -293,4 +294,103 @@
   .non-imprime {
     display: none !important;
   }
+}
+
+/*
+ * Listes déroulantes recherchables (Tom Select), aux couleurs de l'interface.
+ * Le contrôle reprend l'apparence de `.champ` ; le menu reprend les cartes.
+ */
+.ts-wrapper {
+  width: 100%;
+}
+
+.ts-control {
+  min-height: 2.25rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-bord);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-xs);
+  padding: 0.25rem 2rem 0.25rem 0.75rem;
+  font-size: var(--text-base);
+  color: var(--color-encre);
+  gap: 0.25rem;
+  transition: border-color 150ms;
+}
+
+.ts-wrapper.single .ts-control {
+  background-image: none;
+}
+
+.ts-control::after {
+  content: '';
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  width: 0.55rem;
+  height: 0.55rem;
+  margin-top: -0.35rem;
+  border-right: 1.5px solid var(--color-discret);
+  border-bottom: 1.5px solid var(--color-discret);
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+
+.ts-control:hover {
+  border-color: var(--color-marine-200);
+}
+
+.ts-wrapper.focus .ts-control {
+  border-color: var(--color-bleu);
+  outline: 2px solid color-mix(in srgb, var(--color-bleu) 25%, transparent);
+  outline-offset: 0;
+}
+
+.ts-wrapper.disabled .ts-control {
+  cursor: not-allowed;
+  background: var(--color-neutre-fond);
+  color: var(--color-discret);
+}
+
+.ts-control input,
+.ts-control input::placeholder {
+  color: var(--color-encre);
+  font-size: var(--text-base);
+}
+
+.ts-control .item {
+  color: var(--color-encre);
+}
+
+.ts-dropdown {
+  margin-top: 0.25rem;
+  border: 1px solid var(--color-bord);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+  font-size: var(--text-base);
+  color: var(--color-encre);
+}
+
+.ts-dropdown .option {
+  padding: 0.4rem 0.75rem;
+}
+
+.ts-dropdown .option.active {
+  background: var(--color-marine-50);
+  color: var(--color-encre);
+}
+
+.ts-dropdown .option[aria-selected='true'],
+.ts-dropdown .option.selected {
+  background: var(--color-marine-100);
+}
+
+.ts-dropdown .ts-aucun,
+.ts-dropdown .no-results {
+  padding: 0.5rem 0.75rem;
+  color: var(--color-discret);
+}
+
+.ts-wrapper:has(select[aria-invalid='true']) .ts-control {
+  border-color: var(--color-danger);
 }

@@ -19,8 +19,6 @@ class Parametres extends PagePersonnel
     /** Préfixe de clé => [titre, description]. */
     private const SECTIONS = [
         'inscription' => ['Inscription en formation', 'Vérification administrative de l’inscription déclarée par le stagiaire.'],
-        'confirmation' => ['Confirmation des admissions', 'Délais laissés aux candidats, contrôlés par le serveur.'],
-        'dossier_physique' => ['Dossier physique', null],
         'classement' => ['Classement', 'Règle de départage des dossiers de même score.'],
         'places' => ['Places offertes', null],
         'instruction' => ['Instruction', null],

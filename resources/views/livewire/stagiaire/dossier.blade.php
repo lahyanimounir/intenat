@@ -217,7 +217,6 @@
         {{-- -------------------------------------------------------- Suivi du dossier --}}
         @php
             $statut = $demande->statut;
-            $echeance = Format::tempsRestant($demande->date_limite_confirmation);
         @endphp
         <div class="grid items-start gap-6 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
             <div class="space-y-6">
@@ -239,21 +238,13 @@
                                     <div>
                                         <h2 class="text-md font-semibold">Vous êtes admis à l’internat</h2>
                                         <p class="mt-0.5 text-base text-encre-2">
-                                            Confirmez votre place avant le <strong>{{ Format::dateHeure($demande->date_limite_confirmation) }}</strong>.
-                                            Sans confirmation dans ce délai, la place est remise à disposition.
+                                            Confirmez votre place pour la conserver.
                                         </p>
                                     </div>
                                 </div>
-                                @if ($echeance)
-                                    <p @class(['flex items-center gap-1.5 text-sm font-medium', 'text-danger' => $echeance['depasse'], 'text-alerte' => ! $echeance['depasse'] && $echeance['proche'], 'text-encre-2' => ! $echeance['depasse'] && ! $echeance['proche']])>
-                                        <x-icone nom="clock" /> {{ $echeance['texte'] }}
-                                    </p>
-                                @endif
-                                @if ($demande->date_limite_dossier_physique)
-                                    <p class="text-sm text-discret">Dossier papier à déposer à l’internat avant le {{ Format::dateLongue($demande->date_limite_dossier_physique) }}.</p>
-                                @endif
+                                <p class="text-sm text-discret">Pensez à déposer votre dossier papier à l’internat.</p>
                                 <div class="flex flex-wrap gap-2 pt-1">
-                                    <x-bouton variante="primaire" :disabled="$echeance['depasse'] ?? false" cible="confirmer"
+                                    <x-bouton variante="primaire" cible="confirmer"
                                         x-on:click="$confirmer({ titre: 'Confirmer votre place ?', texte: 'Vous acceptez la place qui vous est attribuée à l’internat et vous vous engagez à déposer votre dossier papier.', libelle: 'Je confirme' }).then(() => $wire.confirmer())">
                                         Confirmer ma place
                                     </x-bouton>

@@ -34,8 +34,8 @@ class Utilisateurs extends PagePersonnel
         'GESTIONNAIRE' => ['internat', 'Ne voit que l’internat dont il a la charge.'],
         'CHEF_POLE' => ['etablissement', 'Campagnes, délibération et paiements des internats de son établissement.'],
         'RESTAURATION' => ['etablissement', 'Menus, effectifs et service des internats de son établissement.'],
-        'DIRECTEUR' => ['complexe', 'Tableau de bord du complexe et première approbation des corrections.'],
-        'DIR_REGIONALE' => ['region', 'Indicateurs de la région et seconde approbation des corrections.'],
+        'DIRECTEUR' => ['complexe', 'Tableau de bord et indicateurs de son complexe / CMC.'],
+        'DIR_REGIONALE' => ['region', 'Indicateurs consolidés de sa région.'],
         'DIR_CENTRALE' => [null, 'Pilotage national et grille de référence.'],
     ];
 

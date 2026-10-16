@@ -92,8 +92,6 @@ class ListeAttente
                 );
             }
 
-            $limite = now()->addHours($this->parametres->entier('confirmation.delai_liste_attente_heures'));
-
             DecisionAdmission::create([
                 'demande_id' => $demande->id,
                 'origine' => OrigineDecision::ListeAttente,
@@ -107,8 +105,6 @@ class ListeAttente
 
             $this->transition->appliquer($demande, StatutDemande::Admis, $motif ?? 'Appelé de la liste d\'attente', [
                 'liste' => ListeAdmission::Principale,
-                'date_limite_confirmation' => $limite,
-                'date_limite_dossier_physique' => now()->addDays($this->parametres->entier('dossier_physique.delai_jours'))->toDateString(),
             ]);
 
             $this->journal->consigner('admission.promotion_liste_attente', $demande, details: [
@@ -119,10 +115,9 @@ class ListeAttente
                 $demande->stagiaire,
                 TypeNotification::Resultat,
                 'Une place vous est proposée',
-                'Une place s\'est libérée à l\'internat. Confirmez-la avant le '
-                    .$limite->translatedFormat('j F Y à H\hi').', faute de quoi elle sera proposée à un autre candidat.',
+                'Une place s\'est libérée à l\'internat. Confirmez-la pour la conserver.',
                 '/stagiaire/dossier',
-                "promotion:{$demande->id}:{$limite->timestamp}",
+                "promotion:{$demande->id}",
             );
 
             return $demande;

@@ -73,10 +73,6 @@ return [
     'parametres' => [
         'inscription.justificatif_obligatoire' => [true, 'Un justificatif d\'inscription est exigé pour soumettre son inscription à la vérification', true],
         'inscription.depot_exige_verification' => [false, 'Le dossier d\'hébergement ne peut être déposé qu\'une fois l\'inscription vérifiée (sinon : dès qu\'elle est soumise)', true],
-        'confirmation.delai_admis_jours' => [10, 'Délai de confirmation d\'un admis (jours)', false],
-        'confirmation.delai_liste_attente_heures' => [48, 'Délai de confirmation d\'un candidat appelé de la liste d\'attente (heures)', false],
-        'confirmation.rappel_avant_heures' => [72, 'Rappel avant l\'échéance de confirmation (heures)', true],
-        'dossier_physique.delai_jours' => [10, 'Délai de dépôt du dossier physique après admission (jours)', true],
         'classement.departage' => ['arbitrage_chef_pole', 'Règle de départage des ex æquo (arbitrage_chef_pole | date_soumission)', true],
         'places.exclure_isolement_infirmerie' => [true, 'Les chambres Isolement et Infirmerie ne comptent pas dans les places offertes', true],
         'instruction.masquer_score_gestionnaire' => [true, 'Le score et le rang sont masqués au gestionnaire', true],

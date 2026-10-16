@@ -4,9 +4,7 @@ namespace App\Domain\Admissions;
 
 use App\Domain\Applications\TransitionDemande;
 use App\Domain\Notifications\Notifieur;
-use App\Domain\Shared\Parametres;
 use App\Domain\Shared\RegleMetierException;
-use App\Enums\OrigineDecision;
 use App\Enums\RaisonDesistement;
 use App\Enums\RoleCode;
 use App\Enums\StatutDemande;
@@ -18,9 +16,9 @@ use App\Models\Paiement;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Suites de l'admission côté candidat : confirmation dans le délai, désistement
- * motivé, et expiration des échéances. Les délais sont contrôlés sur le serveur ;
- * l'horloge du navigateur n'entre jamais en ligne de compte.
+ * Suites de l'admission côté candidat : confirmation de la place et désistement
+ * motivé. Il n'y a aucun délai de confirmation : un admis confirme quand il le
+ * souhaite, tant que sa place n'a pas été libérée autrement.
  */
 class ConfirmationAdmission
 {
@@ -28,7 +26,6 @@ class ConfirmationAdmission
         private readonly TransitionDemande $transition,
         private readonly ListeAttente $listeAttente,
         private readonly Notifieur $notifieur,
-        private readonly Parametres $parametres,
     ) {}
 
     public function confirmer(Demande $demande): Demande
@@ -38,13 +35,6 @@ class ConfirmationAdmission
 
             if ($demande->statut !== StatutDemande::Admis) {
                 throw new RegleMetierException('Seul un candidat admis peut confirmer sa place.', 'non_admis');
-            }
-
-            if ($demande->date_limite_confirmation !== null && now()->greaterThan($demande->date_limite_confirmation)) {
-                throw new RegleMetierException(
-                    'Le délai de confirmation est dépassé : la place a été remise à disposition.',
-                    'delai_depasse',
-                );
             }
 
             $this->transition->appliquer($demande, StatutDemande::Confirme, 'Place confirmée par le stagiaire', [
@@ -129,91 +119,4 @@ class ConfirmationAdmission
         });
     }
 
-    /**
-     * Tâche planifiée : remet à disposition les places non confirmées dans le délai.
-     * Sans effet si elle est rejouée (le statut a déjà changé).
-     */
-    public function expirerEcheances(): int
-    {
-        $expirees = 0;
-
-        Demande::query()
-            ->where('statut', StatutDemande::Admis->value)
-            ->whereNotNull('date_limite_confirmation')
-            ->where('date_limite_confirmation', '<', now())
-            ->select('id')
-            ->chunkById(100, function ($lots) use (&$expirees) {
-                foreach ($lots as $ligne) {
-                    $expirees += DB::transaction(function () use ($ligne) {
-                        $demande = Demande::lockForUpdate()->find($ligne->id);
-
-                        if ($demande === null
-                            || $demande->statut !== StatutDemande::Admis
-                            || now()->lessThanOrEqualTo($demande->date_limite_confirmation)) {
-                            return 0;
-                        }
-
-                        $this->transition->appliquer(
-                            $demande,
-                            StatutDemande::DelaiDepasse,
-                            'Place non confirmée dans le délai',
-                            automatique: true,
-                        );
-
-                        $this->notifieur->versStagiaire(
-                            $demande->stagiaire,
-                            TypeNotification::ChangementStatut,
-                            'Délai de confirmation dépassé',
-                            'Vous n\'avez pas confirmé votre place dans le délai imparti : elle a été remise à disposition.',
-                            '/stagiaire/dossier',
-                            "delai_depasse:{$demande->id}",
-                        );
-
-                        $this->listeAttente->signalerPlaceLibre($demande->campagne, "delai-{$demande->id}");
-
-                        return 1;
-                    });
-                }
-            });
-
-        return $expirees;
-    }
-
-    /** Tâche planifiée : rappelle l'échéance aux admis qui n'ont pas encore confirmé. */
-    public function rappelerEcheances(): int
-    {
-        $rappels = 0;
-        $seuilAdmis = $this->parametres->entier('confirmation.rappel_avant_heures');
-        // Pour un candidat appelé de la liste d'attente (48 h), le rappel part à mi-délai.
-        $seuilAttente = (int) floor($this->parametres->entier('confirmation.delai_liste_attente_heures') / 2);
-
-        Demande::query()
-            ->where('statut', StatutDemande::Admis->value)
-            ->whereBetween('date_limite_confirmation', [now(), now()->addHours(max($seuilAdmis, $seuilAttente))])
-            ->with(['stagiaire', 'decisions' => fn ($q) => $q->limit(1)])
-            ->chunkById(100, function ($dossiers) use (&$rappels, $seuilAdmis, $seuilAttente) {
-                foreach ($dossiers as $dossier) {
-                    $depuisAttente = $dossier->decisions->first()?->origine === OrigineDecision::ListeAttente;
-                    $seuil = $depuisAttente ? $seuilAttente : $seuilAdmis;
-
-                    if (now()->diffInHours($dossier->date_limite_confirmation, false) > $seuil) {
-                        continue;
-                    }
-
-                    $envoyee = $this->notifieur->versStagiaire(
-                        $dossier->stagiaire,
-                        TypeNotification::EcheanceConfirmation,
-                        'Confirmez votre place',
-                        'Votre place à l\'internat doit être confirmée avant le '
-                            .$dossier->date_limite_confirmation->translatedFormat('j F Y à H\hi').'.',
-                        '/stagiaire/dossier',
-                        "rappel_confirmation:{$dossier->id}:{$dossier->date_limite_confirmation->timestamp}",
-                    );
-
-                    $rappels += $envoyee ? 1 : 0;
-                }
-            });
-
-        return $rappels;
-    }
 }

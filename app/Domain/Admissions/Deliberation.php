@@ -136,8 +136,6 @@ class Deliberation
             }
 
             $maintenant = now();
-            $limiteConfirmation = $maintenant->copy()->addDays($this->parametres->entier('confirmation.delai_admis_jours'));
-            $limiteDossier = $maintenant->copy()->addDays($this->parametres->entier('dossier_physique.delai_jours'))->toDateString();
 
             foreach ($dossiers as $dossier) {
                 [$decision, $motif] = $decisions[$dossier->id];
@@ -156,8 +154,6 @@ class Deliberation
                 match ($decision) {
                     TypeDecision::Admis => $this->transition->appliquer($dossier, StatutDemande::Admis, $motif, [
                         'liste' => ListeAdmission::Principale,
-                        'date_limite_confirmation' => $limiteConfirmation,
-                        'date_limite_dossier_physique' => $limiteDossier,
                     ]),
                     TypeDecision::ListeAttente => $this->transition->appliquer($dossier, StatutDemande::EnAttente, $motif, [
                         'liste' => ListeAdmission::Attente,

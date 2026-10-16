@@ -345,11 +345,9 @@ class DemonstrationSeeder extends Seeder
             $this->confirmation->desister($admis[$index], $raison, $texte);
         }
 
-        // Une candidate appelée de la liste d'attente laisse passer ses 48 heures ; une autre est appelée hier.
+        // Deux candidates sont appelées de la liste d'attente.
         $this->agir($chef, $this->j->subDays(4)->addHours(9));
         $this->listeAttente->promouvoir($attente[0], $chef, null);
-        $this->agir(null, $this->j->subDays(2)->addHours(10));
-        $this->confirmation->expirerEcheances();
         $this->agir($chef, $this->j->subDays(1)->addHours(11));
         $this->listeAttente->promouvoir($attente[1], $chef, null);
 
