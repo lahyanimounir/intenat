@@ -84,7 +84,7 @@ class CampagneFiche extends PagePersonnel
             'date_ouverture' => $campagne->date_ouverture->toDateString(),
             'date_cloture' => $campagne->date_cloture->toDateString(),
             'nombre_places' => $campagne->nombre_places,
-            'frais_mensuels' => $campagne->frais_mensuels,
+            'frais' => $campagne->frais,
         ];
         $this->ouvrirDialogue('parametres');
     }
@@ -99,13 +99,13 @@ class CampagneFiche extends PagePersonnel
             'parametres.date_ouverture' => ['required', 'date'],
             'parametres.date_cloture' => ['required', 'date'],
             'parametres.nombre_places' => ['required', 'integer', 'min:1', 'max:5000'],
-            'parametres.frais_mensuels' => ['nullable', 'numeric', 'min:0', 'max:99999'],
+            'parametres.frais' => ['nullable', 'numeric', 'min:0', 'max:99999'],
         ], ['parametres.annee.regex' => 'Année attendue au format 2026-2027.'], [
             'parametres.annee' => 'année', 'parametres.date_ouverture' => 'date d\'ouverture', 'parametres.date_cloture' => 'date de clôture',
-            'parametres.nombre_places' => 'nombre de places', 'parametres.frais_mensuels' => 'frais mensuels',
+            'parametres.nombre_places' => 'nombre de places', 'parametres.frais' => 'frais d’internat',
         ])['parametres'];
 
-        $valides['frais_mensuels'] = ($valides['frais_mensuels'] ?? '') === '' ? null : $valides['frais_mensuels'];
+        $valides['frais'] = ($valides['frais'] ?? '') === '' ? null : $valides['frais'];
 
         // Après l'ouverture, seuls la clôture et le nombre de places restent ajustables : le reste n'est pas transmis.
         if ($campagne->statut !== StatutCampagne::Preparee) {

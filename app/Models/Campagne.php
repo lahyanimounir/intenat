@@ -24,7 +24,7 @@ class Campagne extends Model
 
     protected $fillable = [
         'internat_id', 'annee', 'date_ouverture', 'date_cloture', 'nombre_places', 'statut', 'cree_par',
-        'frais_mensuels', 'version_grille', 'compteur_dossiers', 'date_deliberation', 'delibere_par',
+        'frais', 'version_grille', 'compteur_dossiers', 'date_deliberation', 'delibere_par',
         'date_publication', 'archivee_le',
     ];
 
@@ -35,7 +35,7 @@ class Campagne extends Model
             'date_ouverture' => 'date',
             'date_cloture' => 'date',
             'nombre_places' => 'integer',
-            'frais_mensuels' => 'decimal:2',
+            'frais' => 'decimal:2',
             'version_grille' => 'integer',
             'compteur_dossiers' => 'integer',
             'date_deliberation' => 'datetime',

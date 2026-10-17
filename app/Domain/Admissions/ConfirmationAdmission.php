@@ -43,10 +43,10 @@ class ConfirmationAdmission
 
             $campagne = $demande->campagne;
 
-            // Première période : en attente de l'autorisation de paiement du chef de pôle.
+            // Un seul paiement par dossier : en attente de l'autorisation du chef de pôle.
             Paiement::firstOrCreate(
-                ['demande_id' => $demande->id, 'periode' => now()->format('Y-m')],
-                ['montant' => $campagne->frais_mensuels ?? 0, 'statut' => StatutPaiement::EnAttente, 'genere_auto' => false],
+                ['demande_id' => $demande->id],
+                ['montant' => $campagne->frais ?? 0, 'statut' => StatutPaiement::EnAttente],
             );
 
             $this->notifieur->versRole(

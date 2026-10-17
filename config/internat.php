@@ -79,12 +79,9 @@ return [
         'occupation.exiger_autorisation_paiement' => [true, 'Une autorisation de paiement est requise avant d\'autoriser l\'occupation', true],
         'occupation.exiger_recu_valide' => [false, 'Un reçu validé est requis avant d\'autoriser l\'occupation (documenté : non bloquant)', true],
         'occupation.exiger_dossier_physique' => [false, 'Le dossier physique doit être déposé avant d\'autoriser l\'occupation', true],
-        'restauration.jour_blocage' => [5, 'Jour du mois à partir duquel la restauration est bloquée', false],
-        'restauration.critere_blocage' => ['recu_non_depose', 'Critère de blocage (recu_non_depose | recu_non_valide | aucun)', true],
         'restauration.heure_limite_reservation' => ['18:00', 'Heure limite de réservation ou d\'annulation, la veille du repas', true],
         'restauration.sortie_annule_repas' => [false, 'Une sortie acceptée annule les repas réservés sur la période', true],
         'absence.alerte_destinataires' => ['gestionnaire', 'Destinataires de l\'alerte d\'absence non autorisée (gestionnaire | gestionnaire_et_chef_pole)', true],
-        'paiement.jour_rappel' => [3, 'Jour du mois du rappel de paiement aux résidents sans reçu', true],
     ],
 
 ];

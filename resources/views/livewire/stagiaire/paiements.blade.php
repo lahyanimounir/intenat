@@ -4,7 +4,7 @@
 @endphp
 <div>
     <x-page.entete titre="Paiements"
-        description="Frais mensuels d’hébergement. Pour chaque période autorisée, réglez le montant indiqué puis déposez votre reçu : il est contrôlé par le gestionnaire." />
+        description="Frais d’internat de votre campagne. Une fois le paiement autorisé, réglez le montant indiqué puis déposez votre reçu : il est contrôlé par le gestionnaire." />
 
     @if ($paiements->isEmpty())
         <x-carte>
@@ -19,7 +19,7 @@
                 <x-carte wire:key="paiement-{{ $paiement->id }}">
                     <div class="flex flex-wrap items-start justify-between gap-3 px-5 py-4">
                         <div class="min-w-0">
-                            <p class="text-md font-semibold text-encre">{{ mb_convert_case(Format::mois($paiement->periode), MB_CASE_TITLE) }}</p>
+                            <p class="text-md font-semibold text-encre">Frais d’internat</p>
                             <p class="mt-0.5 text-sm text-discret">
                                 Montant : <span class="chiffres font-medium text-encre">{{ Format::montant($paiement->montant) }}</span>
                                 @if ($paiement->date_autorisation) · autorisé le {{ Format::date($paiement->date_autorisation) }}@endif

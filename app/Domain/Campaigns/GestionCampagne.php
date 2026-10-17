@@ -38,7 +38,7 @@ class GestionCampagne
     /**
      * Crée une campagne par internat choisi, préremplie avec la grille nationale de référence.
      *
-     * @param  array{annee: string, date_ouverture: string, date_cloture: string, frais_mensuels: float|string|null, internats: list<array{internat_id: int, nombre_places: int}>}  $donnees
+     * @param  array{annee: string, date_ouverture: string, date_cloture: string, frais: float|string|null, internats: list<array{internat_id: int, nombre_places: int}>}  $donnees
      * @return list<Campagne>
      */
     public function creer(Utilisateur $chefDePole, array $donnees): array
@@ -63,7 +63,7 @@ class GestionCampagne
                     'date_ouverture' => $donnees['date_ouverture'],
                     'date_cloture' => $donnees['date_cloture'],
                     'nombre_places' => $ligne['nombre_places'],
-                    'frais_mensuels' => $donnees['frais_mensuels'] ?? null,
+                    'frais' => $donnees['frais'] ?? null,
                     'statut' => StatutCampagne::Preparee,
                     'cree_par' => $chefDePole->id,
                 ]);
@@ -92,7 +92,7 @@ class GestionCampagne
 
         // Après l'ouverture, seules la date de clôture et le nombre de places restent ajustables.
         $modifiables = $campagne->statut === StatutCampagne::Preparee
-            ? ['annee', 'date_ouverture', 'date_cloture', 'nombre_places', 'frais_mensuels']
+            ? ['annee', 'date_ouverture', 'date_cloture', 'nombre_places', 'frais']
             : ['date_cloture', 'nombre_places'];
 
         $ignores = array_diff(array_keys($donnees), $modifiables);
@@ -135,8 +135,8 @@ class GestionCampagne
         if ($campagne->nombre_places < 1) {
             $blocages[] = 'Le nombre de places offertes doit être d\'au moins 1.';
         }
-        if ($campagne->frais_mensuels === null) {
-            $blocages[] = 'Les frais mensuels d\'internat ne sont pas renseignés.';
+        if ($campagne->frais === null) {
+            $blocages[] = 'Les frais d\'internat ne sont pas renseignés.';
         }
         if ($campagne->typesPieces->isEmpty()) {
             $blocages[] = 'Aucune pièce justificative n\'est définie.';

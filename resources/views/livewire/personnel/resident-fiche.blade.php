@@ -81,8 +81,8 @@
                             <span @class(['chiffres', 'font-medium text-danger' => $affectation->absences->where('autorisee', false)->count() > 0])>{{ $affectation->absences->where('autorisee', false)->count() }}</span>
                         </x-definition>
                         <x-definition terme="Incidents"><span class="chiffres">{{ $affectation->incidents->count() }}</span></x-definition>
-                        @foreach ($affectation->demande->paiements->sortByDesc('periode')->take(3) as $paiement)
-                            <x-definition :terme="'Hébergement — '.Format::mois($paiement->periode)"><x-statut :etat="$paiement->statut" /></x-definition>
+                        @foreach ($affectation->demande->paiements->take(3) as $paiement)
+                            <x-definition terme="Frais d’internat"><x-statut :etat="$paiement->statut" /></x-definition>
                         @endforeach
                     </x-definitions>
                 </x-carte.corps>

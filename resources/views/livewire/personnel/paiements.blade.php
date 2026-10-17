@@ -17,12 +17,10 @@
 
     <x-tableau legende="Paiements" :lignes="$paiements"
         :vide="$filtresActifs ? 'Aucun paiement ne correspond aux filtres' : 'Aucun paiement'"
-        vide-description="Un paiement est créé quand un admis confirme sa place, puis chaque mois pour les résidents.">
+        vide-description="Un paiement est créé quand un admis confirme sa place.">
         <x-slot:barre>
             <x-recherche placeholder="Nom, CEF ou n° de dossier" libelle="Rechercher un paiement" />
             <x-filtre libelle="Statut" wire:model.live="statut" :options="$statuts" :actif="$statut !== ''" />
-            <input type="month" aria-label="Période" wire:model.live="periode"
-                @class(['h-8 rounded-md border bg-surface px-2.5 text-sm shadow-xs hover:border-marine-200', 'border-marine-200 font-medium text-marine' => $periode !== '', 'border-bord text-encre-2' => $periode === '']) />
             @if ($plusieurs)
                 <x-filtre libelle="Internat" wire:model.live="internat" :options="$internats" :actif="$internat !== ''" />
             @endif
@@ -40,7 +38,7 @@
             @if ($peutAutoriser)<x-tableau.colonne class="w-10"><span class="sr-only">Sélection</span></x-tableau.colonne>@endif
             <x-tableau.colonne>Stagiaire</x-tableau.colonne>
             @if ($plusieurs)<x-tableau.colonne>Internat</x-tableau.colonne>@endif
-            <x-tableau.colonne>Période</x-tableau.colonne>
+            <x-tableau.colonne>Objet</x-tableau.colonne>
             <x-tableau.colonne droite>Montant</x-tableau.colonne>
             <x-tableau.colonne>Statut</x-tableau.colonne>
             <x-tableau.colonne>Suivi</x-tableau.colonne>
@@ -53,7 +51,7 @@
                 @if ($peutAutoriser)
                     <x-tableau.cellule>
                         @if ($paiement->statut === StatutPaiement::EnAttente)
-                            <x-case wire:model.live="selection" value="{{ $paiement->id }}" aria-label="Sélectionner le paiement de {{ $personne->nom }} {{ $personne->prenom }}, {{ Format::mois($paiement->periode) }}" />
+                            <x-case wire:model.live="selection" value="{{ $paiement->id }}" aria-label="Sélectionner le paiement de {{ $personne->nom }} {{ $personne->prenom }}" />
                         @endif
                     </x-tableau.cellule>
                 @endif
@@ -62,10 +60,7 @@
                     <p class="chiffres text-xs whitespace-nowrap text-discret">{{ $paiement->demande->numero_dossier }}</p>
                 </x-tableau.cellule>
                 @if ($plusieurs)<x-tableau.cellule class="text-encre-2">{{ $paiement->demande->campagne->internat->nom }}</x-tableau.cellule>@endif
-                <x-tableau.cellule class="whitespace-nowrap">
-                    {{ Format::mois($paiement->periode) }}
-                    @if ($paiement->genere_auto)<x-badge class="ml-1">Suivi mensuel</x-badge>@endif
-                </x-tableau.cellule>
+                <x-tableau.cellule class="whitespace-nowrap text-encre-2">Frais d’internat</x-tableau.cellule>
                 <x-tableau.cellule droite class="chiffres whitespace-nowrap">{{ Format::montant($paiement->montant) }}</x-tableau.cellule>
                 <x-tableau.cellule><x-statut :etat="$paiement->statut" /></x-tableau.cellule>
                 <x-tableau.cellule class="chiffres max-w-xs text-xs text-discret">
@@ -104,10 +99,7 @@
                     L’autorisation n’est pas un encaissement. Le stagiaire règle selon les modalités de l’établissement, puis téléverse son reçu, que le
                     gestionnaire contrôle. L’hébergement peut être autorisé même si le reçu arrive plus tard.
                 </x-alerte>
-                <div class="grid gap-4 sm:grid-cols-2">
-                    <x-saisie libelle="Période" type="month" wire:model="autorisation.periode" requis />
-                    <x-saisie libelle="Montant dû (DH)" type="number" min="0" step="0.01" inputmode="decimal" wire:model="autorisation.montant" requis />
-                </div>
+                <x-saisie libelle="Montant dû (DH)" type="number" min="0" step="0.01" inputmode="decimal" wire:model="autorisation.montant" requis />
             </form>
             <x-slot:pied>
                 <x-bouton wire:click="fermerDialogue">Annuler</x-bouton>
@@ -118,6 +110,6 @@
 
     @if ($dialogue === 'recu' && $choisi)
         <x-apercu :chemin="route('paiements.recu', $choisi)" :nom="$choisi->recu_nom_original"
-            :titre="'Reçu — '.$choisi->demande->stagiaire->nom.' '.$choisi->demande->stagiaire->prenom.', '.Format::mois($choisi->periode)" />
+            :titre="'Reçu — '.$choisi->demande->stagiaire->nom.' '.$choisi->demande->stagiaire->prenom" />
     @endif
 </div>

@@ -5,16 +5,13 @@ namespace App\Domain\Payments;
 use App\Domain\Audit\Journal;
 use App\Domain\Notifications\Notifieur;
 use App\Domain\Shared\Documents;
-use App\Domain\Shared\Parametres;
 use App\Domain\Shared\RegleMetierException;
 use App\Enums\RoleCode;
 use App\Enums\StatutPaiement;
 use App\Enums\TypeNotification;
 use App\Models\Affectation;
-use App\Models\Demande;
 use App\Models\Paiement;
 use App\Models\Utilisateur;
-use Carbon\CarbonInterface;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 
@@ -22,38 +19,29 @@ use Illuminate\Support\Facades\DB;
  * Suivi administratif des frais d'internat. Aucun paiement en ligne : le
  * stagiaire téléverse son reçu, le gestionnaire le contrôle.
  *
- * Quatre notions restent distinctes :
- *   1. l'autorisation de paiement ........ chef de pôle (ou suivi mensuel automatique)
+ * Les frais d'internat se règlent en UNE SEULE FOIS par campagne (non mensuel).
+ * Trois notions restent distinctes :
+ *   1. l'autorisation de paiement ........ chef de pôle
  *   2. le dépôt du reçu .................. stagiaire
  *   3. le contrôle du reçu ............... gestionnaire
- *   4. la permission d'occuper ........... gestionnaire (portée par le dossier, voir AffectationLits)
- * Le paiement n'est pas bloquant pour l'hébergement, mais conditionne la restauration.
+ * Le paiement n'est jamais bloquant : ni pour l'hébergement, ni pour la
+ * restauration (la restauration se règle à part, avec de simples rappels).
  */
 class SuiviPaiements
 {
     public function __construct(
         private readonly Documents $documents,
         private readonly Notifieur $notifieur,
-        private readonly Parametres $parametres,
         private readonly Journal $journal,
     ) {}
 
-    public function autoriser(Paiement $paiement, Utilisateur $chefDePole, ?string $periode = null, ?float $montant = null): Paiement
+    public function autoriser(Paiement $paiement, Utilisateur $chefDePole, ?float $montant = null): Paiement
     {
-        return DB::transaction(function () use ($paiement, $chefDePole, $periode, $montant) {
+        return DB::transaction(function () use ($paiement, $chefDePole, $montant) {
             $paiement = Paiement::lockForUpdate()->findOrFail($paiement->id);
 
             if ($paiement->statut !== StatutPaiement::EnAttente) {
                 throw RegleMetierException::conflit('Ce paiement a déjà été autorisé.', 'deja_autorise');
-            }
-
-            if ($periode !== null && $periode !== $paiement->periode) {
-                $doublon = Paiement::where('demande_id', $paiement->demande_id)->where('periode', $periode)->exists();
-
-                if ($doublon) {
-                    throw RegleMetierException::conflit("Un paiement existe déjà pour la période {$periode}.", 'periode_existante');
-                }
-                $paiement->periode = $periode;
             }
 
             if ($montant !== null) {
@@ -66,9 +54,7 @@ class SuiviPaiements
                 'autorise_par' => $chefDePole->id,
             ])->save();
 
-            $this->journal->consigner('paiement.autorisation', $paiement, details: [
-                'periode' => $paiement->periode, 'montant' => (string) $paiement->montant,
-            ]);
+            $this->journal->consigner('paiement.autorisation', $paiement, details: ['montant' => (string) $paiement->montant]);
 
             $this->notifierAutorisation($paiement);
 
@@ -82,7 +68,7 @@ class SuiviPaiements
             throw new RegleMetierException(
                 $paiement->statut === StatutPaiement::EnAttente
                     ? 'Le paiement n\'a pas encore été autorisé.'
-                    : 'Un reçu a déjà été déposé pour cette période.',
+                    : 'Un reçu a déjà été déposé.',
                 'depot_impossible',
             );
         }
@@ -116,7 +102,7 @@ class SuiviPaiements
                 $demande->internatId(),
                 TypeNotification::RappelPaiement,
                 'Reçu de paiement à contrôler',
-                "{$demande->stagiaire->nomComplet()} a déposé son reçu pour la période {$paiement->periode}.",
+                "{$demande->stagiaire->nomComplet()} a déposé son reçu de paiement.",
                 '/paiements?statut=recu_depose',
                 email: false,
             );
@@ -136,94 +122,32 @@ class SuiviPaiements
     }
 
     /**
-     * Tâche planifiée du début de mois : une autorisation par résident et par
-     * période. La contrainte d'unicité (dossier, période) rend la tâche rejouable.
+     * Tâche planifiée mensuelle : invite chaque résident à régler sa restauration
+     * du mois. Simple rappel — aucun blocage, aucun suivi de reçu de restauration.
      */
-    public function genererAutorisationsMensuelles(?CarbonInterface $mois = null): int
+    public function rappelerRestauration(): int
     {
-        $periode = ($mois ?? now())->format('Y-m');
-        $creees = 0;
-
-        Affectation::actives()
-            ->with('demande.campagne')
-            ->chunkById(200, function ($affectations) use ($periode, &$creees) {
-                foreach ($affectations as $affectation) {
-                    $demande = $affectation->demande;
-
-                    $paiement = Paiement::firstOrCreate(
-                        ['demande_id' => $demande->id, 'periode' => $periode],
-                        [
-                            'montant' => $demande->campagne->frais_mensuels ?? 0,
-                            'statut' => StatutPaiement::Autorise,
-                            'genere_auto' => true,
-                            'date_autorisation' => now(),
-                        ],
-                    );
-
-                    if ($paiement->wasRecentlyCreated) {
-                        $creees++;
-                        $this->notifierAutorisation($paiement);
-                    }
-                }
-            });
-
-        if ($creees > 0) {
-            $this->journal->consigner('paiement.generation_mensuelle', 'paiement', details: ['periode' => $periode, 'crees' => $creees]);
-        }
-
-        return $creees;
-    }
-
-    /** Tâche planifiée : rappelle le reçu manquant aux résidents autorisés à payer. */
-    public function rappelerRecusManquants(?CarbonInterface $mois = null): int
-    {
-        $periode = ($mois ?? now())->format('Y-m');
-        $jourBlocage = $this->parametres->entier('restauration.jour_blocage');
         $rappels = 0;
 
-        Paiement::where('periode', $periode)
-            ->where('statut', StatutPaiement::Autorise->value)
+        Affectation::actives()
             ->with('demande.stagiaire')
-            ->chunkById(200, function ($paiements) use ($periode, $jourBlocage, &$rappels) {
-                foreach ($paiements as $paiement) {
+            ->chunkById(200, function ($affectations) use (&$rappels) {
+                foreach ($affectations as $affectation) {
+                    $stagiaire = $affectation->demande->stagiaire;
+
                     $envoyee = $this->notifieur->versStagiaire(
-                        $paiement->demande->stagiaire,
+                        $stagiaire,
                         TypeNotification::RappelPaiement,
-                        'Reçu de paiement attendu',
-                        "Déposez votre reçu de paiement pour {$periode}. À partir du {$jourBlocage} du mois, l'accès à la restauration peut être suspendu.",
+                        'Restauration : pensez à régler le mois',
+                        'N\'oubliez pas de régler vos frais de restauration pour le mois en cours.',
                         '/stagiaire/paiements',
-                        "rappel_paiement:{$paiement->id}",
+                        'rappel_restauration:'.$affectation->id.':'.now()->format('Y-m'),
                     );
                     $rappels += $envoyee ? 1 : 0;
                 }
             });
 
         return $rappels;
-    }
-
-    /**
-     * Blocage de la restauration (règle provisoire, paramétrable) : à partir du
-     * jour fixé, un résident à qui une autorisation a été délivrée pour le mois
-     * du repas, et dont le reçu manque, ne peut plus réserver.
-     */
-    public function restaurationBloquee(Demande $demande, CarbonInterface $dateRepas): bool
-    {
-        $critere = $this->parametres->texte('restauration.critere_blocage');
-
-        if ($critere === 'aucun' || $dateRepas->day < $this->parametres->entier('restauration.jour_blocage')) {
-            return false;
-        }
-
-        $paiement = Paiement::where('demande_id', $demande->id)->where('periode', $dateRepas->format('Y-m'))->first();
-
-        if ($paiement === null || $paiement->statut === StatutPaiement::EnAttente) {
-            return false;
-        }
-
-        return match ($critere) {
-            'recu_non_valide' => $paiement->statut !== StatutPaiement::Valide,
-            default => ! in_array($paiement->statut, [StatutPaiement::RecuDepose, StatutPaiement::Valide], true),
-        };
     }
 
     private function controler(Paiement $paiement, Utilisateur $gestionnaire, StatutPaiement $decision, ?string $motif): Paiement
@@ -243,7 +167,7 @@ class SuiviPaiements
             ])->save();
 
             $this->journal->consigner('paiement.controle_recu', $paiement, details: [
-                'decision' => $decision->value, 'motif' => $motif, 'periode' => $paiement->periode,
+                'decision' => $decision->value, 'motif' => $motif,
             ]);
 
             $valide = $decision === StatutPaiement::Valide;
@@ -253,8 +177,8 @@ class SuiviPaiements
                 TypeNotification::RappelPaiement,
                 $valide ? 'Reçu validé' : 'Reçu refusé',
                 $valide
-                    ? "Votre reçu pour la période {$paiement->periode} a été validé."
-                    : "Votre reçu pour la période {$paiement->periode} a été refusé : {$motif}. Déposez un nouveau reçu.",
+                    ? 'Votre reçu de paiement a été validé.'
+                    : "Votre reçu de paiement a été refusé : {$motif}. Déposez un nouveau reçu.",
                 '/stagiaire/paiements',
             );
 
@@ -268,7 +192,7 @@ class SuiviPaiements
             $paiement->demande->stagiaire,
             TypeNotification::RappelPaiement,
             'Autorisation de paiement disponible',
-            "Votre autorisation de paiement pour la période {$paiement->periode} est disponible. Réglez les frais puis déposez votre reçu.",
+            'Votre autorisation de paiement des frais d\'internat est disponible. Réglez les frais puis déposez votre reçu.',
             '/stagiaire/paiements',
             "autorisation_paiement:{$paiement->id}",
         );

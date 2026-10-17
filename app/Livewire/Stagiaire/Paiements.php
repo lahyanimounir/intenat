@@ -63,7 +63,7 @@ class Paiements extends PageStagiaire
 
         return view('livewire.stagiaire.paiements', [
             'demande' => $demande,
-            'paiements' => $demande ? $demande->paiements()->orderByDesc('periode')->get() : collect(),
+            'paiements' => $demande ? $demande->paiements()->get() : collect(),
         ]);
     }
 }

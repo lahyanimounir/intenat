@@ -36,7 +36,6 @@
                 <x-tableau.cellule>
                     @if ($candidat->dernierPaiement)
                         <x-statut :etat="$candidat->dernierPaiement->statut" />
-                        <p class="mt-1 text-xs text-discret">{{ Format::mois($candidat->dernierPaiement->periode) }}</p>
                     @else
                         <span class="text-discret">Aucune autorisation</span>
                     @endif

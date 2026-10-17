@@ -122,7 +122,7 @@ class Affectations extends PagePersonnel
         );
 
         $candidats->getCollection()->each(function (Demande $d) use ($affectations) {
-            $d->dernierPaiement = $d->paiements->sortByDesc('periode')->first();
+            $d->dernierPaiement = $d->paiements->first();
             $d->recuValide = $d->paiements->contains(fn ($p) => $p->statut === StatutPaiement::Valide);
             $d->obstacles = $d->occupationAutorisee() ? [] : $affectations->obstaclesOccupation($d);
         });

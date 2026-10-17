@@ -5,7 +5,6 @@ use App\Domain\Campaigns\GestionCampagne;
 use App\Domain\Identity\MyWay\FournisseurIdentiteStagiaire;
 use App\Domain\Payments\SuiviPaiements;
 use App\Domain\Reporting\Exports;
-use App\Domain\Shared\Parametres;
 use App\Enums\MethodeVerification;
 use App\Enums\ResultatVerification;
 use App\Enums\RoleCode;
@@ -35,19 +34,9 @@ Artisan::command('internat:cloturer-campagnes', function (GestionCampagne $campa
     $this->info('Campagnes clôturées : '.$campagnes->cloturerLesEchues());
 })->purpose('Clôture les campagnes dont la date de clôture est passée');
 
-Artisan::command('internat:autorisations-mensuelles', function (SuiviPaiements $paiements) {
-    $this->info('Autorisations générées : '.$paiements->genererAutorisationsMensuelles());
-})->purpose('Génère les autorisations de paiement du mois pour les résidents');
-
-Artisan::command('internat:rappels-paiement', function (SuiviPaiements $paiements, Parametres $parametres) {
-    if (now()->day !== $parametres->entier('paiement.jour_rappel')) {
-        $this->info('Pas de rappel aujourd\'hui.');
-
-        return;
-    }
-
-    $this->info('Rappels envoyés : '.$paiements->rappelerRecusManquants());
-})->purpose('Rappelle le reçu manquant aux résidents, au jour paramétré');
+Artisan::command('internat:rappels-restauration', function (SuiviPaiements $paiements) {
+    $this->info('Rappels envoyés : '.$paiements->rappelerRestauration());
+})->purpose('Invite chaque résident à régler sa restauration du mois (simple rappel, sans blocage)');
 
 Artisan::command('internat:purger-exports', function (Exports $exports) {
     $this->info('Exports expirés supprimés : '.$exports->purgerExpires());
@@ -192,8 +181,7 @@ Artisan::command('internat:myway-diagnostic', function (FournisseurIdentiteStagi
 })->purpose('Indique quel fournisseur MyWay est actif et vérifie la liaison avec le connecteur');
 
 Schedule::command('internat:cloturer-campagnes')->dailyAt('00:10')->withoutOverlapping()->onOneServer();
-Schedule::command('internat:autorisations-mensuelles')->monthlyOn(1, '06:00')->withoutOverlapping()->onOneServer();
-Schedule::command('internat:rappels-paiement')->dailyAt('08:00')->withoutOverlapping()->onOneServer();
+Schedule::command('internat:rappels-restauration')->monthlyOn(1, '08:00')->withoutOverlapping()->onOneServer();
 Schedule::command('internat:purger-exports')->dailyAt('02:30')->withoutOverlapping()->onOneServer();
 Schedule::command('internat:purger-verifications')->hourly()->withoutOverlapping()->onOneServer();
 Schedule::command('auth:clear-resets utilisateurs')->dailyAt('03:00');

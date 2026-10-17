@@ -225,7 +225,7 @@
                                 @endif
                             </x-definition>
                             @foreach ($demande->paiements as $paiement)
-                                <x-definition :terme="'Paiement de l’hébergement — '.Format::mois($paiement->periode)"><x-statut :etat="$paiement->statut" /></x-definition>
+                                <x-definition terme="Paiement de l’hébergement"><x-statut :etat="$paiement->statut" /></x-definition>
                             @endforeach
                         </x-definitions>
                     </x-carte.corps>

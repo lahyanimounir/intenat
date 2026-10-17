@@ -26,7 +26,7 @@ class CampagneResource extends JsonResource
             'date_ouverture' => $this->date_ouverture->toDateString(),
             'date_cloture' => $this->date_cloture->toDateString(),
             'nombre_places' => $this->nombre_places,
-            'frais_mensuels' => $this->frais_mensuels,
+            'frais' => $this->frais,
             'statut' => ['valeur' => $this->statut->value, 'libelle' => $this->statut->libelle()],
             'phase' => $this->phase(),
             'version_grille' => $this->version_grille,

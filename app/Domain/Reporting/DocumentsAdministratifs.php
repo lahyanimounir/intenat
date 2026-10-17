@@ -50,10 +50,10 @@ class DocumentsAdministratifs
         $paiement->loadMissing('demande.stagiaire', 'demande.campagne.internat.etablissement', 'autorisateur');
         $demande = $paiement->demande;
 
-        return $this->rendre("autorisation-paiement-{$demande->numero_dossier}-{$paiement->periode}.pdf", [
+        return $this->rendre("autorisation-paiement-{$demande->numero_dossier}.pdf", [
             'titre' => 'Autorisation de paiement',
-            'sousTitre' => 'Frais d\'internat — période '.$paiement->periode,
-            'reference' => 'AP-'.$paiement->periode.'-'.str_pad((string) $paiement->id, 6, '0', STR_PAD_LEFT),
+            'sousTitre' => 'Frais d\'internat de la campagne',
+            'reference' => 'AP-'.str_pad((string) $paiement->id, 6, '0', STR_PAD_LEFT),
             'etablissement' => $demande->campagne->internat->etablissement->nom_efp,
             'blocs' => [
                 ['titre' => 'Bénéficiaire', 'lignes' => [
@@ -63,12 +63,9 @@ class DocumentsAdministratifs
                     'Internat' => $demande->campagne->internat->nom,
                 ]],
                 ['titre' => 'Paiement autorisé', 'lignes' => [
-                    'Période' => $paiement->periode,
                     'Montant dû' => number_format((float) $paiement->montant, 2, ',', ' ').' DH',
                     'Autorisé le' => $paiement->date_autorisation?->format('d/m/Y'),
-                    'Autorisé par' => $paiement->genere_auto
-                        ? 'Suivi mensuel automatique'
-                        : $paiement->autorisateur?->nomComplet(),
+                    'Autorisé par' => $paiement->autorisateur?->nomComplet(),
                 ]],
             ],
             'paragraphes' => [

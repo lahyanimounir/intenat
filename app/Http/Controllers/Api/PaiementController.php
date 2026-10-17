@@ -27,14 +27,13 @@ class PaiementController extends Controller
         $requete = Paiement::visiblesPar($this->personnel())
             ->with('demande.stagiaire', 'demande.campagne.internat', 'autorisateur:id,nom,prenom', 'validateur:id,nom,prenom')
             ->when($request->filled('statut'), fn ($q) => $q->whereIn('statut', explode(',', $request->string('statut')->toString())))
-            ->when($request->filled('periode'), fn ($q) => $q->where('periode', $request->string('periode')->toString()))
             ->when($request->filled('internat_id'), fn ($q) => $q->whereHas('demande.campagne', fn ($c) => $c->where('internat_id', $request->integer('internat_id'))))
             ->when($request->filled('recherche'), function ($q) use ($request) {
                 $terme = '%'.str_replace(['%', '_'], ['\%', '\_'], $request->string('recherche')->trim()).'%';
                 $q->whereHas('demande', fn ($d) => $d->where('numero_dossier', 'like', $terme)
                     ->orWhereHas('stagiaire', fn ($s) => $s->where('nom', 'like', $terme)->orWhere('prenom', 'like', $terme)->orWhere('cef', 'like', $terme)));
             })
-            ->orderByDesc('periode')->orderByDesc('id');
+            ->orderByDesc('id');
 
         $page = $this->paginer($requete, $request);
         $page->getCollection()->transform(fn (Paiement $p) => self::paiement($p) + [
@@ -51,14 +50,12 @@ class PaiementController extends Controller
         $this->autoriser($paiement, 'paiements.autoriser');
 
         $donnees = $request->validate([
-            'periode' => ['nullable', 'regex:/^\d{4}-(0[1-9]|1[0-2])$/'],
             'montant' => ['nullable', 'numeric', 'min:0', 'max:99999'],
-        ], ['periode.regex' => 'Période attendue au format AAAA-MM.']);
+        ]);
 
         $paiement = $this->paiements->autoriser(
             $paiement,
             $this->personnel(),
-            $donnees['periode'] ?? null,
             isset($donnees['montant']) ? (float) $donnees['montant'] : null,
         );
 
@@ -119,10 +116,8 @@ class PaiementController extends Controller
         return [
             'id' => $p->id,
             'demande_id' => $p->demande_id,
-            'periode' => $p->periode,
             'montant' => $p->montant,
             'statut' => self::enum($p->statut),
-            'genere_auto' => $p->genere_auto,
             'date_autorisation' => $p->date_autorisation,
             'date_depot' => $p->date_depot,
             'date_validation' => $p->date_validation,

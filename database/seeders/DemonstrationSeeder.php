@@ -271,7 +271,7 @@ class DemonstrationSeeder extends Seeder
 
         $campagne = Campagne::create([
             'internat_id' => $internat->id, 'annee' => $this->annee($debut), 'date_ouverture' => $debut->toDateString(),
-            'date_cloture' => $debut->addDays(30)->toDateString(), 'nombre_places' => 14, 'frais_mensuels' => 150,
+            'date_cloture' => $debut->addDays(30)->toDateString(), 'nombre_places' => 14, 'frais' => 150,
             'statut' => StatutCampagne::Cloturee, 'cree_par' => $this->comptes['chef_pole']->id,
             'date_deliberation' => $debut->addDays(36), 'delibere_par' => $this->comptes['chef_pole']->id,
             'date_publication' => $debut->addDays(36), 'archivee_le' => $this->j->subMonths(3), 'compteur_dossiers' => 16,
@@ -400,10 +400,6 @@ class DemonstrationSeeder extends Seeder
             $this->affectations->enregistrerArrivee($affectation, $gestionnaire);
         }
 
-        // Suivi mensuel : autorisations du mois courant pour les résidentes.
-        $this->agir(null, $this->j->addHours(6));
-        $this->paiements->genererAutorisationsMensuelles();
-
         return $residentes->take(8)->values();
     }
 
@@ -475,7 +471,7 @@ class DemonstrationSeeder extends Seeder
         $this->agir($chef, $this->j->subDays(1)->addHours(9));
         $this->campagnes->creer($chef, [
             'annee' => $this->annee($this->j), 'date_ouverture' => $this->j->addDays(5)->toDateString(),
-            'date_cloture' => $this->j->addDays(35)->toDateString(), 'frais_mensuels' => null,
+            'date_cloture' => $this->j->addDays(35)->toDateString(), 'frais' => null,
             'internats' => [['internat_id' => $this->internats['jardins_garcons']->id, 'nombre_places' => 12]],
         ]);
     }
@@ -658,7 +654,7 @@ class DemonstrationSeeder extends Seeder
 
         [$campagne] = $this->campagnes->creer($chef, [
             'annee' => $this->annee($ouverture), 'date_ouverture' => $ouverture->toDateString(), 'date_cloture' => $cloture->toDateString(),
-            'frais_mensuels' => $frais, 'internats' => [['internat_id' => $internat->id, 'nombre_places' => $places]],
+            'frais' => $frais, 'internats' => [['internat_id' => $internat->id, 'nombre_places' => $places]],
         ]);
 
         foreach (['Copie de la CIN', 'Attestation d\'inscription'] as $libelle) {
@@ -731,7 +727,7 @@ class DemonstrationSeeder extends Seeder
         $this->documents->disque()->put($chemin, $this->pdf);
 
         $paiement->forceFill([
-            'recu_fichier' => $chemin, 'recu_nom_original' => 'recu-'.$paiement->periode.'.pdf', 'recu_mime' => 'application/pdf',
+            'recu_fichier' => $chemin, 'recu_nom_original' => 'recu-'.$paiement->demande_id.'.pdf', 'recu_mime' => 'application/pdf',
             'statut' => StatutPaiement::RecuDepose, 'date_depot' => now(),
         ])->save();
     }

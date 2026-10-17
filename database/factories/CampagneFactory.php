@@ -21,7 +21,7 @@ class CampagneFactory extends Factory
             'date_ouverture' => now()->subDays(10)->toDateString(),
             'date_cloture' => now()->addDays(20)->toDateString(),
             'nombre_places' => 2,
-            'frais_mensuels' => 100,
+            'frais' => 100,
             'statut' => StatutCampagne::Ouverte,
             'cree_par' => Utilisateur::factory(),
         ];

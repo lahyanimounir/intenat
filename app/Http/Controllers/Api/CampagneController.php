@@ -49,7 +49,7 @@ class CampagneController extends Controller
             'annee' => ['required', 'regex:/^\d{4}-\d{4}$/'],
             'date_ouverture' => ['required', 'date'],
             'date_cloture' => ['required', 'date', 'after_or_equal:date_ouverture'],
-            'frais_mensuels' => ['nullable', 'numeric', 'min:0', 'max:99999'],
+            'frais' => ['nullable', 'numeric', 'min:0', 'max:99999'],
             'internats' => ['required', 'array', 'min:1'],
             'internats.*.internat_id' => ['required', 'integer', 'distinct', 'exists:internat,id'],
             'internats.*.nombre_places' => ['required', 'integer', 'min:1', 'max:5000'],
@@ -97,7 +97,7 @@ class CampagneController extends Controller
             'date_ouverture' => ['sometimes', 'date'],
             'date_cloture' => ['sometimes', 'date'],
             'nombre_places' => ['sometimes', 'integer', 'min:1', 'max:5000'],
-            'frais_mensuels' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:99999'],
+            'frais' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:99999'],
         ]);
 
         return new CampagneResource($this->campagnes->modifier($campagne, $donnees)->load('internat.etablissement'));

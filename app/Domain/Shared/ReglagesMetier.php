@@ -19,7 +19,6 @@ class ReglagesMetier
     /** Valeurs admises pour les paramètres à choix fermé. */
     public const CHOIX = [
         'classement.departage' => ['arbitrage_chef_pole' => 'Arbitrage du chef de pôle (ex æquo signalés)', 'date_soumission' => 'Date de dépôt du dossier'],
-        'restauration.critere_blocage' => ['recu_non_depose' => 'Reçu non déposé', 'recu_non_valide' => 'Reçu non validé', 'aucun' => 'Aucun blocage'],
         'absence.alerte_destinataires' => ['gestionnaire' => 'Gestionnaire seul', 'gestionnaire_et_chef_pole' => 'Gestionnaire et chef de pôle'],
     ];
 

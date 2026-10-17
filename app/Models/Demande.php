@@ -101,7 +101,7 @@ class Demande extends Model
 
     public function paiements(): HasMany
     {
-        return $this->hasMany(Paiement::class, 'demande_id')->orderBy('periode');
+        return $this->hasMany(Paiement::class, 'demande_id');
     }
 
     public function affectations(): HasMany

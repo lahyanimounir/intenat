@@ -3,7 +3,6 @@
 namespace App\Domain\Catering;
 
 use App\Domain\Audit\Journal;
-use App\Domain\Payments\SuiviPaiements;
 use App\Domain\Shared\Parametres;
 use App\Domain\Shared\RegleMetierException;
 use App\Enums\StatutMenu;
@@ -28,7 +27,6 @@ use Illuminate\Support\Facades\DB;
 class Restauration
 {
     public function __construct(
-        private readonly SuiviPaiements $paiements,
         private readonly Parametres $parametres,
         private readonly Journal $journal,
     ) {}
@@ -91,10 +89,6 @@ class Restauration
 
         if (now()->greaterThan($this->limiteDeReservation($menu))) {
             return 'Le délai de réservation de ce repas est dépassé.';
-        }
-
-        if ($this->paiements->restaurationBloquee($affectation->demande, $menu->date_repas)) {
-            return 'Accès à la restauration suspendu : reçu de paiement manquant pour ce mois.';
         }
 
         return null;

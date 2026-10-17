@@ -37,9 +37,6 @@ class Paiements extends PagePersonnel
     public string $statut = '';
 
     #[Url(except: '')]
-    public string $periode = '';
-
-    #[Url(except: '')]
     public string $internat = '';
 
     /** Paiements cochés pour une autorisation groupée. */
@@ -49,7 +46,7 @@ class Paiements extends PagePersonnel
     public ?int $ligne = null;
 
     /** @var array<string, string> */
-    public array $autorisation = ['periode' => '', 'montant' => ''];
+    public array $autorisation = ['montant' => ''];
 
     public function mount(): void
     {
@@ -58,7 +55,7 @@ class Paiements extends PagePersonnel
 
     protected function filtres(): array
     {
-        return ['statut', 'periode', 'internat'];
+        return ['statut', 'internat'];
     }
 
     public function updated(string $propriete): void
@@ -71,7 +68,7 @@ class Paiements extends PagePersonnel
 
     public function effacerFiltres(): void
     {
-        $this->reset('recherche', 'statut', 'periode', 'internat', 'selection');
+        $this->reset('recherche', 'statut', 'internat', 'selection');
         $this->resetPage();
     }
 
@@ -89,7 +86,7 @@ class Paiements extends PagePersonnel
     {
         $paiement = $this->paiement($id, self::AUTORISER);
         $this->ligne = $paiement->id;
-        $this->autorisation = ['periode' => $paiement->periode, 'montant' => (string) $paiement->montant];
+        $this->autorisation = ['montant' => (string) $paiement->montant];
         $this->ouvrirDialogue('autorisation');
     }
 
@@ -98,13 +95,12 @@ class Paiements extends PagePersonnel
         $paiement = $this->paiement((int) $this->ligne, self::AUTORISER);
 
         $valides = $this->validate([
-            'autorisation.periode' => ['required', 'regex:/^\d{4}-(0[1-9]|1[0-2])$/'],
             'autorisation.montant' => ['required', 'numeric', 'min:0', 'max:99999'],
-        ], ['autorisation.periode.regex' => 'Période attendue au format AAAA-MM.'], [
-            'autorisation.periode' => 'période', 'autorisation.montant' => 'montant',
+        ], [], [
+            'autorisation.montant' => 'montant',
         ])['autorisation'];
 
-        if ($this->executer(fn () => $suivi->autoriser($paiement, $this->utilisateur(), $valides['periode'], (float) $valides['montant']),
+        if ($this->executer(fn () => $suivi->autoriser($paiement, $this->utilisateur(), (float) $valides['montant']),
             'Autorisation de paiement délivrée : le stagiaire est notifié.')) {
             $this->fermerDialogue();
         }
@@ -175,17 +171,15 @@ class Paiements extends PagePersonnel
         $terme = trim($this->recherche);
         $motif = '%'.addcslashes($terme, '%_\\').'%';
         $statuts = array_values(array_intersect(explode(',', $this->statut), StatutPaiement::valeurs()));
-        $periode = preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $this->periode) === 1 ? $this->periode : '';
 
         $paiements = Paiement::visiblesPar($this->utilisateur())
             ->with('demande.stagiaire:id,nom,prenom,cef', 'demande.campagne.internat:id,nom')
             ->when($statuts !== [], fn (Builder $q) => $q->whereIn('paiement.statut', $statuts))
-            ->when($periode !== '', fn (Builder $q) => $q->where('periode', $periode))
             ->when($this->internat !== '', fn (Builder $q) => $q->whereHas('demande.campagne', fn (Builder $c) => $c->where('internat_id', (int) $this->internat)))
             ->when($terme !== '', fn (Builder $q) => $q->whereHas('demande', fn (Builder $d) => $d->where(fn (Builder $s) => $s
                 ->where('numero_dossier', 'like', $motif)
                 ->orWhereHas('stagiaire', fn (Builder $st) => $st->where('nom', 'like', $motif)->orWhere('prenom', 'like', $motif)->orWhere('cef', 'like', $motif)))))
-            ->orderByDesc('periode')->orderByDesc('paiement.id')
+            ->orderByDesc('paiement.id')
             ->paginate(25);
 
         return view('livewire.personnel.paiements', [
@@ -193,7 +187,7 @@ class Paiements extends PagePersonnel
             'internats' => $this->internatsDuPerimetre(),
             'peutAutoriser' => $this->peut(self::AUTORISER),
             'peutControler' => $this->peut(self::CONTROLER),
-            'filtresActifs' => $terme !== '' || $this->statut !== '' || $this->periode !== '' || $this->internat !== '',
+            'filtresActifs' => $terme !== '' || $this->statut !== '' || $this->internat !== '',
             'choisi' => $this->ligne !== null ? Paiement::with('demande.stagiaire:id,nom,prenom')->find($this->ligne) : null,
         ]);
     }

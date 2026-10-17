@@ -23,7 +23,6 @@ class Parametres extends PagePersonnel
         'places' => ['Places offertes', null],
         'instruction' => ['Instruction', null],
         'occupation' => ['Permission d’occuper', 'Conditions exigées avant qu’un gestionnaire autorise l’occupation d’un lit.'],
-        'paiement' => ['Paiements', null],
         'restauration' => ['Restauration', null],
         'absence' => ['Absences', null],
     ];

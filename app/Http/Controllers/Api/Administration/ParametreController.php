@@ -20,7 +20,6 @@ class ParametreController extends Controller
     /** Valeurs admises pour les paramètres à choix fermé. */
     private const CHOIX = [
         'classement.departage' => ['arbitrage_chef_pole', 'date_soumission'],
-        'restauration.critere_blocage' => ['recu_non_depose', 'recu_non_valide', 'aucun'],
         'absence.alerte_destinataires' => ['gestionnaire', 'gestionnaire_et_chef_pole'],
     ];
 

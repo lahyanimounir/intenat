@@ -42,7 +42,7 @@ class HebergementController extends Controller
 
         $page = $this->paginer($requete, $request);
         $page->getCollection()->transform(function (Demande $d) {
-            $paiement = $d->paiements->sortByDesc('periode')->first();
+            $paiement = $d->paiements->first();
 
             return [
                 'id' => $d->id,

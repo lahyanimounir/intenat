@@ -21,14 +21,13 @@ return new class extends Migration
     {
         Schema::create('paiement', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('demande_id')->constrained('demande')->restrictOnDelete();
-            $table->string('periode', 7);
+            // Frais d'internat : un seul paiement par dossier (par campagne), non mensuel.
+            $table->foreignId('demande_id')->unique()->constrained('demande')->restrictOnDelete();
             $table->decimal('montant', 8, 2);
             $table->string('recu_fichier', 255)->nullable();
             $table->string('recu_nom_original', 255)->nullable();
             $table->string('recu_mime', 100)->nullable();
             $table->enum('statut', StatutPaiement::valeurs())->default(StatutPaiement::EnAttente->value);
-            $table->boolean('genere_auto')->default(false);
             $table->dateTime('date_autorisation')->nullable();
             $table->foreignId('autorise_par')->nullable()->constrained('utilisateur')->restrictOnDelete();
             $table->dateTime('date_depot')->nullable();
@@ -37,9 +36,7 @@ return new class extends Migration
             $table->text('motif_refus')->nullable();
             $table->timestamps();
 
-            // Une seule ligne par dossier et par période : le suivi mensuel est rejouable.
-            $table->unique(['demande_id', 'periode']);
-            $table->index(['periode', 'statut']);
+            $table->index('statut');
         });
 
         Schema::create('affectation', function (Blueprint $table) {

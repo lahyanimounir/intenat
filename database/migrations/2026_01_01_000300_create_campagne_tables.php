@@ -26,7 +26,7 @@ return new class extends Migration
             $table->enum('statut', StatutCampagne::valeurs())->default(StatutCampagne::Preparee->value);
             $table->foreignId('cree_par')->constrained('utilisateur')->restrictOnDelete();
             // Extensions documentées.
-            $table->decimal('frais_mensuels', 8, 2)->nullable();
+            $table->decimal('frais', 8, 2)->nullable();
             $table->unsignedInteger('version_grille')->default(1);
             $table->unsignedInteger('compteur_dossiers')->default(0);
             $table->dateTime('date_deliberation')->nullable();
