@@ -142,6 +142,8 @@ class DossierFiche extends PagePersonnel
             'nonControlees' => $pieces->filter(fn (array $p) => $p['piece']?->statut === StatutPiece::Deposee)->count(),
             'aRemplacer' => $pieces->filter(fn (array $p) => $p['piece']?->statut === StatutPiece::ARemplacer)->count(),
             'instruire' => $instruire,
+            // Justificatif de scolarité joint à la candidature : il fait partie de la revue unique.
+            'justificatifScolarite' => $demande->stagiaire->verificationsInscription()->whereNotNull('fichier')->latest('id')->first(),
             // Un dossier renvoyé pour rectification peut encore être rejeté.
             'rejetPossible' => $utilisateur->can('demandes.instruire') && in_array($demande->statut, [StatutDemande::Recu, StatutDemande::RetourRectification], true),
             'gererHebergement' => $utilisateur->can('hebergement.gerer'),

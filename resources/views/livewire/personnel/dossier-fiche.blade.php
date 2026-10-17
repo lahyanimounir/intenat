@@ -5,7 +5,9 @@
     use App\Support\Affichage\Format;
 
     $inscription = $stagiaire->statut_inscription;
-    $pret = $nonControlees === 0 && $aRemplacer === 0 && $acceptees === $requises->count() && $inscription === StatutInscription::Verifiee;
+    // Déclarer le dossier complet vaut validation de la candidature (et de l'inscription) :
+    // il suffit que toutes les pièces requises soient contrôlées et acceptées.
+    $pret = $nonControlees === 0 && $aRemplacer === 0 && $acceptees === $requises->count();
     $admis = in_array($demande->statut, [StatutDemande::Admis, StatutDemande::Confirme], true);
 @endphp
 <div>
@@ -84,6 +86,22 @@
                         <x-definition terme="Besoins spécifiques"><x-oui-non :valeur="$demande->besoins_specifiques" oui="Déclaré" non="Non déclaré" /></x-definition>
                         @if ($demande->precisions_besoins)<x-definition terme="Précisions sur les besoins">{{ $demande->precisions_besoins }}</x-definition>@endif
                     </x-definitions>
+                </x-carte.corps>
+            </x-carte>
+
+            <x-carte>
+                <x-carte.entete titre="Justificatif de scolarité" description="Joint à la candidature : il fait partie de la revue avant de déclarer le dossier complet." />
+                <x-carte.corps>
+                    @if ($justificatifScolarite)
+                        <x-ligne-fichier :nom="$justificatifScolarite->nom_original"
+                            :detail="Format::taille($justificatifScolarite->taille).' · soumis le '.Format::dateHeure($justificatifScolarite->soumise_le)">
+                            <x-slot:actions>
+                                <x-bouton taille="sm" variante="discret" icone="eye" :href="route('inscriptions.justificatif', $justificatifScolarite)" :navigation="false" target="_blank" rel="noopener">Voir</x-bouton>
+                            </x-slot:actions>
+                        </x-ligne-fichier>
+                    @else
+                        <p class="text-sm text-discret">Aucun justificatif de scolarité n’a été joint.</p>
+                    @endif
                 </x-carte.corps>
             </x-carte>
 
@@ -184,17 +202,15 @@
                             <x-alerte ton="neutre">
                                 @if ($aRemplacer > 0)
                                     Une pièce est à remplacer : renvoyez le dossier au stagiaire pour rectification.
-                                @elseif ($inscription !== StatutInscription::Verifiee && $nonControlees === 0)
-                                    L’inscription en formation du stagiaire doit être vérifiée avant de déclarer le dossier complet.
                                 @else
-                                    Contrôlez toutes les pièces déposées pour pouvoir déclarer le dossier complet.
+                                    Contrôlez et acceptez toutes les pièces requises pour pouvoir déclarer la candidature complète.
                                 @endif
                             </x-alerte>
                         @endif
                         <div class="flex flex-wrap gap-2">
                             @if ($instruire)
                                 <x-bouton variante="primaire" icone="file-check-corner" :disabled="! $pret" cible="declarerComplet"
-                                    x-on:click="$confirmer({ titre: 'Déclarer le dossier complet ?', texte: 'Le score sera calculé et le dossier participera à la sélection.\nCette décision est définitive : un dossier complet ne peut plus être modifié ni renvoyé.', libelle: 'Déclarer complet' }).then(() => $wire.declarerComplet())">
+                                    x-on:click="$confirmer({ titre: 'Déclarer la candidature complète ?', texte: 'Cette décision valide la candidature et l’inscription du stagiaire, lui ouvre son espace, calcule son score et le fait participer à la sélection.\nElle est définitive : un dossier complet ne peut plus être modifié ni renvoyé.', libelle: 'Déclarer complet' }).then(() => $wire.declarerComplet())">
                                     Déclarer complet
                                 </x-bouton>
                                 <x-bouton icone="rotate-ccw"

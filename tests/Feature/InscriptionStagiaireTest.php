@@ -10,8 +10,11 @@ use App\Enums\StatutInscription;
 use App\Livewire\Auth\Connexion;
 use App\Livewire\Auth\Inscription;
 use App\Livewire\Stagiaire\ConfirmationAdresse;
+use App\Domain\Applications\Instruction;
 use App\Enums\StatutDemande;
+use App\Enums\StatutPiece;
 use App\Livewire\Stagiaire\MonInscription;
+use App\Models\Demande;
 use App\Models\Campagne;
 use App\Models\JournalAudit;
 use App\Models\Stagiaire;
@@ -66,6 +69,22 @@ class InscriptionStagiaireTest extends TestCase
     private function fichier(string $nom = 'piece.pdf'): UploadedFile
     {
         return UploadedFile::fake()->createWithContent($nom, "%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF");
+    }
+
+    /** Un candidat soumet une candidature complète (inscription + dossier) pour la campagne donnée. */
+    private function soumettreCandidature(Campagne $campagne): Demande
+    {
+        Storage::fake('prive');
+        $cin = $campagne->typesPieces->firstWhere('obligatoire', true);
+        $stagiaire = Stagiaire::factory()->nouveau()->create($this->identite());
+
+        $ecran = Livewire::actingAs($stagiaire, 'stagiaire')->test(MonInscription::class);
+        $this->declarerFormation($ecran, $campagne)->call('enregistrerFormation');
+        $ecran->set('situation.adresse_complete', '12 rue des Orangers, Hay Hassani')->call('enregistrerSituation');
+        $ecran->set("fichiers.{$cin->id}", $this->fichier('cin.pdf'));
+        $ecran->set('justificatif', $this->fichier('scolarite.pdf'))->call('soumettre')->assertHasNoErrors();
+
+        return $stagiaire->demandeCourante();
     }
 
     /**
@@ -362,6 +381,42 @@ class InscriptionStagiaireTest extends TestCase
         $this->assertSame(StatutInscription::Soumise, $stagiaire->statut_inscription);
         $this->assertSame(StatutDemande::Recu, $demande->statut);
         $this->assertNotNull($demande->numero_dossier);
+    }
+
+    public function test_la_validation_du_gestionnaire_vaut_inscription_verifiee_et_ouvre_le_sejour(): void
+    {
+        $campagne = $this->creerCampagne($this->filles);
+        $demande = $this->soumettreCandidature($campagne);
+        $stagiaire = $demande->stagiaire;
+
+        // En attente de la revue unique : inscription soumise, séjour fermé.
+        $this->assertSame(StatutInscription::Soumise, $stagiaire->fresh()->statut_inscription);
+
+        // Le gestionnaire contrôle la pièce puis déclare la candidature complète.
+        $instruction = app(Instruction::class);
+        $instruction->controlerPiece($demande->pieces()->first(), StatutPiece::Acceptee, null, $this->gestionnaireFilles);
+        $instruction->declarerComplet($demande->fresh(), $this->gestionnaireFilles);
+
+        // Revue unique : l'inscription est vérifiée, le dossier complet, le séjour ouvert.
+        $stagiaire->refresh();
+        $this->assertTrue($stagiaire->inscriptionVerifiee());
+        $this->assertSame(StatutDemande::Complet, $demande->fresh()->statut);
+        $this->actingAs($stagiaire, 'stagiaire')->get(route('stagiaire.accueil'))->assertOk();
+    }
+
+    public function test_un_retour_pour_rectification_referme_le_sejour_et_renvoie_le_candidat(): void
+    {
+        $campagne = $this->creerCampagne($this->filles);
+        $demande = $this->soumettreCandidature($campagne);
+        $stagiaire = $demande->stagiaire;
+
+        app(Instruction::class)->renvoyerPourRectification($demande->fresh(), 'Pièce illisible : merci de la redéposer.', $this->gestionnaireFilles);
+
+        // La candidature revient au candidat : inscription « à corriger », séjour fermé.
+        $stagiaire->refresh();
+        $this->assertSame(StatutInscription::ACorriger, $stagiaire->statut_inscription);
+        $this->assertSame(StatutDemande::RetourRectification, $demande->fresh()->statut);
+        $this->actingAs($stagiaire, 'stagiaire')->get(route('stagiaire.accueil'))->assertRedirect(route('stagiaire.inscription'));
     }
 
     public function test_un_profil_incomplet_n_ouvre_que_l_ecran_d_inscription(): void

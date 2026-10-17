@@ -4,21 +4,28 @@ namespace App\Domain\Applications;
 
 use App\Domain\Admissions\CalculScore;
 use App\Domain\Audit\Journal;
+use App\Domain\Identity\ControleInscription;
 use App\Domain\Notifications\Notifieur;
 use App\Domain\Shared\RegleMetierException;
 use App\Enums\StatutDemande;
 use App\Enums\StatutPiece;
+use App\Enums\StatutVerificationInscription;
 use App\Enums\TypeNotification;
 use App\Jobs\RecalculerClassement;
 use App\Models\Demande;
 use App\Models\PieceJointe;
+use App\Models\Stagiaire;
 use App\Models\Utilisateur;
+use App\Models\VerificationInscription;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Instruction du dossier par le gestionnaire : contrôle des pièces puis
- * décision — complet, à rectifier, ou rejet motivé. Un dossier déclaré
- * complet n'est plus modifiable par le gestionnaire.
+ * Instruction de la candidature par le gestionnaire : revue unique du dossier
+ * (identité, formation, situation, pièces et justificatif de scolarité) puis
+ * décision — complet, à rectifier, ou rejet motivé. Cette décision vaut aussi
+ * pour l'inscription en formation : déclarer complet la valide (et ouvre le
+ * séjour), un retour pour rectification la met « à corriger », un rejet la
+ * rejette. Un dossier déclaré complet n'est plus modifiable par le gestionnaire.
  */
 class Instruction
 {
@@ -28,6 +35,7 @@ class Instruction
         private readonly CalculScore $calcul,
         private readonly Journal $journal,
         private readonly Notifieur $notifieur,
+        private readonly ControleInscription $controle,
     ) {}
 
     public function controlerPiece(PieceJointe $piece, StatutPiece $statut, ?string $commentaire, Utilisateur $gestionnaire): PieceJointe
@@ -66,15 +74,6 @@ class Instruction
             $demande = Demande::lockForUpdate()->findOrFail($demande->id);
             $this->exigerEnInstruction($demande);
 
-            // Seule une inscription en formation vérifiée par un agent ouvre la sélection.
-            if (! $demande->stagiaire->inscriptionVerifiee()) {
-                throw new RegleMetierException(
-                    'Le dossier ne peut pas être déclaré complet : l\'inscription en formation du stagiaire n\'est pas vérifiée ('
-                        .mb_strtolower($demande->stagiaire->statut_inscription->libelle()).').',
-                    'inscription_non_verifiee',
-                );
-            }
-
             $attendues = $this->dossier->piecesAttendues($demande);
 
             $nonConformes = $attendues
@@ -99,6 +98,10 @@ class Instruction
                     'pieces_non_controlees',
                 );
             }
+
+            // Revue unique : valider le dossier vaut validation de l'inscription en
+            // formation du candidat — c'est elle qui ouvre son séjour.
+            $this->reporterSurInscription($demande->stagiaire, StatutVerificationInscription::Verifiee, null, $gestionnaire);
 
             $this->transition->appliquer($demande, StatutDemande::Complet, 'Dossier complet', [
                 'instruit_par' => $gestionnaire->id,
@@ -136,6 +139,9 @@ class Instruction
                 );
             }
 
+            // Renvoyer la candidature au candidat : l'inscription repasse « à corriger ».
+            $this->reporterSurInscription($demande->stagiaire, StatutVerificationInscription::ACorriger, $motif, $gestionnaire);
+
             $this->transition->appliquer($demande, StatutDemande::RetourRectification, $motif, [
                 'motif_rectification' => $motif,
                 'instruit_par' => $gestionnaire->id,
@@ -146,8 +152,8 @@ class Instruction
                 $demande->stagiaire,
                 TypeNotification::ChangementStatut,
                 'Rectification demandée',
-                "Votre dossier n° {$demande->numero_dossier} doit être rectifié : {$motif}",
-                '/stagiaire/dossier',
+                "Votre candidature n° {$demande->numero_dossier} doit être rectifiée : {$motif}",
+                '/stagiaire/inscription',
             );
 
             return $demande;
@@ -163,6 +169,9 @@ class Instruction
                 throw new RegleMetierException('Seul un dossier en cours d\'instruction peut être rejeté.', 'dossier_verrouille');
             }
 
+            // Rejeter la candidature rejette aussi l'inscription en formation.
+            $this->reporterSurInscription($demande->stagiaire, StatutVerificationInscription::Rejetee, $motif, $gestionnaire);
+
             $this->transition->appliquer($demande, StatutDemande::Rejete, $motif, [
                 'motif_rejet' => $motif,
                 'instruit_par' => $gestionnaire->id,
@@ -172,9 +181,9 @@ class Instruction
             $this->notifieur->versStagiaire(
                 $demande->stagiaire,
                 TypeNotification::ChangementStatut,
-                'Dossier rejeté',
-                "Votre dossier n° {$demande->numero_dossier} a été rejeté. Motif : {$motif}",
-                '/stagiaire/dossier',
+                'Candidature rejetée',
+                "Votre candidature n° {$demande->numero_dossier} a été rejetée. Motif : {$motif}",
+                '/stagiaire/inscription',
             );
 
             return $demande;
@@ -215,5 +224,33 @@ class Instruction
                 'dossier_verrouille',
             );
         }
+    }
+
+    /**
+     * Reporte la décision du gestionnaire sur l'inscription en formation du
+     * candidat : elle résout la vérification en attente (soumise avec la
+     * candidature), ou, à défaut, tranche directement. La revue du dossier et
+     * celle de l'inscription n'en font ainsi qu'une seule.
+     */
+    private function reporterSurInscription(Stagiaire $stagiaire, StatutVerificationInscription $decision, ?string $motif, Utilisateur $gestionnaire): void
+    {
+        if ($stagiaire->statut_inscription === $decision->versStagiaire()) {
+            return;
+        }
+
+        $enAttente = VerificationInscription::where('stagiaire_id', $stagiaire->id)->enAttente()->latest('id')->first();
+
+        if ($enAttente !== null) {
+            $this->controle->decider($enAttente, $decision, $motif, $gestionnaire);
+
+            return;
+        }
+
+        $this->controle->deciderSansDemande(
+            $stagiaire,
+            $decision,
+            $motif ?? 'Candidature validée par le gestionnaire après contrôle des pièces.',
+            $gestionnaire,
+        );
     }
 }

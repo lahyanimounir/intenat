@@ -69,16 +69,11 @@ class VerificationInscriptionTest extends TestCase
 
     public function test_le_stagiaire_soumet_son_inscription_avec_un_justificatif(): void
     {
+        // La soumission de la candidature (parcours complet) est couverte par InscriptionStagiaireTest ;
+        // ici on vérifie l'instantané de scolarité figé par ControleInscription::soumettre.
         $stagiaire = $this->declare();
 
-        Livewire::actingAs($stagiaire, 'stagiaire')->test(MonInscription::class)
-            ->assertSet('etape', 'verification')
-            ->set('justificatif', $this->justificatif())
-            ->call('soumettre')
-            ->assertHasNoErrors()
-            ->assertSee('En attente de vérification');
-
-        $verification = VerificationInscription::sole();
+        $verification = $this->soumettre($stagiaire);
 
         $this->assertSame(StatutVerificationInscription::Soumise, $verification->statut);
         $this->assertSame(OrigineVerificationInscription::Declaration, $verification->origine);
@@ -86,6 +81,7 @@ class VerificationInscriptionTest extends TestCase
         $this->assertSame($this->etablissement->id, $verification->etablissement_id);
         $this->assertSame('attestation.pdf', $verification->nom_original);
         $this->assertNull($verification->decidee_par);
+        $this->assertSame(StatutInscription::Soumise, $stagiaire->fresh()->statut_inscription);
         Storage::disk('prive')->assertExists($verification->fichier);
         $this->assertStringStartsWith("inscriptions/{$stagiaire->id}/", $verification->fichier);
 
@@ -333,30 +329,27 @@ class VerificationInscriptionTest extends TestCase
         }
     }
 
-    public function test_un_dossier_depose_n_entre_dans_la_selection_qu_une_fois_l_inscription_verifiee(): void
+    public function test_la_validation_du_gestionnaire_verifie_l_inscription_et_fait_entrer_le_dossier_dans_la_selection(): void
     {
         $campagne = $this->creerCampagne($this->filles);
         $stagiaire = $this->creerStagiaire($this->filles, ['statut_inscription' => StatutInscription::Declaree, 'inscription_verifiee_le' => null]);
-        $demandeInscription = $this->soumettre($stagiaire);
+        $this->soumettre($stagiaire); // inscription soumise : une vérification est en attente.
 
-        // Inscription soumise : le dépôt est admis, pour ne pas faire manquer l'échéance de la campagne.
         $dossiers = app(DossierStagiaire::class);
         $demande = $dossiers->ouvrirBrouillon($stagiaire->fresh());
         $dossiers->enregistrer($demande, ['adresse_complete' => '12 rue des Orangers']);
         $piece = $this->joindrePiece($demande, $campagne->typesPieces->firstWhere('obligatoire', true));
         $demande = $dossiers->soumettre($demande->fresh());
         $this->assertSame(StatutDemande::Recu, $demande->statut);
+        $this->assertFalse($stagiaire->fresh()->inscriptionVerifiee());
 
-        // Mais le gestionnaire ne peut pas le déclarer complet : pas de score, pas de classement.
+        // Revue unique : accepter les pièces puis déclarer complet vérifie l'inscription
+        // en formation ET fait entrer le dossier dans la sélection (score + classement).
         $instruction = app(Instruction::class);
         $instruction->controlerPiece($piece, StatutPiece::Acceptee, null, $this->gestionnaireFilles);
-        $this->assertRegle('inscription_non_verifiee', fn () => $instruction->declarerComplet($demande->fresh(), $this->gestionnaireFilles));
-        $this->assertSame(StatutDemande::Recu, $demande->fresh()->statut);
-        $this->assertNull($demande->fresh()->score);
-
-        app(ControleInscription::class)->decider($demandeInscription, StatutVerificationInscription::Verifiee, null, $this->chefDePole);
-
         $instruction->declarerComplet($demande->fresh(), $this->gestionnaireFilles);
+
+        $this->assertTrue($stagiaire->fresh()->inscriptionVerifiee());
         $this->assertSame(StatutDemande::Complet, $demande->fresh()->statut);
         $this->assertNotNull($demande->fresh()->score);
     }
