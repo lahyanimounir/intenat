@@ -8,6 +8,7 @@ use App\Domain\Shared\Documents;
 use App\Domain\Shared\Parametres;
 use App\Domain\Shared\RegleMetierException;
 use App\Enums\DeclencheurCritere;
+use App\Enums\NiveauFormation;
 use App\Enums\RoleCode;
 use App\Enums\StatutDemande;
 use App\Enums\StatutInscription;
@@ -182,18 +183,33 @@ class DossierStagiaire
     public function piecesAttendues(Demande $demande): Collection
     {
         $demande->loadMissing('campagne.typesPieces', 'campagne.criteres', 'pieces', 'stagiaire');
-        $declarees = $this->piecesLieesAuxDeclarations($demande);
 
-        return $demande->campagne->typesPieces->map(function (TypePiece $type) use ($demande, $declarees) {
-            $raison = $declarees[$type->id] ?? null;
+        return $this->piecesRequises($demande->campagne, [
+            'eloigne_ou_rural' => (bool) $demande->eloigne_ou_rural,
+            'demuni' => (bool) $demande->demuni,
+            'orphelin_ou_divorce' => (bool) $demande->orphelin_ou_divorce,
+            'besoins_specifiques' => (bool) $demande->besoins_specifiques,
+        ], $demande->stagiaire->niveau_formation)
+            ->map(fn (array $p) => $p + ['piece' => $demande->pieces->firstWhere('type_piece_id', $p['type']->id)]);
+    }
 
-            return [
-                'type' => $type,
-                'requise' => $type->obligatoire || $raison !== null,
-                'raison' => $type->obligatoire ? null : $raison,
-                'piece' => $demande->pieces->firstWhere('type_piece_id', $type->id),
-            ];
-        })->values();
+    /**
+     * Pièces à fournir calculées à partir d'une campagne et des déclarations de situation,
+     * sans dossier existant : sert au parcours d'inscription avant la création du compte.
+     *
+     * @param  array<string, bool>  $declarations  clés : eloigne_ou_rural, demuni, orphelin_ou_divorce, besoins_specifiques
+     * @return Collection<int, array{type: TypePiece, requise: bool, raison: string|null}>
+     */
+    public function piecesRequises(Campagne $campagne, array $declarations, ?NiveauFormation $niveau): Collection
+    {
+        $campagne->loadMissing('typesPieces', 'criteres');
+        $liees = $this->liensCriteres($campagne, $declarations, $niveau);
+
+        return $campagne->typesPieces->map(fn (TypePiece $type) => [
+            'type' => $type,
+            'requise' => $type->obligatoire || isset($liees[$type->id]),
+            'raison' => $type->obligatoire ? null : ($liees[$type->id] ?? null),
+        ])->values();
     }
 
     /** Soumission initiale ou nouvelle soumission après rectification. */
@@ -334,23 +350,24 @@ class DossierStagiaire
     }
 
     /**
+     * @param  array<string, bool>  $declarations
      * @return array<int, string> type_piece_id => libellé de la déclaration qui l'exige
      */
-    private function piecesLieesAuxDeclarations(Demande $demande): array
+    private function liensCriteres(Campagne $campagne, array $declarations, ?NiveauFormation $niveau): array
     {
         $liees = [];
 
-        foreach ($demande->campagne->criteres as $critere) {
+        foreach ($campagne->criteres as $critere) {
             if ($critere->type_piece_id === null) {
                 continue;
             }
 
             $declare = match ($critere->declencheur) {
-                DeclencheurCritere::EloigneOuRural => (bool) $demande->eloigne_ou_rural,
-                DeclencheurCritere::Demuni => (bool) $demande->demuni,
-                DeclencheurCritere::OrphelinOuDivorce => (bool) $demande->orphelin_ou_divorce,
-                DeclencheurCritere::BesoinsSpecifiques => (bool) $demande->besoins_specifiques,
-                DeclencheurCritere::NiveauFormation => $demande->stagiaire->niveau_formation?->value === $critere->valeur_attendue,
+                DeclencheurCritere::EloigneOuRural => (bool) ($declarations['eloigne_ou_rural'] ?? false),
+                DeclencheurCritere::Demuni => (bool) ($declarations['demuni'] ?? false),
+                DeclencheurCritere::OrphelinOuDivorce => (bool) ($declarations['orphelin_ou_divorce'] ?? false),
+                DeclencheurCritere::BesoinsSpecifiques => (bool) ($declarations['besoins_specifiques'] ?? false),
+                DeclencheurCritere::NiveauFormation => $niveau?->value === $critere->valeur_attendue,
             };
 
             if ($declare) {

@@ -35,13 +35,19 @@ class InscriptionStagiaire
 
     public function __construct(private readonly Journal $journal) {}
 
-    /** Crée le compte. L'adresse n'est pas une preuve d'inscription en formation, même une fois confirmée. */
-    public function creerCompte(#[SensitiveParameter] string $email, #[SensitiveParameter] string $motDePasse): Stagiaire
+    /**
+     * Crée le compte. L'adresse n'est pas une preuve d'inscription en formation, même une fois confirmée.
+     *
+     * `$adresseConfirmee` : marque l'adresse comme vérifiée sans envoyer de lien. C'est le cas du
+     * parcours d'inscription complet (compte créé au moment de la soumission), où aucune confirmation
+     * d'e-mail n'est exigée — seuls le format et l'unicité sont contrôlés.
+     */
+    public function creerCompte(#[SensitiveParameter] string $email, #[SensitiveParameter] string $motDePasse, bool $adresseConfirmee = false): Stagiaire
     {
         $email = mb_strtolower(trim($email));
 
         try {
-            $stagiaire = DB::transaction(function () use ($email, $motDePasse) {
+            $stagiaire = DB::transaction(function () use ($email, $motDePasse, $adresseConfirmee) {
                 $stagiaire = Stagiaire::create([
                     'email' => $email,
                     'mot_de_passe_hash' => $motDePasse,
@@ -49,6 +55,7 @@ class InscriptionStagiaire
                     'compte_active_le' => now(),
                     'inscrit_le' => now(),
                     'mot_de_passe_modifie_le' => now(),
+                    'email_verifie_le' => $adresseConfirmee ? now() : null,
                     'statut_inscription' => StatutInscription::NonDeclaree,
                     'source_identite' => 'declaration',
                 ]);
@@ -58,12 +65,12 @@ class InscriptionStagiaire
                 return $stagiaire;
             });
         } catch (UniqueConstraintViolationException) {
-            throw $this->adresseIndisponible();
+            throw $adresseConfirmee ? $this->adresseDejaUtilisee() : $this->adresseIndisponible();
         } catch (QueryException $erreur) {
             throw $this->operationEnCours($erreur);
         }
 
-        if (Stagiaire::verificationAdresseExigee()) {
+        if (! $adresseConfirmee && Stagiaire::verificationAdresseExigee()) {
             $stagiaire->envoyerVerificationAdresse();
         }
 
@@ -77,6 +84,12 @@ class InscriptionStagiaire
             'Cette adresse ne peut pas être utilisée pour créer un compte. Si vous en avez déjà un, connectez-vous ou réinitialisez votre mot de passe.',
             'adresse_indisponible',
         );
+    }
+
+    /** Message explicite demandé pour le parcours d'inscription : l'adresse est déjà rattachée à un compte. */
+    public function adresseDejaUtilisee(): RegleMetierException
+    {
+        return new RegleMetierException('Cette adresse e-mail est déjà utilisée.', 'adresse_deja_utilisee');
     }
 
     /** Le lien signé a déjà été contrôlé par la route : il ne reste qu'à dater la confirmation. */

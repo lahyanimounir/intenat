@@ -103,74 +103,97 @@ class InscriptionStagiaireTest extends TestCase
             ->set('campagneId', (string) $campagne->id);
     }
 
-    /* ---------------------------------------------------- Création du compte */
-
-    public function test_un_stagiaire_cree_son_compte_et_arrive_sur_son_inscription(): void
+    /**
+     * Déroule tout l'assistant anonyme (Compte → Identité → Formation → Situation → Pièces)
+     * jusqu'au point de soumission, sans appeler `soumettre`. Aucun compte n'est créé.
+     */
+    private function remplirWizard(string $email, Campagne $campagne): \Livewire\Features\SupportTesting\Testable
     {
-        Livewire::test(Inscription::class)
-            ->set('email', 'Salma.ElAmrani@Exemple.ma')
-            ->set('mot_de_passe', self::MOT_DE_PASSE)
-            ->set('mot_de_passe_confirmation', self::MOT_DE_PASSE)
-            ->call('creer')
-            ->assertHasNoErrors()
-            ->assertRedirect(route('stagiaire.inscription'));
+        $cin = $campagne->typesPieces->firstWhere('obligatoire', true);
+        $e = $this->etablissement->loadMissing('complexe.province');
+
+        return Livewire::test(Inscription::class)
+            ->set('compte.email', $email)
+            ->set('compte.mot_de_passe', self::MOT_DE_PASSE)
+            ->set('compte.mot_de_passe_confirmation', self::MOT_DE_PASSE)
+            ->call('continuerCompte')->assertHasNoErrors()
+            ->set('identite', $this->identite())
+            ->call('continuerIdentite')->assertHasNoErrors()
+            ->set('regionId', (string) $e->complexe->province->region_id)
+            ->set('provinceId', (string) $e->complexe->province_id)
+            ->set('complexeId', (string) $e->complexe_id)
+            ->set('formation', $this->formation())
+            ->set('campagneId', (string) $campagne->id)
+            ->call('continuerFormation')->assertHasNoErrors()
+            ->set('situation.adresse_complete', '12 rue des Orangers, Hay Hassani')
+            ->call('continuerSituation')->assertHasNoErrors()
+            ->set("fichiers.{$cin->id}", $this->fichier('cin.pdf'))
+            ->set('justificatif', $this->fichier('scolarite.pdf'));
+    }
+
+    /* ------------------------------------- Inscription anonyme (compte différé) */
+
+    public function test_la_candidature_se_remplit_sans_compte_puis_le_compte_est_cree_a_la_soumission(): void
+    {
+        Storage::fake('prive');
+        $campagne = $this->creerCampagne($this->filles);
+
+        $ecran = $this->remplirWizard('Salma.ElAmrani@Exemple.ma', $campagne);
+
+        // Aucune écriture tant que la candidature n'est pas soumise : pas de compte créé.
+        $this->assertSame(0, Stagiaire::count());
+        $this->assertFalse(Auth::guard('stagiaire')->check());
+
+        $ecran->call('soumettre')->assertHasNoErrors()->assertRedirect(route('stagiaire.inscription'));
 
         $stagiaire = Stagiaire::where('email', 'salma.elamrani@exemple.ma')->sole();
-
         $this->assertSame(EtatCompte::Actif, $stagiaire->etat_compte);
-        $this->assertSame(StatutInscription::NonDeclaree, $stagiaire->statut_inscription);
-        $this->assertNotNull($stagiaire->inscrit_le);
-        $this->assertNull($stagiaire->cef);
-        $this->assertNull($stagiaire->inscription_verifiee_le);
-        $this->assertStringStartsWith('$argon2id$', $stagiaire->mot_de_passe_hash);
+        $this->assertSame(StatutInscription::Soumise, $stagiaire->statut_inscription);
+        $this->assertTrue($stagiaire->adresseVerifiee());           // aucune confirmation d'e-mail exigée
+        $this->assertSame('2026000000123', $stagiaire->cef);
+        $this->assertSame(StatutDemande::Recu, $stagiaire->demandeCourante()->statut);
         $this->assertTrue(Auth::guard('stagiaire')->check());
-        $this->assertFalse(Auth::guard('web')->check());
         $this->assertTrue(JournalAudit::where('action', 'stagiaire.inscription')->where('stagiaire_id', $stagiaire->id)->exists());
     }
 
     public function test_le_mot_de_passe_doit_respecter_la_politique_et_etre_confirme(): void
     {
-        $composant = Livewire::test(Inscription::class)->set('email', 'nouveau@exemple.ma');
+        $composant = Livewire::test(Inscription::class)->set('compte.email', 'nouveau@exemple.ma');
 
-        $composant->set('mot_de_passe', 'court')->set('mot_de_passe_confirmation', 'court')->call('creer')->assertHasErrors('mot_de_passe');
-        $composant->set('mot_de_passe', self::MOT_DE_PASSE)->set('mot_de_passe_confirmation', 'Autre-Chose-2026')->call('creer')->assertHasErrors('mot_de_passe');
-        $composant->set('mot_de_passe', 'Nouveau-2026-secret')->set('mot_de_passe_confirmation', 'Nouveau-2026-secret')->call('creer')
-            ->assertHasErrors(['mot_de_passe' => 'Le mot de passe ne doit pas contenir votre adresse e-mail.']);
+        $composant->set('compte.mot_de_passe', 'court')->set('compte.mot_de_passe_confirmation', 'court')->call('continuerCompte')->assertHasErrors('compte.mot_de_passe');
+        $composant->set('compte.mot_de_passe', self::MOT_DE_PASSE)->set('compte.mot_de_passe_confirmation', 'Autre-Chose-2026')->call('continuerCompte')->assertHasErrors('compte.mot_de_passe');
+        $composant->set('compte.mot_de_passe', 'Nouveau-2026-secret')->set('compte.mot_de_passe_confirmation', 'Nouveau-2026-secret')->call('continuerCompte')
+            ->assertHasErrors(['compte.mot_de_passe' => 'Le mot de passe ne doit pas contenir votre adresse e-mail.']);
 
         $this->assertSame(0, Stagiaire::count());
     }
 
-    public function test_une_adresse_deja_prise_est_refusee_sans_rien_reveler_du_compte_existant(): void
+    public function test_une_adresse_deja_prise_affiche_un_message_clair(): void
     {
-        $existant = Stagiaire::factory()->create(['email' => 'deja@exemple.ma']);
+        Stagiaire::factory()->create(['email' => 'deja@exemple.ma']);
 
         Livewire::test(Inscription::class)
-            ->set('email', 'DEJA@exemple.ma')
-            ->set('mot_de_passe', self::MOT_DE_PASSE)
-            ->set('mot_de_passe_confirmation', self::MOT_DE_PASSE)
-            ->call('creer')
-            ->assertHasErrors('email')
-            ->assertDontSee($existant->nom)
+            ->set('compte.email', 'DEJA@exemple.ma')
+            ->set('compte.mot_de_passe', self::MOT_DE_PASSE)
+            ->set('compte.mot_de_passe_confirmation', self::MOT_DE_PASSE)
+            ->call('continuerCompte')
+            ->assertHasErrors(['compte.email' => 'Cette adresse e-mail est déjà utilisée.'])
             ->assertNoRedirect();
 
         $this->assertSame(1, Stagiaire::count());
         $this->assertFalse(Auth::guard('stagiaire')->check());
-        $this->assertTrue(password_verify('Motdepasse-Test-1', $existant->fresh()->mot_de_passe_hash));
     }
 
-    public function test_la_creation_de_compte_est_limitee_en_debit(): void
+    public function test_l_inscription_est_limitee_en_debit(): void
     {
         // Cinq essais par minute sur une même adresse et depuis un même poste ; le sixième est refusé.
-        Stagiaire::factory()->create(['email' => 'cible@exemple.ma']);
-
         foreach (range(1, 5) as $essai) {
-            Livewire::test(Inscription::class)->set('email', 'cible@exemple.ma')
-                ->set('mot_de_passe', self::MOT_DE_PASSE)->set('mot_de_passe_confirmation', self::MOT_DE_PASSE)->call('creer')
-                ->assertHasErrors('email');
+            Livewire::test(Inscription::class)->set('compte.email', 'cible@exemple.ma')
+                ->set('compte.mot_de_passe', self::MOT_DE_PASSE)->set('compte.mot_de_passe_confirmation', self::MOT_DE_PASSE)->call('continuerCompte');
         }
 
-        Livewire::test(Inscription::class)->set('email', 'cible@exemple.ma')
-            ->set('mot_de_passe', self::MOT_DE_PASSE)->set('mot_de_passe_confirmation', self::MOT_DE_PASSE)->call('creer')
+        Livewire::test(Inscription::class)->set('compte.email', 'cible@exemple.ma')
+            ->set('compte.mot_de_passe', self::MOT_DE_PASSE)->set('compte.mot_de_passe_confirmation', self::MOT_DE_PASSE)->call('continuerCompte')
             ->assertSee('Trop de tentatives');
     }
 
@@ -183,39 +206,6 @@ class InscriptionStagiaireTest extends TestCase
 
         $this->assertFalse($stagiaire->doitVerifierSonAdresse());
         $this->actingAs($stagiaire, 'stagiaire')->get(route('stagiaire.inscription'))->assertOk();
-    }
-
-    public function test_avec_un_serveur_d_envoi_le_stagiaire_confirme_son_adresse_par_un_lien_signe(): void
-    {
-        config(['mail.default' => 'smtp', 'internat.inscription.verifier_adresse' => null]);
-        Notification::fake();
-
-        Livewire::test(Inscription::class)
-            ->set('email', 'a.confirmer@exemple.ma')
-            ->set('mot_de_passe', self::MOT_DE_PASSE)
-            ->set('mot_de_passe_confirmation', self::MOT_DE_PASSE)
-            ->call('creer')
-            ->assertHasNoErrors();
-
-        $stagiaire = Stagiaire::where('email', 'a.confirmer@exemple.ma')->sole();
-        Notification::assertSentTo($stagiaire, VerificationAdresse::class);
-
-        // Tant que l'adresse n'est pas confirmée, tout l'espace ramène à l'écran qui le demande.
-        $this->actingAs($stagiaire, 'stagiaire')->get(route('stagiaire.inscription'))->assertRedirect(route('stagiaire.adresse'));
-        $this->get(route('stagiaire.adresse'))->assertOk()->assertSee('Confirmez votre adresse e-mail');
-
-        // Un lien falsifié, ou établi pour une autre adresse, est refusé.
-        $lien = VerificationAdresse::lien($stagiaire);
-        $this->get($lien.'x')->assertForbidden();
-        $this->get(str_replace(sha1($stagiaire->email), sha1('autre@exemple.ma'), $lien))->assertForbidden();
-        $this->assertNull($stagiaire->fresh()->email_verifie_le);
-
-        $this->get($lien)->assertRedirect(route('stagiaire.inscription'));
-        $this->assertNotNull($stagiaire->fresh()->email_verifie_le);
-        $this->actingAs($stagiaire->fresh(), 'stagiaire')->get(route('stagiaire.inscription'))->assertOk();
-
-        // Une adresse confirmée ne dit rien de l'inscription en formation.
-        $this->assertSame(StatutInscription::NonDeclaree, $stagiaire->fresh()->statut_inscription);
     }
 
     public function test_le_lien_de_confirmation_peut_etre_renvoye(): void
