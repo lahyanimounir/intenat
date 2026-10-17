@@ -7,8 +7,13 @@ use App\Domain\Identity\InscriptionStagiaire;
 use App\Enums\AnneeFormation;
 use App\Enums\Genre;
 use App\Enums\NiveauFormation;
+use App\Enums\StatutCampagne;
 use App\Livewire\PageStagiaire;
+use App\Models\Campagne;
+use App\Models\Complexe;
 use App\Models\Etablissement;
+use App\Models\Province;
+use App\Models\Region;
 use App\Models\Stagiaire;
 use App\Support\AnneeScolaire;
 use Illuminate\Validation\Rule;
@@ -46,8 +51,23 @@ class MonInscription extends PageStagiaire
         'etablissement_id' => '', 'nom_filiere' => '', 'niveau_formation' => '', 'annee_formation' => '', 'annee_scolaire' => '',
     ];
 
-    /** Recherche dans le référentiel des établissements (nom ou code EFP). */
-    public string $rechercheEfp = '';
+    /**
+     * Descente hiérarchique obligatoire avant le choix de l'établissement :
+     * Région → Province → Complexe → Établissement. On ne choisit jamais un
+     * établissement sans passer par les niveaux supérieurs.
+     */
+    public string $regionId = '';
+
+    public string $provinceId = '';
+
+    public string $complexeId = '';
+
+    /**
+     * Campagne ouverte retenue : aucune inscription n'est possible sans campagne
+     * ouverte valide, et le formulaire de formation reste verrouillé tant qu'elle
+     * n'est pas choisie.
+     */
+    public string $campagneId = '';
 
     /** @var TemporaryUploadedFile|null */
     public $justificatif = null;
@@ -70,9 +90,47 @@ class MonInscription extends PageStagiaire
             $this->formation['annee_scolaire'] = AnneeScolaire::courante();
         }
 
+        // Rétablir la cascade et la campagne à partir de l'établissement déjà déclaré.
+        if ($this->formation['etablissement_id'] !== '' && $this->formation['etablissement_id'] !== null) {
+            $etablissement = Etablissement::with('complexe.province')->find((int) $this->formation['etablissement_id']);
+
+            if ($etablissement !== null) {
+                $this->complexeId = (string) $etablissement->complexe_id;
+                $this->provinceId = (string) ($etablissement->complexe?->province_id ?? '');
+                $this->regionId = (string) ($etablissement->complexe?->province?->region_id ?? '');
+                $this->campagneId = (string) ($this->campagnesOuvertes($stagiaire)->keys()->first() ?? '');
+            }
+        }
+
         if (! in_array($this->etape, self::ETAPES, true)) {
             $this->etape = $this->etapeAttendue($stagiaire);
         }
+    }
+
+    /**
+     * Campagnes ouvertes de l'établissement choisi, limitées à l'internat du
+     * genre déclaré par le candidat. En pratique une au plus (un internat par
+     * genre, une campagne ouverte par internat).
+     *
+     * @return \Illuminate\Support\Collection<int, string>
+     */
+    private function campagnesOuvertes(Stagiaire $stagiaire): \Illuminate\Support\Collection
+    {
+        $etablissementId = (int) ($this->formation['etablissement_id'] ?: 0);
+        $genre = $stagiaire->genre;
+
+        if ($etablissementId === 0 || $genre === null) {
+            return collect();
+        }
+
+        return Campagne::query()
+            ->where('statut', StatutCampagne::Ouverte->value)
+            ->whereDate('date_ouverture', '<=', now())
+            ->whereDate('date_cloture', '>=', now())
+            ->whereHas('internat', fn ($q) => $q->where('etablissement_id', $etablissementId)->where('genre', $genre->value))
+            ->orderByDesc('date_ouverture')
+            ->get()
+            ->mapWithKeys(fn (Campagne $c) => [$c->id => 'Campagne '.$c->annee.' — clôture le '.$c->date_cloture->format('d/m/Y')]);
     }
 
     /** Première étape qui reste à faire. */
@@ -144,23 +202,54 @@ class MonInscription extends PageStagiaire
 
     public function enregistrerFormation(InscriptionStagiaire $inscription): void
     {
-        $valides = $this->validate([
-            'formation.etablissement_id' => ['required', 'integer', Rule::exists('etablissement', 'id')],
+        $stagiaire = $this->stagiaire();
+
+        // La campagne doit être une campagne ouverte de l'internat correspondant à
+        // l'établissement NOUVELLEMENT choisi et au genre du candidat — jamais celui
+        // d'un établissement précédemment enregistré.
+        $internatVise = $stagiaire->genre === null ? null : \App\Models\Internat::query()
+            ->where('etablissement_id', (int) ($this->formation['etablissement_id'] ?: 0))
+            ->where('genre', $stagiaire->genre->value)
+            ->value('id');
+
+        // L'établissement doit appartenir au complexe choisi (lui-même issu de la
+        // province et de la région sélectionnées) : la hiérarchie est respectée de bout en bout.
+        $donnees = $this->validate([
+            'regionId' => ['required', 'integer', Rule::exists('region', 'id')],
+            'provinceId' => ['required', 'integer', Rule::exists('province', 'id')->where('region_id', $this->regionId ?: 0)],
+            'complexeId' => ['required', 'integer', Rule::exists('complexe', 'id')->where('province_id', $this->provinceId ?: 0)],
+            'formation.etablissement_id' => ['required', 'integer', Rule::exists('etablissement', 'id')->where('complexe_id', $this->complexeId ?: 0)],
+            'campagneId' => [
+                'required', 'integer',
+                Rule::exists('campagne', 'id')
+                    ->where('statut', StatutCampagne::Ouverte->value)
+                    ->where('internat_id', $internatVise ?? 0),
+            ],
             'formation.nom_filiere' => ['required', 'string', 'min:3', 'max:190'],
             'formation.niveau_formation' => ['required', Rule::enum(NiveauFormation::class)],
             'formation.annee_formation' => ['required', Rule::enum(AnneeFormation::class)],
             'formation.annee_scolaire' => ['required', Rule::in(array_keys(AnneeScolaire::options()))],
         ], [
+            'regionId.required' => 'Choisissez votre région.',
+            'provinceId.required' => 'Choisissez votre province.',
+            'provinceId.exists' => 'La province doit appartenir à la région choisie.',
+            'complexeId.required' => 'Choisissez votre complexe / CMC.',
+            'complexeId.exists' => 'Le complexe doit appartenir à la province choisie.',
             'formation.etablissement_id.required' => 'Choisissez votre établissement dans la liste.',
-            'formation.etablissement_id.exists' => 'Choisissez votre établissement dans la liste.',
+            'formation.etablissement_id.exists' => 'L\'établissement doit appartenir au complexe choisi.',
+            'campagneId.required' => 'Sélectionnez une campagne ouverte pour poursuivre votre inscription.',
+            'campagneId.exists' => 'Cette campagne n\'est plus ouverte pour votre internat. Choisissez une campagne ouverte.',
         ], [
-            'formation.etablissement_id' => 'établissement', 'formation.nom_filiere' => 'filière', 'formation.niveau_formation' => 'niveau de formation',
+            'regionId' => 'région', 'provinceId' => 'province', 'complexeId' => 'complexe',
+            'formation.etablissement_id' => 'établissement', 'campagneId' => 'campagne',
+            'formation.nom_filiere' => 'filière', 'formation.niveau_formation' => 'niveau de formation',
             'formation.annee_formation' => 'année de formation', 'formation.annee_scolaire' => 'année scolaire',
-        ])['formation'];
+        ]);
 
+        $valides = $donnees['formation'];
         $valides['nom_filiere'] = trim((string) $valides['nom_filiere']);
 
-        if ($this->executer(fn () => $inscription->declarerFormation($this->stagiaire(), $valides), 'Votre formation est enregistrée.')) {
+        if ($this->executer(fn () => $inscription->declarerFormation($stagiaire, $valides), 'Votre formation est enregistrée.')) {
             $this->etape = 'verification';
         }
     }
@@ -184,10 +273,37 @@ class MonInscription extends PageStagiaire
         $this->executer(fn () => $controle->retirer($this->stagiaire()), 'Votre demande est retirée : vous pouvez corriger votre déclaration.');
     }
 
-    public function updatedRechercheEfp(): void
+    /** Changer de région réinitialise toute la descente et la campagne. */
+    public function updatedRegionId(): void
     {
-        // Une nouvelle recherche ne garde pas un choix qui n'est plus affiché.
-        $this->resetValidation('formation.etablissement_id');
+        $this->provinceId = '';
+        $this->complexeId = '';
+        $this->formation['etablissement_id'] = '';
+        $this->campagneId = '';
+        $this->resetValidation(['formation.etablissement_id', 'campagneId']);
+    }
+
+    public function updatedProvinceId(): void
+    {
+        $this->complexeId = '';
+        $this->formation['etablissement_id'] = '';
+        $this->campagneId = '';
+        $this->resetValidation(['formation.etablissement_id', 'campagneId']);
+    }
+
+    public function updatedComplexeId(): void
+    {
+        $this->formation['etablissement_id'] = '';
+        $this->campagneId = '';
+        $this->resetValidation(['formation.etablissement_id', 'campagneId']);
+    }
+
+    /** Un nouvel établissement remet à zéro la campagne ; s'il n'y en a qu'une, on la présélectionne. */
+    public function updatedFormationEtablissementId(): void
+    {
+        $ouvertes = $this->campagnesOuvertes($this->stagiaire());
+        $this->campagneId = $ouvertes->count() === 1 ? (string) $ouvertes->keys()->first() : '';
+        $this->resetValidation(['formation.etablissement_id', 'campagneId']);
     }
 
     public function render()
@@ -195,22 +311,16 @@ class MonInscription extends PageStagiaire
         $stagiaire = $this->stagiaire()->load('etablissement');
         $statut = $stagiaire->statut_inscription;
 
-        $terme = trim($this->rechercheEfp);
-        $etablissements = Etablissement::query()
-            ->when($terme !== '', fn ($q) => $q->where(fn ($s) => $s
-                ->where('nom_efp', 'like', '%'.addcslashes($terme, '%_\\').'%')
-                ->orWhere('code_efp', 'like', addcslashes($terme, '%_\\').'%')))
-            ->when($terme === '' && $this->formation['etablissement_id'] === '', fn ($q) => $q->limit(50))
-            ->orderBy('nom_efp')
-            ->limit(80)
-            ->get(['id', 'nom_efp', 'code_efp']);
+        // Descente hiérarchique : chaque niveau n'est peuplé qu'une fois le parent choisi.
+        $provinces = $this->regionId !== '' ? Province::where('region_id', $this->regionId)->orderBy('nom')->pluck('nom', 'id') : collect();
+        $complexes = $this->provinceId !== '' ? Complexe::where('province_id', $this->provinceId)->orderBy('nom')->pluck('nom', 'id') : collect();
+        $etablissements = $this->complexeId !== ''
+            ? Etablissement::where('complexe_id', $this->complexeId)->orderBy('nom_efp')->get(['id', 'nom_efp', 'code_efp'])
+                ->mapWithKeys(fn (Etablissement $e) => [$e->id => $e->nom_efp.' — '.$e->code_efp])
+            : collect();
 
-        // L'établissement déjà choisi reste proposé même s'il ne correspond plus à la recherche.
-        $choisi = $this->formation['etablissement_id'] !== '' ? Etablissement::find((int) $this->formation['etablissement_id'], ['id', 'nom_efp', 'code_efp']) : null;
-
-        if ($choisi !== null && ! $etablissements->contains('id', $choisi->id)) {
-            $etablissements->prepend($choisi);
-        }
+        $campagnes = $this->campagnesOuvertes($stagiaire);
+        $efpChoisi = $this->formation['etablissement_id'] !== '' ? Etablissement::find((int) $this->formation['etablissement_id'], ['id', 'nom_efp', 'code_efp']) : null;
 
         return view('livewire.stagiaire.mon-inscription', [
             'stagiaire' => $stagiaire,
@@ -218,8 +328,13 @@ class MonInscription extends PageStagiaire
             'modifiable' => $statut->modifiable(),
             'etapes' => ['Identité', 'Formation', 'Vérification'],
             'indice' => (int) array_search($this->etape, self::ETAPES, true),
+            'regions' => Region::orderBy('nom')->pluck('nom', 'id'),
+            'provinces' => $provinces,
+            'complexes' => $complexes,
             'etablissements' => $etablissements,
-            'efpChoisi' => $choisi,
+            'campagnes' => $campagnes,
+            'campagneRequise' => $this->formation['etablissement_id'] !== '',
+            'efpChoisi' => $efpChoisi,
             'historique' => $stagiaire->verificationsInscription()->with('agent:id,nom,prenom', 'etablissement:id,nom_efp')->latest('id')->limit(10)->get(),
             'enAttente' => $stagiaire->verificationsInscription()->enAttente()->latest('id')->first(),
             'justificatifObligatoire' => app(ControleInscription::class)->justificatifObligatoire(),

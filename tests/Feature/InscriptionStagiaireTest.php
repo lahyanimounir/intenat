@@ -11,6 +11,7 @@ use App\Livewire\Auth\Connexion;
 use App\Livewire\Auth\Inscription;
 use App\Livewire\Stagiaire\ConfirmationAdresse;
 use App\Livewire\Stagiaire\MonInscription;
+use App\Models\Campagne;
 use App\Models\JournalAudit;
 use App\Models\Stagiaire;
 use App\Notifications\VerificationAdresse;
@@ -55,6 +56,22 @@ class InscriptionStagiaireTest extends TestCase
             'niveau_formation' => NiveauFormation::TechnicienSpecialise->value, 'annee_formation' => AnneeFormation::Premiere->value,
             'annee_scolaire' => AnneeScolaire::courante(),
         ];
+    }
+
+    /**
+     * Déroule la cascade Région → Province → Complexe → Établissement puis choisit
+     * la campagne, dans l'ordre où les sélecteurs dépendent les uns des autres.
+     */
+    private function declarerFormation(\Livewire\Features\SupportTesting\Testable $ecran, Campagne $campagne, array $formation = []): \Livewire\Features\SupportTesting\Testable
+    {
+        $e = $this->etablissement->loadMissing('complexe.province');
+
+        return $ecran
+            ->set('regionId', (string) $e->complexe->province->region_id)
+            ->set('provinceId', (string) $e->complexe->province_id)
+            ->set('complexeId', (string) $e->complexe_id)
+            ->set('formation', $this->formation($formation))
+            ->set('campagneId', (string) $campagne->id);
     }
 
     /* ---------------------------------------------------- Création du compte */
@@ -204,7 +221,9 @@ class InscriptionStagiaireTest extends TestCase
         // Une identité seule ne suffit pas : la formation reste à déclarer.
         $this->assertSame(StatutInscription::NonDeclaree, $stagiaire->statut_inscription);
 
-        $ecran->set('formation', $this->formation())->call('enregistrerFormation')->assertHasNoErrors()->assertSet('etape', 'verification');
+        // Une campagne doit être ouverte pour l'internat (filles) de l'établissement visé.
+        $campagne = $this->creerCampagne($this->filles);
+        $this->declarerFormation($ecran, $campagne)->call('enregistrerFormation')->assertHasNoErrors()->assertSet('etape', 'verification');
 
         $stagiaire->refresh();
         $this->assertSame($this->etablissement->id, $stagiaire->etablissement_id);
@@ -264,6 +283,36 @@ class InscriptionStagiaireTest extends TestCase
             ->assertHasErrors(['formation.annee_scolaire', 'formation.niveau_formation']);
 
         $this->assertNull($stagiaire->fresh()->etablissement_id);
+    }
+
+    public function test_la_formation_exige_une_campagne_ouverte_et_la_hierarchie_complete(): void
+    {
+        $stagiaire = Stagiaire::factory()->nouveau()->create($this->identite());
+        $ecran = Livewire::actingAs($stagiaire, 'stagiaire')->test(MonInscription::class);
+        $e = $this->etablissement->loadMissing('complexe.province');
+
+        // Hiérarchie complète mais aucune campagne ouverte : l'inscription est bloquée.
+        $ecran->set('regionId', (string) $e->complexe->province->region_id)
+            ->set('provinceId', (string) $e->complexe->province_id)
+            ->set('complexeId', (string) $e->complexe_id)
+            ->set('formation', $this->formation())
+            ->call('enregistrerFormation')
+            ->assertHasErrors('campagneId');
+        $this->assertNull($stagiaire->fresh()->etablissement_id);
+
+        // Une campagne ouverte d'un AUTRE internat (garçons) ne vaut pas pour une candidate.
+        $autreCampagne = $this->creerCampagne($this->garcons);
+        $this->declarerFormation($ecran, $autreCampagne)
+            ->call('enregistrerFormation')
+            ->assertHasErrors('campagneId');
+
+        // La bonne campagne ouverte (internat filles) débloque la déclaration.
+        $campagne = $this->creerCampagne($this->filles);
+        $this->declarerFormation($ecran, $campagne)
+            ->call('enregistrerFormation')
+            ->assertHasNoErrors()
+            ->assertSet('etape', 'verification');
+        $this->assertSame($this->etablissement->id, $stagiaire->fresh()->etablissement_id);
     }
 
     public function test_un_profil_incomplet_n_ouvre_que_l_ecran_d_inscription(): void

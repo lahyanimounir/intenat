@@ -92,7 +92,10 @@
                 <x-carte.corps class="space-y-5">
                     <div>
                         <h2 class="text-md font-semibold text-encre">Ma formation</h2>
-                        <p class="mt-0.5 text-sm text-discret">L’établissement se choisit dans la liste tenue par l’administration : il ne peut pas être saisi librement.</p>
+                        <p class="mt-0.5 text-sm text-discret">
+                            Choisissez votre établissement en descendant la hiérarchie — région, province, complexe, établissement —
+                            puis sélectionnez une campagne ouverte. Le reste du formulaire se débloque ensuite.
+                        </p>
                     </div>
 
                     @if ($verrouillee)
@@ -103,33 +106,60 @@
                     @endif
 
                     <fieldset class="grid gap-4 sm:grid-cols-2" @disabled($verrouillee)>
-                        <div class="space-y-2 sm:col-span-2">
-                            <x-saisie libelle="Rechercher mon établissement" wire:model.live.debounce.300ms="rechercheEfp" type="search" placeholder="Nom de l’établissement ou code EFP" autocomplete="off" />
-                            <x-liste libelle="Établissement (EFP)" wire:model.live="formation.etablissement_id" vide="Choisir dans la liste…" requis
-                                :aide="$etablissements->count() >= 80 ? 'Liste limitée aux 80 premiers résultats : précisez la recherche.' : null">
-                                @foreach ($etablissements as $etablissement)
-                                    <option value="{{ $etablissement->id }}">{{ $etablissement->nom_efp }} — {{ $etablissement->code_efp }}</option>
-                                @endforeach
-                            </x-liste>
-                        </div>
+                        {{-- Descente hiérarchique obligatoire : Région → Province → Complexe → Établissement --}}
+                        <x-liste libelle="Région" wire:model.live="regionId" :options="$regions" vide="Choisir une région…" requis />
+                        <x-liste libelle="Province" wire:model.live="provinceId" :options="$provinces" vide="Choisir une province…" requis
+                            :disabled="$regionId === ''" wire:key="provinces-{{ $regionId }}"
+                            :aide="$regionId === '' ? 'Choisissez d’abord une région.' : null" />
+                        <x-liste libelle="Complexe / CMC" wire:model.live="complexeId" :options="$complexes" vide="Choisir un complexe…" requis
+                            :disabled="$provinceId === ''" wire:key="complexes-{{ $provinceId }}"
+                            :aide="$provinceId === '' ? 'Choisissez d’abord une province.' : null" />
+                        <x-liste libelle="Établissement (EFP)" wire:model.live="formation.etablissement_id" :options="$etablissements" vide="Choisir un établissement…" requis
+                            :disabled="$complexeId === ''" wire:key="etablissements-{{ $complexeId }}"
+                            :aide="$complexeId === '' ? 'Choisissez d’abord un complexe.' : null" />
 
-                        <x-champ libelle="Code EFP" pour="code-efp" aide="Renseigné d’après l’établissement choisi.">
-                            <input id="code-efp" type="text" readonly value="{{ $efpChoisi?->code_efp }}" class="champ h-9 bg-neutre-fond text-encre-2" />
-                        </x-champ>
-                        <x-liste libelle="Année scolaire" wire:model="formation.annee_scolaire" :options="$anneesScolaires" requis />
-
-                        <x-saisie libelle="Filière" wire:model="formation.nom_filiere" requis class="sm:col-span-2"
-                            aide="Intitulé exact de votre filière. Cette information est déclarée : elle sera contrôlée lors de la vérification." />
-                        <x-liste libelle="Niveau de formation" wire:model="formation.niveau_formation" :options="NiveauFormation::options()" vide="Choisir…" requis />
-                        <x-liste libelle="Année de formation" wire:model="formation.annee_formation" :options="AnneeFormation::options()" vide="Choisir…" requis />
+                        {{-- Verrou de campagne : aucune inscription sans campagne ouverte sélectionnée --}}
+                        @if ($campagneRequise)
+                            @if ($campagnes->isEmpty())
+                                <div class="sm:col-span-2">
+                                    <x-alerte ton="alerte" titre="Aucune campagne ouverte">
+                                        Aucune campagne n’est actuellement ouverte pour l’internat
+                                        {{ $stagiaire->genre?->libelle() ? mb_strtolower($stagiaire->genre->libelle()) : '' }} de cet établissement.
+                                        Vous ne pouvez pas poursuivre votre inscription tant qu’une campagne n’est pas ouverte.
+                                    </x-alerte>
+                                </div>
+                            @else
+                                <div class="sm:col-span-2">
+                                    <x-liste libelle="Campagne ouverte" wire:model.live="campagneId" :options="$campagnes" vide="Sélectionner la campagne…" requis
+                                        wire:key="campagnes-{{ $formation['etablissement_id'] }}"
+                                        aide="Sélectionnez la campagne à laquelle vous vous inscrivez pour débloquer la suite du formulaire." />
+                                </div>
+                            @endif
+                        @endif
                     </fieldset>
+
+                    {{-- La déclaration de formation reste masquée tant qu'une campagne ouverte n'est pas retenue. --}}
+                    @if ($campagneId !== '' && $campagnes->isNotEmpty())
+                        <fieldset class="grid gap-4 sm:grid-cols-2" @disabled($verrouillee)>
+                            <x-champ libelle="Code EFP" pour="code-efp" aide="Renseigné d’après l’établissement choisi.">
+                                <input id="code-efp" type="text" readonly value="{{ $efpChoisi?->code_efp }}" class="champ h-9 bg-neutre-fond text-encre-2" />
+                            </x-champ>
+                            <x-liste libelle="Année scolaire" wire:model="formation.annee_scolaire" :options="$anneesScolaires" requis />
+
+                            <x-saisie libelle="Filière" wire:model="formation.nom_filiere" requis class="sm:col-span-2"
+                                aide="Intitulé exact de votre filière. Cette information est déclarée : elle sera contrôlée lors de la vérification." />
+                            <x-liste libelle="Niveau de formation" wire:model="formation.niveau_formation" :options="NiveauFormation::options()" vide="Choisir…" requis />
+                            <x-liste libelle="Année de formation" wire:model="formation.annee_formation" :options="AnneeFormation::options()" vide="Choisir…" requis />
+                        </fieldset>
+                    @endif
                 </x-carte.corps>
                 <footer class="flex justify-between gap-2 border-t border-bord-doux bg-surface-2 px-5 py-3">
                     <x-bouton wire:click="allerA(0)" icone="arrow-left">Identité</x-bouton>
                     @if ($verrouillee)
                         <x-bouton variante="primaire" wire:click="allerA(2)" icone-fin="arrow-right">Vérification</x-bouton>
                     @else
-                        <x-bouton type="submit" variante="primaire" cible="enregistrerFormation" icone-fin="arrow-right">Enregistrer et continuer</x-bouton>
+                        <x-bouton type="submit" variante="primaire" cible="enregistrerFormation" icone-fin="arrow-right"
+                            :disabled="$campagneId === '' || $campagnes->isEmpty()">Enregistrer et continuer</x-bouton>
                     @endif
                 </footer>
             </form>
