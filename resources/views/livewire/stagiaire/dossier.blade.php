@@ -9,7 +9,7 @@
 @endphp
 <div>
     <x-page.entete titre="Mon dossier"
-        :description="$demande ? ($demande->campagne->internat->nom.' — campagne '.$demande->campagne->annee) : 'Votre demande de place à la Maison des Stagiaires.'">
+        :description="$demande ? ($demande->campagne->internat->nom.' — campagne '.$demande->campagne->annee.' · suivi de votre candidature et de votre admission') : 'Votre candidature se dépose désormais depuis « Mon inscription ».'">
         @if ($demande)<x-slot:marque><x-statut :etat="$demande->statut" /></x-slot:marque> @endif
     </x-page.entete>
 
