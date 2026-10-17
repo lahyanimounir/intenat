@@ -4,7 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Etablissement;
 use App\Models\JournalAudit;
-use App\Models\Region;
+use App\Models\Complexe;
 use App\Models\Stagiaire;
 use App\Models\VerificationIdentite;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -45,9 +45,9 @@ class ConnecteurMyWayTest extends TestCase
     {
         parent::setUp();
 
-        $region = Region::factory()->create();
-        Etablissement::factory()->create(['region_id' => $region->id, 'code_efp' => 'DL10', 'nom_efp' => 'ISTA Démo Littoral']);
-        Etablissement::factory()->create(['region_id' => $region->id, 'code_efp' => 'DJ20', 'nom_efp' => 'ISTA Démo Les Jardins']);
+        $complexe = Complexe::factory()->create();
+        Etablissement::factory()->create(['complexe_id' => $complexe->id, 'code_efp' => 'DL10', 'nom_efp' => 'ISTA Démo Littoral']);
+        Etablissement::factory()->create(['complexe_id' => $complexe->id, 'code_efp' => 'DJ20', 'nom_efp' => 'ISTA Démo Les Jardins']);
 
         config([
             'internat.myway.fournisseur' => 'connecteur',

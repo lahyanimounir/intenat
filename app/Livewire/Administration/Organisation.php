@@ -8,31 +8,40 @@ use App\Livewire\PagePersonnel;
 use App\Models\Complexe;
 use App\Models\Etablissement;
 use App\Models\Internat;
+use App\Models\Province;
 use App\Models\Region;
 use Illuminate\Database\Eloquent\Model;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 
 /**
- * Organisation : direction centrale → directions régionales → complexes / CMC
- * → établissements (EFP) → internats. La liste des établissements est le
- * référentiel dans lequel chaque stagiaire choisit le sien à l'inscription.
+ * Organisation : direction centrale → directions régionales → provinces →
+ * complexes / CMC → établissements (EFP) → internats. La hiérarchie est stricte
+ * et descendante ; la liste des établissements est le référentiel dans lequel
+ * chaque stagiaire choisit le sien à l'inscription.
  */
 #[Title('Organisation')]
 class Organisation extends PagePersonnel
 {
     private const PERMISSION = 'organisation.gerer';
 
-    private const TITRES = ['regions' => 'une région', 'complexes' => 'un complexe / CMC', 'etablissements' => 'un établissement', 'internats' => 'un internat'];
+    private const TITRES = [
+        'regions' => 'une région',
+        'provinces' => 'une province',
+        'complexes' => 'un complexe / CMC',
+        'etablissements' => 'un établissement',
+        'internats' => 'un internat',
+    ];
 
     private const CHAMPS = [
         'regions' => ['code', 'nom'],
-        'complexes' => ['region_id', 'code', 'nom'],
-        'etablissements' => ['region_id', 'complexe_id', 'code_efp', 'nom_efp'],
+        'provinces' => ['region_id', 'code', 'nom'],
+        'complexes' => ['province_id', 'code', 'nom'],
+        'etablissements' => ['complexe_id', 'code_efp', 'nom_efp'],
         'internats' => ['etablissement_id', 'genre', 'nom'],
     ];
 
-    /** Niveau de l'élément saisi : régions, complexes, établissements ou internats. */
+    /** Niveau de l'élément saisi : régions, provinces, complexes, établissements ou internats. */
     #[Locked]
     public string $niveau = '';
 
@@ -64,9 +73,11 @@ class Organisation extends PagePersonnel
         $this->ligne = null;
         $this->saisie = array_fill_keys(self::CHAMPS[$niveau], '');
 
-        // Valeurs proposées : la première région, le premier établissement, les filles.
+        // Valeurs proposées : premier parent de la hiérarchie, les filles pour l'internat.
         match ($niveau) {
-            'complexes', 'etablissements' => $this->saisie['region_id'] = (string) (Region::orderBy('nom')->value('id') ?? ''),
+            'provinces' => $this->saisie['region_id'] = (string) (Region::orderBy('nom')->value('id') ?? ''),
+            'complexes' => $this->saisie['province_id'] = (string) (Province::orderBy('nom')->value('id') ?? ''),
+            'etablissements' => $this->saisie['complexe_id'] = (string) (Complexe::orderBy('nom')->value('id') ?? ''),
             'internats' => [$this->saisie['etablissement_id'], $this->saisie['genre']] = [(string) (Etablissement::orderBy('nom_efp')->value('id') ?? ''), Genre::Fille->value],
             default => null,
         };
@@ -86,14 +97,6 @@ class Organisation extends PagePersonnel
         $this->ouvrirDialogue('element');
     }
 
-    /** Changer de région vide le complexe choisi : il doit appartenir à la région. */
-    public function updatedSaisieRegionId(): void
-    {
-        if (array_key_exists('complexe_id', $this->saisie)) {
-            $this->saisie['complexe_id'] = '';
-        }
-    }
-
     public function enregistrer(StructureInstitutionnelle $structure): void
     {
         $this->exiger(self::PERMISSION);
@@ -106,7 +109,8 @@ class Organisation extends PagePersonnel
 
         $this->saisie = array_map(fn ($valeur) => (string) $valeur, $saisie);
         $valides = validator(['saisie' => $saisie], $regles, $messages, [
-            'saisie.region_id' => 'région', 'saisie.complexe_id' => 'complexe', 'saisie.etablissement_id' => 'établissement', 'saisie.genre' => 'genre',
+            'saisie.region_id' => 'région', 'saisie.province_id' => 'province', 'saisie.complexe_id' => 'complexe',
+            'saisie.etablissement_id' => 'établissement', 'saisie.genre' => 'genre',
             'saisie.code' => 'code', 'saisie.nom' => 'nom', 'saisie.code_efp' => 'code EFP', 'saisie.nom_efp' => 'nom EFP',
         ])->validate()['saisie'];
 
@@ -139,19 +143,23 @@ class Organisation extends PagePersonnel
         $this->exiger(self::PERMISSION);
 
         $regions = Region::orderBy('nom')->get();
+        $provinces = Province::orderBy('nom')->get();
         $complexes = Complexe::orderBy('nom')->get();
         $etablissements = Etablissement::orderBy('nom_efp')->get();
 
         return view('livewire.administration.organisation', [
             'regions' => $regions,
-            'complexes' => $complexes->groupBy('region_id'),
+            'provinces' => $provinces->groupBy('region_id'),
+            'nomsProvinces' => $provinces->pluck('nom', 'id'),
+            'complexes' => $complexes->groupBy('province_id'),
             'nomsComplexes' => $complexes->pluck('nom', 'id'),
-            'etablissements' => $etablissements->groupBy('region_id'),
+            'etablissements' => $etablissements->groupBy('complexe_id'),
             'internats' => Internat::orderBy('nom')->get()->groupBy('etablissement_id'),
             'titre' => ($this->ligne ? 'Modifier ' : 'Ajouter ').(self::TITRES[$this->niveau] ?? ''),
-            // Listes de choix de la fenêtre.
+            // Listes de choix de la fenêtre (chaque niveau choisit son parent direct).
             'choixRegions' => $regions->pluck('nom', 'id'),
-            'choixComplexes' => $complexes->where('region_id', (int) ($this->saisie['region_id'] ?? 0))->pluck('nom', 'id'),
+            'choixProvinces' => $provinces->pluck('nom', 'id'),
+            'choixComplexes' => $complexes->pluck('nom', 'id'),
             'choixEtablissements' => $etablissements->pluck('nom_efp', 'id'),
         ]);
     }

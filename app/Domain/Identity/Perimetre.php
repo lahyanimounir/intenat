@@ -138,7 +138,9 @@ class Perimetre
         return match ($utilisateur->roleCode()) {
             RoleCode::Admin, RoleCode::DirCentrale => null,
             RoleCode::DirRegionale => $this->internatsDesEtablissements(
-                $utilisateur->region_id ? Etablissement::where('region_id', $utilisateur->region_id) : null
+                $utilisateur->region_id
+                    ? Etablissement::whereHas('complexe.province', fn ($q) => $q->where('region_id', $utilisateur->region_id))
+                    : null
             ),
             RoleCode::Directeur => $this->internatsDesEtablissements(match (true) {
                 $utilisateur->complexe_id !== null => Etablissement::where('complexe_id', $utilisateur->complexe_id),

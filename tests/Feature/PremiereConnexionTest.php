@@ -5,9 +5,9 @@ namespace Tests\Feature;
 use App\Domain\Identity\MyWay\FournisseurIdentiteStagiaire;
 use App\Domain\Identity\MyWay\ProfilMyWay;
 use App\Enums\EtatCompte;
+use App\Models\Complexe;
 use App\Models\Etablissement;
 use App\Models\JournalAudit;
-use App\Models\Region;
 use App\Models\Stagiaire;
 use App\Models\VerificationIdentite;
 use Illuminate\Database\QueryException;
@@ -40,9 +40,9 @@ class PremiereConnexionTest extends TestCase
     {
         parent::setUp();
 
-        $region = Region::factory()->create();
-        Etablissement::factory()->create(['region_id' => $region->id, 'code_efp' => 'DL10', 'nom_efp' => 'ISTA Démo Littoral']);
-        Etablissement::factory()->create(['region_id' => $region->id, 'code_efp' => 'DJ20', 'nom_efp' => 'ISTA Démo Les Jardins']);
+        $complexe = Complexe::factory()->create();
+        Etablissement::factory()->create(['complexe_id' => $complexe->id, 'code_efp' => 'DL10', 'nom_efp' => 'ISTA Démo Littoral']);
+        Etablissement::factory()->create(['complexe_id' => $complexe->id, 'code_efp' => 'DJ20', 'nom_efp' => 'ISTA Démo Les Jardins']);
     }
 
     private function verifier(string $email, string $motDePasse = self::MYWAY): TestResponse

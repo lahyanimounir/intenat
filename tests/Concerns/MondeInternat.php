@@ -21,12 +21,14 @@ use App\Models\Affectation;
 use App\Models\Batiment;
 use App\Models\Campagne;
 use App\Models\Chambre;
+use App\Models\Complexe;
 use App\Models\Critere;
 use App\Models\Demande;
 use App\Models\Etablissement;
 use App\Models\Internat;
 use App\Models\Lit;
 use App\Models\PieceJointe;
+use App\Models\Province;
 use App\Models\Region;
 use App\Models\Stagiaire;
 use App\Models\TypePiece;
@@ -75,7 +77,10 @@ trait MondeInternat
     protected function creerMonde(): void
     {
         $this->region = Region::factory()->create();
-        $this->etablissement = Etablissement::factory()->create(['region_id' => $this->region->id, 'code_efp' => 'T100', 'nom_efp' => 'Établissement de test']);
+        // Hiérarchie stricte : l'établissement de test se rattache à sa région via province → complexe.
+        $province = Province::factory()->create(['region_id' => $this->region->id]);
+        $complexe = Complexe::factory()->create(['province_id' => $province->id]);
+        $this->etablissement = Etablissement::factory()->create(['complexe_id' => $complexe->id, 'code_efp' => 'T100', 'nom_efp' => 'Établissement de test']);
         $this->filles = Internat::factory()->create(['etablissement_id' => $this->etablissement->id, 'genre' => Genre::Fille, 'nom' => 'Internat filles']);
         $this->garcons = Internat::factory()->create(['etablissement_id' => $this->etablissement->id, 'genre' => Genre::Garcon, 'nom' => 'Internat garçons']);
 
@@ -208,7 +213,6 @@ trait MondeInternat
     {
         $demande = Demande::factory()->deposee(StatutDemande::Admis)->create([
             'campagne_id' => $campagne->id, 'stagiaire_id' => $this->creerStagiaire($campagne->internat)->id,
-            'date_limite_confirmation' => now()->addDays(10),
         ]);
 
         $this->agirEnTantQue($demande->stagiaire);

@@ -11,7 +11,9 @@ use Illuminate\Support\Facades\Schema;
 
 /**
  * Organisation et référentiel des lits.
- * Région → (Complexe / CMC) → Établissement → Internat → Bâtiment → Chambre → Lit.
+ * Région → Province → Complexe → Établissement → Internat → Bâtiment → Chambre → Lit.
+ * La hiérarchie est stricte : un établissement se rattache obligatoirement à un
+ * complexe, un complexe à une province, une province à une région.
  */
 return new class extends Migration
 {
@@ -24,8 +26,8 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // Extension documentée : niveau « complexe / CMC » entre la région et l'établissement.
-        Schema::create('complexe', function (Blueprint $table) {
+        // Niveau « province » entre la région et le complexe.
+        Schema::create('province', function (Blueprint $table) {
             $table->id();
             $table->foreignId('region_id')->constrained('region')->restrictOnDelete();
             $table->string('code', 20)->unique();
@@ -33,10 +35,20 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        // Niveau « complexe / CMC », rattaché à une province.
+        Schema::create('complexe', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('province_id')->constrained('province')->restrictOnDelete();
+            $table->string('code', 20)->unique();
+            $table->string('nom', 150);
+            $table->timestamps();
+        });
+
         Schema::create('etablissement', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('region_id')->constrained('region')->restrictOnDelete();
-            $table->foreignId('complexe_id')->nullable()->constrained('complexe')->restrictOnDelete();
+            // Rattachement obligatoire à un complexe : la région et la province
+            // se déduisent de la chaîne complexe → province → région.
+            $table->foreignId('complexe_id')->constrained('complexe')->restrictOnDelete();
             $table->string('code_efp', 20)->unique();
             // Nom tel qu'il apparaît sur MyWay : sert à retrouver le code EFP.
             $table->string('nom_efp', 190)->unique();
@@ -103,6 +115,7 @@ return new class extends Migration
         Schema::dropIfExists('internat');
         Schema::dropIfExists('etablissement');
         Schema::dropIfExists('complexe');
+        Schema::dropIfExists('province');
         Schema::dropIfExists('region');
     }
 };

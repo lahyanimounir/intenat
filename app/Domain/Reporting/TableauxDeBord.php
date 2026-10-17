@@ -172,7 +172,9 @@ class TableauxDeBord
             'paiements' => [
                 'recus_a_controler' => Paiement::where('statut', StatutPaiement::RecuDepose->value)
                     ->whereHas('demande.campagne', fn ($q) => $q->whereIn('internat_id', $ids))->count(),
-                'recus_manquants' => Paiement::where('statut', StatutPaiement::Autorise->value)->where('periode', now()->format('Y-m'))
+                // Paiement d'internat autorisé mais dont le reçu n'a pas encore été déposé
+                // (un seul paiement par campagne : plus de filtre mensuel).
+                'recus_manquants' => Paiement::where('statut', StatutPaiement::Autorise->value)
                     ->whereHas('demande.campagne', fn ($q) => $q->whereIn('internat_id', $ids))->count(),
             ],
             'quotidien' => [
@@ -321,10 +323,10 @@ class TableauxDeBord
     {
         $occupation = $this->indicateurs->occupationParInternat(null);
         $dossiers = $this->indicateurs->dossiersParInternat(null);
-        $internats = Internat::with('etablissement:id,region_id')->get(['id', 'etablissement_id']);
+        $internats = Internat::with('etablissement.complexe.province:id,region_id')->get(['id', 'etablissement_id']);
 
         $regions = Region::orderBy('nom')->get()->map(function (Region $region) use ($internats, $occupation, $dossiers) {
-            $ids = $internats->filter(fn (Internat $i) => $i->etablissement->region_id === $region->id)->pluck('id');
+            $ids = $internats->filter(fn (Internat $i) => $i->etablissement?->complexe?->province?->region_id === $region->id)->pluck('id');
             $lits = $ids->sum(fn ($id) => $occupation[$id]->lits ?? 0);
             $horsService = $ids->sum(fn ($id) => $occupation[$id]->hors_service ?? 0);
             $occupes = $ids->sum(fn ($id) => $occupation[$id]->occupes ?? 0);

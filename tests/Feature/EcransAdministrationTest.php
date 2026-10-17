@@ -205,11 +205,20 @@ class EcransAdministrationTest extends TestCase
             ->set('saisie.code', 'R99')->set('saisie.nom', 'Région d’essai')->call('enregistrer')->assertHasNoErrors();
         $region = Region::where('code', 'R99')->sole();
 
-        $ecran->call('ajouter', 'etablissements')->set('saisie.region_id', (string) $region->id)->set('saisie.code_efp', 'T100')->set('saisie.nom_efp', 'ISTA d’essai')
+        // La hiérarchie est descendante : province sous la région, complexe sous la province.
+        $ecran->call('ajouter', 'provinces')->set('saisie.region_id', (string) $region->id)->set('saisie.code', 'P99')->set('saisie.nom', 'Province d’essai')
+            ->call('enregistrer')->assertHasNoErrors();
+        $province = \App\Models\Province::where('code', 'P99')->sole();
+
+        $ecran->call('ajouter', 'complexes')->set('saisie.province_id', (string) $province->id)->set('saisie.code', 'C99')->set('saisie.nom', 'Complexe d’essai')
+            ->call('enregistrer')->assertHasNoErrors();
+        $complexe = \App\Models\Complexe::where('code', 'C99')->sole();
+
+        $ecran->call('ajouter', 'etablissements')->set('saisie.complexe_id', (string) $complexe->id)->set('saisie.code_efp', 'T100')->set('saisie.nom_efp', 'ISTA d’essai')
             ->call('enregistrer')->assertHasErrors('saisie.code_efp')
             ->set('saisie.code_efp', 'T200')->call('enregistrer')->assertHasNoErrors();
         $etablissement = Etablissement::where('code_efp', 'T200')->sole();
-        $this->assertSame($region->id, $etablissement->region_id);
+        $this->assertSame($complexe->id, $etablissement->complexe_id);
 
         // Un établissement a au plus un internat par genre.
         $ecran->call('ajouter', 'internats')->set('saisie.etablissement_id', (string) $this->etablissement->id)->set('saisie.genre', Genre::Fille->value)->set('saisie.nom', 'Doublon')
@@ -224,11 +233,16 @@ class EcransAdministrationTest extends TestCase
         $ecran->call('fermerDialogue');
 
         // Suppression : refusée tant que des données sont rattachées, permise sinon.
+        // La hiérarchie se démonte de bas en haut : internat → établissement → complexe → province → région.
         $ecran->call('supprimer', 'regions', $region->id);
         $this->assertNotNull($region->fresh());
-        $ecran->call('supprimer', 'internats', $internat->id)->call('supprimer', 'etablissements', $etablissement->id)->call('supprimer', 'regions', $region->id);
+        $ecran->call('supprimer', 'internats', $internat->id)
+            ->call('supprimer', 'etablissements', $etablissement->id)
+            ->call('supprimer', 'complexes', $complexe->id)
+            ->call('supprimer', 'provinces', $province->id)
+            ->call('supprimer', 'regions', $region->id);
         $this->assertNull($region->fresh());
-        $this->assertSame(3, JournalAudit::where('action', 'organisation.suppression')->count());
+        $this->assertSame(5, JournalAudit::where('action', 'organisation.suppression')->count());
 
         $ecran->call('ajouter', 'inconnu')->assertNotFound();
     }
@@ -238,17 +252,16 @@ class EcransAdministrationTest extends TestCase
     public function test_une_regle_parametrable_se_modifie_se_confirme_et_laisse_une_trace(): void
     {
         $ecran = Livewire::actingAs($this->admin)->test(Parametres::class)->assertSee('règle(s) provisoire(s)')->assertSee('Inscription en formation')
-            ->assertSet('valeurs.confirmation__delai_admis_jours', 10);
+            ->assertSet('valeurs.restauration__sortie_annule_repas', false);
 
-        // Valeurs hors bornes ou hors liste : refusées.
-        $ecran->set('valeurs.confirmation__delai_admis_jours', 9999)->call('enregistrer', 'confirmation.delai_admis_jours')->assertHasErrors('valeurs.confirmation__delai_admis_jours');
+        // Valeurs hors liste ou mal formées : refusées.
         $ecran->set('valeurs.restauration__heure_limite_reservation', '25h')->call('enregistrer', 'restauration.heure_limite_reservation')->assertHasErrors('valeurs.restauration__heure_limite_reservation');
         $ecran->set('valeurs.classement__departage', 'tirage_au_sort')->call('enregistrer', 'classement.departage')->assertHasErrors('valeurs.classement__departage');
-        $this->assertSame(10, app(LectureParametres::class)->entier('confirmation.delai_admis_jours'));
+        $this->assertFalse(app(LectureParametres::class)->vrai('restauration.sortie_annule_repas'));
         $this->assertSame(0, JournalAudit::where('action', 'parametre.modification')->count());
 
-        $ecran->set('valeurs.confirmation__delai_admis_jours', 7)->call('enregistrer', 'confirmation.delai_admis_jours')->assertHasNoErrors();
-        $this->assertSame(7, app(LectureParametres::class)->entier('confirmation.delai_admis_jours'));
+        $ecran->set('valeurs.restauration__sortie_annule_repas', true)->call('enregistrer', 'restauration.sortie_annule_repas')->assertHasNoErrors();
+        $this->assertTrue(app(LectureParametres::class)->vrai('restauration.sortie_annule_repas'));
 
         // Confirmer la règle de vérification des inscriptions : elle n'est plus provisoire.
         $ecran->set('valeurs.inscription__depot_exige_verification', true)->set('confirmees.inscription__depot_exige_verification', true)
@@ -258,7 +271,7 @@ class EcransAdministrationTest extends TestCase
 
         $trace = JournalAudit::where('action', 'parametre.modification')->orderBy('id')->first();
         // MySQL range les clés d'un JSON à sa façon : l'ordre n'est pas comparé.
-        $this->assertEquals(['cle' => 'confirmation.delai_admis_jours', 'avant' => 10, 'apres' => 7, 'a_valider' => false], $trace->details);
+        $this->assertEquals(['cle' => 'restauration.sortie_annule_repas', 'avant' => false, 'apres' => true, 'a_valider' => true], $trace->details);
 
         $ecran->call('enregistrer', 'cle.inconnue')->assertNotFound();
     }

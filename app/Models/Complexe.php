@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * Complexe / CMC (extension documentée) : regroupe des établissements d'une région.
+ * Complexe / CMC : regroupe des établissements et se rattache à une province.
+ * Hiérarchie : Région → Province → Complexe → Établissement.
  */
 class Complexe extends Model
 {
@@ -17,12 +18,12 @@ class Complexe extends Model
     protected $table = 'complexe';
 
     protected $fillable = [
-        'region_id', 'code', 'nom',
+        'province_id', 'code', 'nom',
     ];
 
-    public function region(): BelongsTo
+    public function province(): BelongsTo
     {
-        return $this->belongsTo(Region::class, 'region_id');
+        return $this->belongsTo(Province::class, 'province_id');
     }
 
     public function etablissements(): HasMany

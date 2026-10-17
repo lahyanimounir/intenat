@@ -5,9 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 /**
- * Direction régionale : regroupe les établissements et borne le périmètre régional.
+ * Direction régionale : regroupe des provinces et borne le périmètre régional.
+ * Hiérarchie : Région → Province → Complexe → Établissement.
  */
 class Region extends Model
 {
@@ -19,13 +21,14 @@ class Region extends Model
         'code', 'nom',
     ];
 
-    public function complexes(): HasMany
+    public function provinces(): HasMany
     {
-        return $this->hasMany(Complexe::class, 'region_id');
+        return $this->hasMany(Province::class, 'region_id');
     }
 
-    public function etablissements(): HasMany
+    /** Complexes de la région, à travers ses provinces. */
+    public function complexes(): HasManyThrough
     {
-        return $this->hasMany(Etablissement::class, 'region_id');
+        return $this->hasManyThrough(Complexe::class, Province::class, 'region_id', 'province_id');
     }
 }

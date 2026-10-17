@@ -82,8 +82,10 @@ class Notifieur
     {
         $internat = DB::table('internat')
             ->join('etablissement', 'etablissement.id', '=', 'internat.etablissement_id')
+            ->join('complexe', 'complexe.id', '=', 'etablissement.complexe_id')
+            ->join('province', 'province.id', '=', 'complexe.province_id')
             ->where('internat.id', $internatId)
-            ->first(['internat.id', 'internat.etablissement_id', 'etablissement.region_id', 'etablissement.complexe_id']);
+            ->first(['internat.id', 'internat.etablissement_id', 'province.region_id', 'etablissement.complexe_id']);
 
         if ($internat === null) {
             return collect();

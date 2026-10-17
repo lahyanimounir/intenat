@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Models\Complexe;
 use App\Models\Etablissement;
-use App\Models\Region;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /** @extends Factory<Etablissement> */
@@ -14,7 +14,7 @@ class EtablissementFactory extends Factory
     public function definition(): array
     {
         return [
-            'region_id' => Region::factory(),
+            'complexe_id' => Complexe::factory(),
             'code_efp' => 'E'.fake()->unique()->numerify('####'),
             'nom_efp' => 'Établissement '.fake()->unique()->numerify('######'),
         ];

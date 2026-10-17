@@ -55,6 +55,7 @@ use App\Models\Lit;
 use App\Models\Menu;
 use App\Models\Paiement;
 use App\Models\PieceJointe;
+use App\Models\Province;
 use App\Models\RegimeAlimentaire;
 use App\Models\Region;
 use App\Models\Stagiaire;
@@ -174,11 +175,17 @@ class DemonstrationSeeder extends Seeder
     {
         $atlantique = Region::create(['code' => 'DRDA', 'nom' => 'Direction régionale Démo Atlantique']);
         $centre = Region::create(['code' => 'DRDC', 'nom' => 'Direction régionale Démo Centre']);
-        $cmc = Complexe::create(['region_id' => $atlantique->id, 'code' => 'CMC-DA', 'nom' => 'CMC Démo Atlantique']);
 
-        $littoral = Etablissement::create(['region_id' => $atlantique->id, 'complexe_id' => $cmc->id, 'code_efp' => 'DL10', 'nom_efp' => 'ISTA Démo Littoral']);
-        $jardins = Etablissement::create(['region_id' => $atlantique->id, 'complexe_id' => $cmc->id, 'code_efp' => 'DJ20', 'nom_efp' => 'ISTA Démo Les Jardins']);
-        $plateau = Etablissement::create(['region_id' => $centre->id, 'code_efp' => 'DP30', 'nom_efp' => 'ISTA Démo Le Plateau']);
+        // Hiérarchie stricte : Région → Province → Complexe → Établissement.
+        $provAtlantique = Province::create(['region_id' => $atlantique->id, 'code' => 'PRDA', 'nom' => 'Province Démo Atlantique']);
+        $provCentre = Province::create(['region_id' => $centre->id, 'code' => 'PRDC', 'nom' => 'Province Démo Centre']);
+
+        $cmc = Complexe::create(['province_id' => $provAtlantique->id, 'code' => 'CMC-DA', 'nom' => 'CMC Démo Atlantique']);
+        $cmcCentre = Complexe::create(['province_id' => $provCentre->id, 'code' => 'CMC-DC', 'nom' => 'CMC Démo Centre']);
+
+        $littoral = Etablissement::create(['complexe_id' => $cmc->id, 'code_efp' => 'DL10', 'nom_efp' => 'ISTA Démo Littoral']);
+        $jardins = Etablissement::create(['complexe_id' => $cmc->id, 'code_efp' => 'DJ20', 'nom_efp' => 'ISTA Démo Les Jardins']);
+        $plateau = Etablissement::create(['complexe_id' => $cmcCentre->id, 'code_efp' => 'DP30', 'nom_efp' => 'ISTA Démo Le Plateau']);
 
         $this->internats = [
             'littoral_filles' => Internat::create(['etablissement_id' => $littoral->id, 'genre' => Genre::Fille, 'nom' => 'Maison des Stagiaires Filles — Littoral']),
@@ -201,7 +208,7 @@ class DemonstrationSeeder extends Seeder
             'chef_pole' => ['Lamrani', 'Samira', 'chef.pole@internat.test', RoleCode::ChefPole, ['etablissement_id' => $littoral->id]],
             'restauration' => ['Skalli', 'Rachid', 'restauration@internat.test', RoleCode::Restauration, ['etablissement_id' => $littoral->id]],
             'directeur' => ['Kettani', 'Hassan', 'directeur.cmc@internat.test', RoleCode::Directeur, ['complexe_id' => $littoral->complexe_id]],
-            'direction_regionale' => ['Sebti', 'Latifa', 'direction.regionale@internat.test', RoleCode::DirRegionale, ['region_id' => $littoral->region_id]],
+            'direction_regionale' => ['Sebti', 'Latifa', 'direction.regionale@internat.test', RoleCode::DirRegionale, ['region_id' => $littoral->complexe->province->region_id]],
             'direction_centrale' => ['Ouazzani', 'Mohamed', 'direction.centrale@internat.test', RoleCode::DirCentrale, []],
             'gestionnaire_jardins' => ['Cherkaoui', 'Houda', 'gestionnaire.jardins@internat.test', RoleCode::Gestionnaire, ['internat_id' => $this->internats['jardins_filles']->id]],
             'chef_pole_jardins' => ['Haddad', 'Driss', 'chef.pole.jardins@internat.test', RoleCode::ChefPole, ['etablissement_id' => $jardins->id]],

@@ -121,6 +121,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::middleware('permission:organisation.gerer')->prefix('organisation')->group(function () {
             Route::post('regions', [OrganisationController::class, 'enregistrerRegion']);
             Route::put('regions/{region}', [OrganisationController::class, 'enregistrerRegion']);
+            Route::post('provinces', [OrganisationController::class, 'enregistrerProvince']);
+            Route::put('provinces/{province}', [OrganisationController::class, 'enregistrerProvince']);
             Route::post('complexes', [OrganisationController::class, 'enregistrerComplexe']);
             Route::put('complexes/{complexe}', [OrganisationController::class, 'enregistrerComplexe']);
             Route::post('etablissements', [OrganisationController::class, 'enregistrerEtablissement']);
@@ -128,7 +130,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('internats', [OrganisationController::class, 'enregistrerInternat']);
             Route::put('internats/{internat}', [OrganisationController::class, 'enregistrerInternat']);
             Route::delete('{niveau}/{id}', [OrganisationController::class, 'supprimer'])
-                ->whereIn('niveau', ['regions', 'complexes', 'etablissements', 'internats'])->whereNumber('id');
+                ->whereIn('niveau', ['regions', 'provinces', 'complexes', 'etablissements', 'internats'])->whereNumber('id');
         });
 
         Route::middleware('permission:parametres.gerer')->group(function () {

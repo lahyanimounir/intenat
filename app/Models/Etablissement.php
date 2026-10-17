@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Établissement de formation (EFP) et table de correspondance Nom EFP → Code EFP.
+ * Rattaché à un complexe ; la province et la région se déduisent de la chaîne
+ * complexe → province → région.
  */
 class Etablissement extends Model
 {
@@ -17,13 +19,8 @@ class Etablissement extends Model
     protected $table = 'etablissement';
 
     protected $fillable = [
-        'region_id', 'complexe_id', 'code_efp', 'nom_efp',
+        'complexe_id', 'code_efp', 'nom_efp',
     ];
-
-    public function region(): BelongsTo
-    {
-        return $this->belongsTo(Region::class, 'region_id');
-    }
 
     public function complexe(): BelongsTo
     {

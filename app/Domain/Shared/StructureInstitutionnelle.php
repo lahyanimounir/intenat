@@ -7,23 +7,27 @@ use App\Enums\Genre;
 use App\Models\Complexe;
 use App\Models\Etablissement;
 use App\Models\Internat;
+use App\Models\Province;
 use App\Models\Region;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\QueryException;
 use Illuminate\Validation\Rule;
 
 /**
- * Structure institutionnelle : Région → Complexe / CMC → Établissement → Internat.
+ * Structure institutionnelle : Région → Province → Complexe / CMC → Établissement → Internat.
  *
- * La table des établissements est aussi le référentiel des EFP : c'est dans
- * cette liste, tenue par l'administrateur, que le stagiaire choisit son
- * établissement à l'inscription — il ne saisit jamais un établissement libre.
+ * La hiérarchie est stricte : un complexe se rattache à une province, une
+ * province à une région. La table des établissements est aussi le référentiel
+ * des EFP : c'est dans cette liste, tenue par l'administrateur, que le stagiaire
+ * choisit son établissement à l'inscription — il ne saisit jamais un
+ * établissement libre, et toujours en descendant la hiérarchie.
  */
 class StructureInstitutionnelle
 {
     /** @var array<string, class-string<Model>> */
     public const NIVEAUX = [
         'regions' => Region::class,
+        'provinces' => Province::class,
         'complexes' => Complexe::class,
         'etablissements' => Etablissement::class,
         'internats' => Internat::class,
@@ -44,14 +48,18 @@ class StructureInstitutionnelle
                 'code' => ['required', 'string', 'max:20', Rule::unique('region', 'code')->ignore($existant?->getKey())],
                 'nom' => ['required', 'string', 'max:150'],
             ],
-            'complexes' => [
+            'provinces' => [
                 'region_id' => ['required', 'integer', 'exists:region,id'],
+                'code' => ['required', 'string', 'max:20', Rule::unique('province', 'code')->ignore($existant?->getKey())],
+                'nom' => ['required', 'string', 'max:150'],
+            ],
+            'complexes' => [
+                'province_id' => ['required', 'integer', 'exists:province,id'],
                 'code' => ['required', 'string', 'max:20', Rule::unique('complexe', 'code')->ignore($existant?->getKey())],
                 'nom' => ['required', 'string', 'max:150'],
             ],
             'etablissements' => [
-                'region_id' => ['required', 'integer', 'exists:region,id'],
-                'complexe_id' => ['nullable', 'integer', Rule::exists('complexe', 'id')->where('region_id', $saisie['region_id'] ?? null)],
+                'complexe_id' => ['required', 'integer', 'exists:complexe,id'],
                 'code_efp' => ['required', 'string', 'max:20', Rule::unique('etablissement', 'code_efp')->ignore($existant?->getKey())],
                 'nom_efp' => ['required', 'string', 'max:190', Rule::unique('etablissement', 'nom_efp')->ignore($existant?->getKey())],
             ],
@@ -71,7 +79,6 @@ class StructureInstitutionnelle
     public static function messages(): array
     {
         return [
-            'complexe_id.exists' => 'Le complexe doit appartenir à la région choisie.',
             'genre.unique' => 'Cet établissement a déjà un internat pour ce genre.',
         ];
     }

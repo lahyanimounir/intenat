@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Complexe;
 use App\Models\Etablissement;
 use App\Models\Internat;
+use App\Models\Province;
 use App\Models\Region;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\QueryException;
@@ -17,8 +18,9 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 /**
- * Structure institutionnelle : Région → Complexe / CMC → Établissement → Internat.
- * La table des établissements est aussi la correspondance Nom EFP → Code EFP.
+ * Structure institutionnelle : Région → Province → Complexe / CMC → Établissement → Internat.
+ * La hiérarchie est stricte et descendante ; la table des établissements est
+ * aussi la correspondance Nom EFP → Code EFP.
  */
 class OrganisationController extends Controller
 {
@@ -30,18 +32,21 @@ class OrganisationController extends Controller
         $complet = $ids === null;
 
         $internats = Internat::query()->when(! $complet, fn ($q) => $q->whereIn('id', $ids))
-            ->with('etablissement.region', 'etablissement.complexe')->orderBy('nom')->get();
+            ->with('etablissement.complexe.province.region')->orderBy('nom')->get();
 
         $etablissements = $complet
-            ? Etablissement::with('region', 'complexe')->orderBy('nom_efp')->get()
+            ? Etablissement::with('complexe.province.region')->orderBy('nom_efp')->get()
             : $internats->pluck('etablissement')->unique('id')->sortBy('nom_efp')->values();
 
+        $complexes = $complet ? Complexe::orderBy('nom')->get() : $etablissements->pluck('complexe')->filter()->unique('id')->values();
+        $provinces = $complet ? Province::orderBy('nom')->get() : $complexes->pluck('province')->filter()->unique('id')->values();
+        $regions = $complet ? Region::orderBy('nom')->get() : $provinces->pluck('region')->filter()->unique('id')->values();
+
         return response()->json([
-            'regions' => ($complet ? Region::orderBy('nom')->get() : $etablissements->pluck('region')->unique('id')->values())
-                ->map(fn (Region $r) => $r->only(['id', 'code', 'nom'])),
-            'complexes' => ($complet ? Complexe::orderBy('nom')->get() : $etablissements->pluck('complexe')->filter()->unique('id')->values())
-                ->map(fn (Complexe $c) => $c->only(['id', 'region_id', 'code', 'nom'])),
-            'etablissements' => $etablissements->map(fn (Etablissement $e) => $e->only(['id', 'region_id', 'complexe_id', 'code_efp', 'nom_efp'])),
+            'regions' => $regions->map(fn (Region $r) => $r->only(['id', 'code', 'nom'])),
+            'provinces' => $provinces->map(fn (Province $p) => $p->only(['id', 'region_id', 'code', 'nom'])),
+            'complexes' => $complexes->map(fn (Complexe $c) => $c->only(['id', 'province_id', 'code', 'nom'])),
+            'etablissements' => $etablissements->map(fn (Etablissement $e) => $e->only(['id', 'complexe_id', 'code_efp', 'nom_efp'])),
             'internats' => $internats->map(fn (Internat $i) => [
                 'id' => $i->id, 'etablissement_id' => $i->etablissement_id, 'nom' => $i->nom,
                 'genre' => self::enum($i->genre),
@@ -59,10 +64,21 @@ class OrganisationController extends Controller
         return $this->enregistrer($region ?? new Region, $donnees, $journal);
     }
 
-    public function enregistrerComplexe(Request $request, Journal $journal, ?Complexe $complexe = null): JsonResponse
+    public function enregistrerProvince(Request $request, Journal $journal, ?Province $province = null): JsonResponse
     {
         $donnees = $request->validate([
             'region_id' => ['required', 'integer', 'exists:region,id'],
+            'code' => ['required', 'string', 'max:20', Rule::unique('province', 'code')->ignore($province?->id)],
+            'nom' => ['required', 'string', 'max:150'],
+        ]);
+
+        return $this->enregistrer($province ?? new Province, $donnees, $journal);
+    }
+
+    public function enregistrerComplexe(Request $request, Journal $journal, ?Complexe $complexe = null): JsonResponse
+    {
+        $donnees = $request->validate([
+            'province_id' => ['required', 'integer', 'exists:province,id'],
             'code' => ['required', 'string', 'max:20', Rule::unique('complexe', 'code')->ignore($complexe?->id)],
             'nom' => ['required', 'string', 'max:150'],
         ]);
@@ -73,12 +89,9 @@ class OrganisationController extends Controller
     public function enregistrerEtablissement(Request $request, Journal $journal, ?Etablissement $etablissement = null): JsonResponse
     {
         $donnees = $request->validate([
-            'region_id' => ['required', 'integer', 'exists:region,id'],
-            'complexe_id' => ['nullable', 'integer', Rule::exists('complexe', 'id')->where('region_id', $request->input('region_id'))],
+            'complexe_id' => ['required', 'integer', 'exists:complexe,id'],
             'code_efp' => ['required', 'string', 'max:20', Rule::unique('etablissement', 'code_efp')->ignore($etablissement?->id)],
             'nom_efp' => ['required', 'string', 'max:190', Rule::unique('etablissement', 'nom_efp')->ignore($etablissement?->id)],
-        ], [
-            'complexe_id.exists' => 'Le complexe doit appartenir à la région choisie.',
         ]);
 
         return $this->enregistrer($etablissement ?? new Etablissement, $donnees, $journal);
@@ -108,6 +121,7 @@ class OrganisationController extends Controller
     {
         $modele = match ($niveau) {
             'regions' => Region::findOrFail($id),
+            'provinces' => Province::findOrFail($id),
             'complexes' => Complexe::findOrFail($id),
             'etablissements' => Etablissement::findOrFail($id),
             'internats' => Internat::findOrFail($id),
