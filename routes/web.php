@@ -45,9 +45,11 @@ Route::middleware(['auth:stagiaire', 'auth.session', 'stagiaire'])->prefix('stag
     Route::get('adresse', Stagiaire\ConfirmationAdresse::class)->name('adresse');
 
     Route::middleware('adresse.verifiee')->group(function () {
-        // Identité, formation, vérification de l'inscription : accessible dès la création du compte.
+        // Identité, formation, situation, pièces : toute la candidature se saisit ici,
+        // accessible dès la création du compte (avant la validation par le gestionnaire).
         Route::get('inscription', Stagiaire\MonInscription::class)->name('inscription');
         Route::get('inscription/justificatifs/{verification}', [FichierController::class, 'justificatifDuStagiaire'])->name('inscription.justificatif');
+        Route::get('inscription/pieces/{piece}', [FichierController::class, 'pieceDuStagiaire'])->name('inscription.piece');
 
         // Le séjour n'est accessible qu'une fois l'inscription en formation vérifiée.
         // Avant cela, tout ramène à « Mon inscription » (statut et corrections).

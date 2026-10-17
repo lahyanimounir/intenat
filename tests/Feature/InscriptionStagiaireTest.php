@@ -10,6 +10,7 @@ use App\Enums\StatutInscription;
 use App\Livewire\Auth\Connexion;
 use App\Livewire\Auth\Inscription;
 use App\Livewire\Stagiaire\ConfirmationAdresse;
+use App\Enums\StatutDemande;
 use App\Livewire\Stagiaire\MonInscription;
 use App\Models\Campagne;
 use App\Models\JournalAudit;
@@ -18,8 +19,10 @@ use App\Notifications\VerificationAdresse;
 use App\Support\Affichage\Menu;
 use App\Support\AnneeScolaire;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Tests\Concerns\MondeInternat;
 use Tests\TestCase;
@@ -57,6 +60,12 @@ class InscriptionStagiaireTest extends TestCase
             'niveau_formation' => NiveauFormation::TechnicienSpecialise->value, 'annee_formation' => AnneeFormation::Premiere->value,
             'annee_scolaire' => AnneeScolaire::courante(),
         ];
+    }
+
+    /** Petit PDF valide pour les dépôts de pièces. */
+    private function fichier(string $nom = 'piece.pdf'): UploadedFile
+    {
+        return UploadedFile::fake()->createWithContent($nom, "%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF");
     }
 
     /**
@@ -223,8 +232,9 @@ class InscriptionStagiaireTest extends TestCase
         $this->assertSame(StatutInscription::NonDeclaree, $stagiaire->statut_inscription);
 
         // Une campagne doit être ouverte pour l'internat (filles) de l'établissement visé.
+        // La formation enregistrée ouvre le dossier de candidature et mène à l'étape « Situation ».
         $campagne = $this->creerCampagne($this->filles);
-        $this->declarerFormation($ecran, $campagne)->call('enregistrerFormation')->assertHasNoErrors()->assertSet('etape', 'verification');
+        $this->declarerFormation($ecran, $campagne)->call('enregistrerFormation')->assertHasNoErrors()->assertSet('etape', 'situation');
 
         $stagiaire->refresh();
         $this->assertSame($this->etablissement->id, $stagiaire->etablissement_id);
@@ -312,8 +322,46 @@ class InscriptionStagiaireTest extends TestCase
         $this->declarerFormation($ecran, $campagne)
             ->call('enregistrerFormation')
             ->assertHasNoErrors()
-            ->assertSet('etape', 'verification');
+            ->assertSet('etape', 'situation');
         $this->assertSame($this->etablissement->id, $stagiaire->fresh()->etablissement_id);
+    }
+
+    public function test_la_candidature_complete_se_soumet_en_une_fois_au_gestionnaire(): void
+    {
+        Storage::fake('prive');
+        $campagne = $this->creerCampagne($this->filles);
+        $cin = $campagne->typesPieces->firstWhere('obligatoire', true);
+
+        $stagiaire = Stagiaire::factory()->nouveau()->create($this->identite());
+        $ecran = Livewire::actingAs($stagiaire, 'stagiaire')->test(MonInscription::class);
+
+        // Formation + campagne → ouvre le dossier de candidature, étape « Situation ».
+        $this->declarerFormation($ecran, $campagne)->call('enregistrerFormation')->assertHasNoErrors()->assertSet('etape', 'situation');
+
+        // Situation enregistrée → étape « Pièces ».
+        $ecran->set('situation.adresse_complete', '12 rue des Orangers, Hay Hassani')
+            ->set('situation.eloigne_ou_rural', true)
+            ->call('enregistrerSituation')->assertHasNoErrors()->assertSet('etape', 'pieces');
+
+        $demande = $stagiaire->demandeCourante();
+        $this->assertNotNull($demande);
+        $this->assertTrue($demande->eloigne_ou_rural);
+
+        // Sans la pièce obligatoire, la soumission est refusée et renvoie aux pièces.
+        $ecran->set('justificatif', $this->fichier('scolarite.pdf'))->call('soumettre')->assertSet('etape', 'pieces');
+        $this->assertSame(StatutDemande::Brouillon, $stagiaire->demandeCourante()->statut);
+        $this->assertSame(StatutInscription::Declaree, $stagiaire->fresh()->statut_inscription);
+
+        // Dépôt de la pièce obligatoire, puis soumission unique (inscription + dossier).
+        $ecran->set("fichiers.{$cin->id}", $this->fichier('cin.pdf'));
+        $ecran->set('justificatif', $this->fichier('scolarite.pdf'))->call('soumettre')->assertHasNoErrors();
+
+        $stagiaire->refresh();
+        $demande = $stagiaire->demandeCourante();
+        // La candidature part en une fois : inscription soumise + dossier reçu, en attente du gestionnaire.
+        $this->assertSame(StatutInscription::Soumise, $stagiaire->statut_inscription);
+        $this->assertSame(StatutDemande::Recu, $demande->statut);
+        $this->assertNotNull($demande->numero_dossier);
     }
 
     public function test_un_profil_incomplet_n_ouvre_que_l_ecran_d_inscription(): void
