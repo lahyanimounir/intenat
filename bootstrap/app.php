@@ -6,6 +6,7 @@ use App\Domain\Identity\MyWay\ReponseInattendueException;
 use App\Domain\Shared\RegleMetierException;
 use App\Http\Middleware\EnTetesSecurite;
 use App\Http\Middleware\ExigerAdresseVerifiee;
+use App\Http\Middleware\ExigerInscriptionVerifiee;
 use App\Http\Middleware\ExigerPermission;
 use App\Http\Middleware\ExigerPersonnel;
 use App\Http\Middleware\ExigerProfilComplet;
@@ -42,6 +43,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => ExigerPermission::class,
             'adresse.verifiee' => ExigerAdresseVerifiee::class,
             'profil.complet' => ExigerProfilComplet::class,
+            'inscription.verifiee' => ExigerInscriptionVerifiee::class,
         ]);
 
         // Un visiteur est renvoyé à la connexion ; un compte déjà connecté, à l'accueil de son espace.

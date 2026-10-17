@@ -6,7 +6,7 @@
     // L'espace affiché est celui du compte connecté : personnel ou stagiaire.
     $compte = auth('stagiaire')->user() ?? auth('web')->user();
     $estStagiaire = $compte instanceof Stagiaire;
-    $sections = $estStagiaire ? Menu::stagiaire() : Menu::personnel($compte);
+    $sections = $estStagiaire ? Menu::stagiaire($compte) : Menu::personnel($compte);
     $role = $estStagiaire ? 'Stagiaire' : $compte->roleCode()?->libelle();
     $perimetre = $estStagiaire
         ? $compte->etablissement?->nom_efp

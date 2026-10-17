@@ -49,7 +49,9 @@ Route::middleware(['auth:stagiaire', 'auth.session', 'stagiaire'])->prefix('stag
         Route::get('inscription', Stagiaire\MonInscription::class)->name('inscription');
         Route::get('inscription/justificatifs/{verification}', [FichierController::class, 'justificatifDuStagiaire'])->name('inscription.justificatif');
 
-        Route::middleware('profil.complet')->group(function () {
+        // Le séjour n'est accessible qu'une fois l'inscription en formation vérifiée.
+        // Avant cela, tout ramène à « Mon inscription » (statut et corrections).
+        Route::middleware(['profil.complet', 'inscription.verifiee'])->group(function () {
             Route::get('/', Stagiaire\Accueil::class)->name('accueil');
             Route::get('profil', Stagiaire\Profil::class)->name('profil');
 

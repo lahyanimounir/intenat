@@ -2,6 +2,7 @@
 
 namespace App\Support\Affichage;
 
+use App\Models\Stagiaire;
 use App\Models\Utilisateur;
 
 /**
@@ -90,10 +91,21 @@ final class Menu
         return self::construire(self::PERSONNEL, fn (array $permissions) => $permissions === [] || $utilisateur->canAny($permissions));
     }
 
-    /** @return list<array{titre: string|null, entrees: list<array{libelle: string, chemin: string, icone: string, actif: bool}>}> */
-    public static function stagiaire(): array
+    /**
+     * Menu du candidat. Tant que son inscription en formation n'est pas vérifiée,
+     * seul « Mon inscription » est proposé : les fonctionnalités du séjour
+     * n'apparaissent qu'après la validation par l'agent habilité. Ce filtrage
+     * double les verrous de route (middleware `inscription.verifiee`).
+     *
+     * @return list<array{titre: string|null, entrees: list<array{libelle: string, chemin: string, icone: string, actif: bool}>}>
+     */
+    public static function stagiaire(Stagiaire $stagiaire): array
     {
-        return self::construire(self::STAGIAIRE, fn () => true);
+        $sections = $stagiaire->inscriptionVerifiee()
+            ? self::STAGIAIRE
+            : [['entrees' => [['Mon inscription', '/stagiaire/inscription', 'graduation-cap']]]];
+
+        return self::construire($sections, fn () => true);
     }
 
     private static function construire(array $sections, callable $permis): array

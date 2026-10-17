@@ -15,6 +15,7 @@ use App\Models\Campagne;
 use App\Models\JournalAudit;
 use App\Models\Stagiaire;
 use App\Notifications\VerificationAdresse;
+use App\Support\Affichage\Menu;
 use App\Support\AnneeScolaire;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
@@ -321,6 +322,35 @@ class InscriptionStagiaireTest extends TestCase
 
         $this->actingAs($stagiaire, 'stagiaire')->get(route('stagiaire.accueil'))->assertRedirect(route('stagiaire.inscription'));
         $this->get(route('stagiaire.inscription'))->assertOk()->assertSee('Mon identité');
+    }
+
+    public function test_le_sejour_reste_ferme_tant_que_l_inscription_n_est_pas_verifiee(): void
+    {
+        // Profil complet mais inscription soumise, pas encore vérifiée.
+        $enAttente = $this->creerStagiaire($this->filles, [
+            'statut_inscription' => StatutInscription::Soumise, 'inscription_verifiee_le' => null,
+        ]);
+
+        // Les routes du séjour renvoient toutes à l'écran d'inscription (verrou de route).
+        foreach (['stagiaire.accueil', 'stagiaire.profil', 'stagiaire.dossier', 'stagiaire.hebergement',
+            'stagiaire.paiements', 'stagiaire.repas', 'stagiaire.sorties', 'stagiaire.reclamations', 'stagiaire.documents'] as $route) {
+            $this->actingAs($enAttente, 'stagiaire')->get(route($route))->assertRedirect(route('stagiaire.inscription'));
+        }
+
+        // Seule « Mon inscription » reste accessible, et le menu ne propose qu'elle.
+        $this->actingAs($enAttente, 'stagiaire')->get(route('stagiaire.inscription'))->assertOk();
+        $this->assertSame(['Mon inscription'], collect(Menu::stagiaire($enAttente))->flatMap(fn ($s) => $s['entrees'])->pluck('libelle')->all());
+    }
+
+    public function test_le_sejour_s_ouvre_une_fois_l_inscription_verifiee(): void
+    {
+        $verifie = $this->creerStagiaire($this->filles);
+
+        $this->actingAs($verifie, 'stagiaire')->get(route('stagiaire.accueil'))->assertOk();
+
+        // Le menu complet réapparaît : séjour et dossier compris.
+        $libelles = collect(Menu::stagiaire($verifie))->flatMap(fn ($s) => $s['entrees'])->pluck('libelle');
+        $this->assertTrue($libelles->contains('Hébergement') && $libelles->contains('Mon dossier') && $libelles->count() > 1);
     }
 
     /* ------------------------------------------------------------ Connexion */
