@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\StatutCampagne;
 use App\Enums\StatutDemande;
 use App\Models\Concerns\LimiteAuPerimetre;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -74,14 +75,39 @@ class Campagne extends Model
         return $this->hasMany(Demande::class, 'campagne_id');
     }
 
-    /** Le dépôt est possible : campagne ouverte et date du jour dans la période. */
+    /**
+     * Campagnes qui reçoivent les candidatures : ouvertes par le chef de pôle et non échues. Ouvrir la
+     * campagne la rend accessible aux candidats, y compris avant sa date officielle d'ouverture.
+     */
+    public function scopeAccessibles(Builder $requete): Builder
+    {
+        return $requete->where($requete->qualifyColumn('statut'), StatutCampagne::Ouverte->value)
+            ->whereDate($requete->qualifyColumn('date_cloture'), '>=', now()->toDateString());
+    }
+
+    /** Le dépôt est possible : campagne ouverte par le chef de pôle, date de clôture non passée. */
     public function accepteLesDepots(): bool
     {
-        $aujourdhui = now()->startOfDay();
-
         return $this->statut === StatutCampagne::Ouverte
-            && $aujourdhui->greaterThanOrEqualTo($this->date_ouverture)
-            && $aujourdhui->lessThanOrEqualTo($this->date_cloture);
+            && now()->startOfDay()->lessThanOrEqualTo($this->date_cloture);
+    }
+
+    /** Campagne déjà accessible aux candidats, avant sa date officielle d'ouverture. */
+    public function avantOuverture(): bool
+    {
+        return now()->startOfDay()->lessThan($this->date_ouverture);
+    }
+
+    /** Désignation proposée au candidat : « Campagne 2026-2027 — du 09/11/2026 au 07/01/2027 ». */
+    public function libelleCandidature(): string
+    {
+        return 'Campagne '.$this->annee.' — du '.$this->date_ouverture->format('d/m/Y').' au '.$this->date_cloture->format('d/m/Y');
+    }
+
+    /** Désignation courte, qui distingue les campagnes d'une même année : « 2026-2027 · du 01/09 au 15/09/2026 ». */
+    public function libellePeriode(): string
+    {
+        return $this->annee.' · du '.$this->date_ouverture->format('d/m').' au '.$this->date_cloture->format('d/m/Y');
     }
 
     public function estDeliberee(): bool

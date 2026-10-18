@@ -10,7 +10,7 @@
     $niveaux = collect(NiveauFormation::options())->pluck('libelle', 'valeur');
 @endphp
 <div>
-    <x-page.entete :titre="'Campagne '.$campagne->annee" :fil="[['Campagnes', route('campagnes')], [$campagne->annee.' — '.$campagne->internat->nom, null]]"
+    <x-page.entete :titre="'Campagne '.$campagne->annee" :fil="[['Campagnes', route('campagnes')], [$campagne->libellePeriode().' — '.$campagne->internat->nom, null]]"
         :description="$campagne->internat->nom.' — '.$campagne->internat->etablissement->nom_efp">
         <x-slot:marque>
             <x-statut :etat="$campagne->statut" />
@@ -68,7 +68,7 @@
                             <x-definition terme="Ouverture du dépôt">{{ Format::dateLongue($campagne->date_ouverture) }}</x-definition>
                             <x-definition terme="Clôture du dépôt">{{ Format::dateLongue($campagne->date_cloture) }}</x-definition>
                             <x-definition terme="Places offertes"><span class="chiffres">{{ Format::nombre($campagne->nombre_places) }}</span> · {{ Format::nombre($litsEligibles) }} lit(s) éligible(s)</x-definition>
-                            <x-definition terme="Frais d’internat">{{ $campagne->frais === null ? 'Non renseignés' : Format::montant($campagne->frais) }}</x-definition>
+                            <x-definition terme="Frais d’internat">{{ $campagne->frais === null ? 'Non renseignés' : Format::montant($campagne->frais).' par mois' }}</x-definition>
                             <x-definition terme="Version de la grille"><span class="chiffres">{{ $campagne->version_grille }}</span></x-definition>
                             <x-definition terme="Créée par">{{ $campagne->createur?->nomComplet() }}</x-definition>
                             <x-definition terme="Délibération">{{ $campagne->date_deliberation ? Format::dateHeure($campagne->date_deliberation) : '' }}</x-definition>
@@ -194,7 +194,7 @@
         <x-dialogue titre="Modifier la campagne" :description="$preparation ? null : 'Après l’ouverture, seuls la date de clôture et le nombre de places restent ajustables.'">
             <form wire:submit="modifier" id="form-parametres" novalidate class="grid gap-4 sm:grid-cols-2">
                 <x-saisie libelle="Année de formation" wire:model="parametres.annee" requis :disabled="! $preparation" />
-                <x-saisie libelle="Frais d’internat (DH)" wire:model="parametres.frais" type="number" min="0" step="0.01" :disabled="! $preparation" />
+                <x-saisie libelle="Frais d’internat par mois (DH)" wire:model="parametres.frais" type="number" min="0" step="0.01" :disabled="! $preparation" />
                 <x-saisie libelle="Ouverture du dépôt" wire:model="parametres.date_ouverture" type="date" requis :disabled="! $preparation" />
                 <x-saisie libelle="Clôture du dépôt" wire:model="parametres.date_cloture" type="date" requis />
                 <x-saisie libelle="Places offertes" wire:model="parametres.nombre_places" type="number" min="1" requis

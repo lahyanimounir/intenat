@@ -88,6 +88,38 @@ class EcransHebergementTest extends TestCase
             ->assertSee('Chambre '.$lits->first()->chambre->numero)->call('preparerBatiment')->assertForbidden();
     }
 
+    public function test_le_plan_se_choisit_par_la_hierarchie_quand_plusieurs_internats_sont_en_charge(): void
+    {
+        $this->creerLits($this->filles)->first()->chambre->update(['numero' => 'F-101']);
+        $this->creerLits($this->garcons)->first()->chambre->update(['numero' => 'G-201']);
+        $complexe = $this->etablissement->complexe;
+
+        // Gestionnaire d'un seul internat : rien à choisir, son plan s'affiche comme avant.
+        Livewire::actingAs($this->gestionnaireFilles)->test(Plan::class)
+            ->assertViewHas('filtre', null)->assertSee('Chambre F-101')->assertDontSee('Région : toutes');
+
+        // Chef de pôle : le premier internat de son périmètre est proposé, avec sa hiérarchie déjà remplie.
+        $plan = Livewire::actingAs($this->chefDePole)->test(Plan::class)
+            ->assertSet('internat', (string) $this->filles->id)->assertSet('region', (string) $this->region->id)
+            ->assertSet('province', (string) $complexe->province_id)->assertSet('complexe', (string) $complexe->id)
+            ->assertSet('etablissement', (string) $this->etablissement->id)->assertSee('Chambre F-101')
+            ->assertViewHas('filtre', fn (array $f) => $f['regions']->keys()->all() === [$this->region->id]
+                && $f['internats']->keys()->sort()->values()->all() === collect([$this->filles->id, $this->garcons->id])->sort()->values()->all());
+
+        // Changer l'établissement efface l'internat : le plan attend un nouveau choix.
+        $plan->set('etablissement', '')->assertSet('internat', '')->assertSee('Choisissez un internat')->assertDontSee('Chambre F-101')
+            ->set('etablissement', (string) $this->etablissement->id)->set('internat', (string) $this->garcons->id)
+            ->assertSee('Chambre G-201')->assertDontSee('Chambre F-101');
+
+        // Changer la région efface tous les niveaux en dessous.
+        $plan->set('region', '')->assertSet('province', '')->assertSet('complexe', '')->assertSet('etablissement', '')->assertSet('internat', '');
+
+        // Un internat donné dans l'adresse fixe les niveaux au-dessus de lui ; hors périmètre, il est refusé.
+        Livewire::actingAs($this->chefDePole)->withQueryParams(['internat' => (string) $this->garcons->id])->test(Plan::class)
+            ->assertSet('etablissement', (string) $this->etablissement->id)->assertSee('Chambre G-201');
+        Livewire::actingAs($this->chefDePole)->test(Plan::class)->set('internat', (string) $this->ailleurs->id)->assertForbidden();
+    }
+
     public function test_le_gestionnaire_attribue_un_lit_puis_suit_le_sejour(): void
     {
         $campagne = $this->creerCampagne($this->filles);

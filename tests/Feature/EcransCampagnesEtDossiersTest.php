@@ -304,13 +304,13 @@ class EcransCampagnesEtDossiersTest extends TestCase
         Livewire::actingAs($this->chefDePole)->test(DossierFiche::class, ['demande' => $demande])
             ->call('confirmerPlace')->assertForbidden();
 
-        // Le gestionnaire de l'internat confirme la place de l'admis ; le premier paiement attend l'autorisation.
+        // Le gestionnaire de l'internat confirme la place de l'admis ; la première mensualité naîtra avec l'affectation du lit.
         Livewire::actingAs($this->gestionnaireFilles)->test(DossierFiche::class, ['demande' => $demande])
             ->assertSee('Confirmer la place')
             ->call('confirmerPlace')->assertHasNoErrors();
 
         $this->assertSame(StatutDemande::Confirme, $demande->fresh()->statut);
         $this->assertNotNull($demande->fresh()->date_confirmation);
-        $this->assertDatabaseHas('paiement', ['demande_id' => $demande->id, 'statut' => 'en_attente']);
+        $this->assertDatabaseMissing('paiement', ['demande_id' => $demande->id]);
     }
 }

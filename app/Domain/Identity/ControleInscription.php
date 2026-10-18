@@ -2,6 +2,7 @@
 
 namespace App\Domain\Identity;
 
+use App\Domain\Admissions\Classement;
 use App\Domain\Applications\TransitionDemande;
 use App\Domain\Audit\Journal;
 use App\Domain\Notifications\Notifieur;
@@ -14,7 +15,6 @@ use App\Enums\StatutDemande;
 use App\Enums\StatutInscription;
 use App\Enums\StatutVerificationInscription;
 use App\Enums\TypeNotification;
-use App\Jobs\RecalculerClassement;
 use App\Models\Demande;
 use App\Models\Stagiaire;
 use App\Models\Utilisateur;
@@ -372,7 +372,7 @@ class ControleInscription
         foreach ($dossiers->where('statut', StatutDemande::Complet) as $dossier) {
             $this->transition->rouvrirInstruction($dossier, 'Inscription en formation remise en cause : dossier à instruire de nouveau');
 
-            RecalculerClassement::dispatch($dossier->campagne_id)->afterCommit();
+            app(Classement::class)->actualiser($dossier->campagne_id);
         }
     }
 

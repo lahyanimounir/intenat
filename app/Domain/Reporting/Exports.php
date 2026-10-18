@@ -207,13 +207,14 @@ class Exports
             ],
             'liste_admis', 'liste_attente' => $this->listeAdmission($type, $u, (int) $campagneId),
             'paiements' => [
-                'sous_titre' => 'Paiements des frais d\'internat',
-                'colonnes' => ['N° dossier', 'Nom', 'Prénom', 'Montant', 'Statut', 'Autorisé le', 'Reçu déposé le', 'Contrôlé le'],
+                'sous_titre' => 'Paiements des frais mensuels d\'internat'.(! empty($filtres['periode']) ? ' — '.$filtres['periode'] : ''),
+                'colonnes' => ['Mois', 'N° dossier', 'Nom', 'Prénom', 'Montant', 'Statut', 'Autorisé le', 'Reçu déposé le', 'Contrôlé le'],
                 'lignes' => Paiement::visiblesPar($u)
                     ->when(! empty($filtres['statut']), fn ($q) => $q->where('statut', $filtres['statut']))
-                    ->with('demande.stagiaire')->get()
+                    ->when(! empty($filtres['periode']), fn ($q) => $q->where('periode', $filtres['periode']))
+                    ->with('demande.stagiaire')->orderBy('periode')->get()
                     ->map(fn (Paiement $p) => [
-                        $p->demande->numero_dossier, $p->demande->stagiaire->nom, $p->demande->stagiaire->prenom,
+                        $p->periode, $p->demande->numero_dossier, $p->demande->stagiaire->nom, $p->demande->stagiaire->prenom,
                         number_format((float) $p->montant, 2, ',', ' '), $p->statut->libelle(),
                         $p->date_autorisation?->format('d/m/Y'), $p->date_depot?->format('d/m/Y'), $p->date_validation?->format('d/m/Y'),
                     ])->all(),

@@ -9,10 +9,13 @@
     $raccourcis = [
         [route('stagiaire.inscription'), 'graduation-cap', 'Mon inscription', $inscription->libelle()],
         [route('stagiaire.dossier'), 'clipboard-check', 'Mon dossier', $demande ? $statut->libelle() : 'Aucune demande'],
-        [url('/stagiaire/hebergement'), 'bed-double', 'Hébergement', $affectation ? 'Chambre '.$affectation->lit->chambre->numero.', lit '.$affectation->lit->numero : 'Aucun lit attribué'],
-        [url('/stagiaire/paiements'), 'credit-card', 'Paiements', $paiementsARegler > 0 ? $paiementsARegler.' reçu(s) à déposer' : 'À jour'],
-        [url('/stagiaire/repas'), 'utensils-crossed', 'Repas', $repasReserves.' repas réservé(s) à venir'],
     ];
+    // Les services du séjour n'apparaissent qu'une fois un lit affecté.
+    if ($heberge) {
+        $raccourcis[] = [url('/stagiaire/hebergement'), 'bed-double', 'Hébergement', $affectation ? 'Chambre '.$affectation->lit->chambre->numero.', lit '.$affectation->lit->numero : 'Aucun lit attribué'];
+        $raccourcis[] = [url('/stagiaire/paiements'), 'credit-card', 'Paiements', $paiementsARegler > 0 ? $paiementsARegler.' mensualité(s) à régler' : 'À jour'];
+        $raccourcis[] = [url('/stagiaire/repas'), 'utensils-crossed', 'Repas', $repasReserves.' repas réservé(s) à venir'];
+    }
 @endphp
 <div>
     <x-page.entete :titre="'Bonjour '.$stagiaire->prenom" description="Votre demande de place, votre séjour et vos démarches à la Maison des Stagiaires." />
@@ -64,9 +67,9 @@
         @endif
 
         @if ($paiementsARegler > 0)
-            <x-alerte ton="alerte" titre="Reçu de paiement de l’hébergement attendu">
-                {{ $paiementsARegler }} période(s) autorisée(s) au paiement sans reçu déposé.
-                <x-slot:action><x-bouton taille="sm" :href="url('/stagiaire/paiements')">Déposer mon reçu</x-bouton></x-slot:action>
+            <x-alerte ton="alerte" titre="Frais d’internat à régler">
+                {{ $paiementsARegler }} mensualité(s) en attente de votre paiement et de votre justificatif.
+                <x-slot:action><x-bouton taille="sm" :href="url('/stagiaire/paiements')">Mes paiements</x-bouton></x-slot:action>
             </x-alerte>
         @endif
 
@@ -92,6 +95,7 @@
                     @elseif ($campagneOuverte)
                         <x-vide titre="Une campagne est ouverte" class="py-8!">
                             {{ $campagneOuverte->internat->nom }} — jusqu’au {{ Format::dateLongue($campagneOuverte->date_cloture) }}.
+                    @if ($campagneOuverte->avantOuverture()) Les candidatures sont déjà acceptées ; l’ouverture officielle est fixée au {{ Format::dateLongue($campagneOuverte->date_ouverture) }}.@endif
                             <x-slot:action><x-bouton variante="primaire" :href="route('stagiaire.dossier')">Déposer une demande</x-bouton></x-slot:action>
                         </x-vide>
                     @else

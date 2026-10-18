@@ -69,7 +69,7 @@ class FichierController extends Controller
 
     public function autorisationDuStagiaire(Paiement $paiement, DocumentsAdministratifs $documents): Response
     {
-        abort_unless($paiement->demande->stagiaire_id === $this->stagiaire()->id && $paiement->date_autorisation !== null, 404);
+        abort_unless($paiement->demande->stagiaire_id === $this->stagiaire()->id, 404);
 
         return $documents->autorisationDePaiement($paiement);
     }
@@ -139,7 +139,6 @@ class FichierController extends Controller
     public function autorisationDuPaiement(Paiement $paiement, DocumentsAdministratifs $documents): Response
     {
         $this->autoriser($paiement, 'paiements.consulter');
-        abort_if($paiement->date_autorisation === null, 404);
 
         return $documents->autorisationDePaiement($paiement);
     }

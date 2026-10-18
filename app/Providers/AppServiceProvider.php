@@ -9,6 +9,7 @@ use App\Domain\Identity\MyWay\FournisseurSimule;
 use App\Domain\Identity\Perimetre;
 use App\Domain\Shared\Parametres;
 use App\Http\Middleware\ExigerAdresseVerifiee;
+use App\Http\Middleware\ExigerLitAffecte;
 use App\Http\Middleware\ExigerPermission;
 use App\Http\Middleware\ExigerPersonnel;
 use App\Http\Middleware\ExigerProfilComplet;
@@ -89,7 +90,7 @@ class AppServiceProvider extends ServiceProvider
         Livewire::addPersistentMiddleware([
             AuthenticateSession::class,
             ExigerPersonnel::class, ExigerStagiaire::class, ExigerPermission::class,
-            ExigerAdresseVerifiee::class, ExigerProfilComplet::class,
+            ExigerAdresseVerifiee::class, ExigerProfilComplet::class, ExigerLitAffecte::class,
         ]);
 
         $this->limitesDeDebit();

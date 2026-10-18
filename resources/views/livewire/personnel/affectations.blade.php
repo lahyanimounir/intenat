@@ -1,7 +1,7 @@
 @php use App\Support\Affichage\Format; @endphp
 <div>
     <x-page.entete titre="Affectations"
-        description="Candidats admis ayant confirmé leur place, à loger. La permission d’occuper est votre décision : elle est distincte du paiement de l’hébergement, dont le reçu peut suivre." />
+        description="Candidats admis ayant confirmé leur place, à loger. La permission d’occuper est votre décision : le paiement des frais d’internat n’est jamais une condition de l’affectation ou de l’arrivée." />
 
     <x-tableau legende="Candidats à loger" :lignes="$candidats" vide="Aucun candidat à loger"
         vide-description="Les candidats apparaissent ici dès qu’ils confirment leur place.">
@@ -50,7 +50,7 @@
                             <x-bouton taille="sm" variante="primaire" icone="bed-double" wire:click="preparer({{ $candidat->id }})">Attribuer un lit</x-bouton>
                         @else
                             <x-bouton taille="sm" icone="key-round" :disabled="count($candidat->obstacles) > 0"
-                                x-on:click="$confirmer({ titre: 'Autoriser l’occupation ?', texte: 'Le candidat pourra recevoir un lit. Cette décision est distincte du paiement de l’hébergement et reste tracée.', libelle: 'Autoriser' }).then(() => $wire.autoriserOccupation({{ $candidat->id }}))">
+                                x-on:click="$confirmer({ titre: 'Autoriser l’occupation ?', texte: 'Le candidat pourra recevoir un lit. Le paiement des frais d’internat n’en est pas une condition. La décision reste tracée.', libelle: 'Autoriser' }).then(() => $wire.autoriserOccupation({{ $candidat->id }}))">
                                 Autoriser l’occupation
                             </x-bouton>
                         @endif

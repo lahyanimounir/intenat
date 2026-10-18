@@ -13,13 +13,10 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 
 /**
- * Suivi des frais d'internat, période par période. Trois étapes distinctes :
- * l'autorisation de paiement (chef de pôle), le dépôt du reçu (stagiaire), son
- * contrôle (gestionnaire). Aucun paiement en ligne.
- *
- * Ces frais d'hébergement sont un processus à part : ils ne se confondent pas
- * avec le règlement des frais d'inscription en formation, qui relève de
- * l'établissement et n'est ni saisi ni contrôlé ici.
+ * Suivi des frais d'internat, mois par mois. Le stagiaire paie directement et dépose son
+ * justificatif ; le gestionnaire le vérifie ; le chef de pôle consulte et suit, sans rien autoriser.
+ * Ces frais d'hébergement ne se confondent pas avec les frais d'inscription en formation,
+ * qui relèvent de l'établissement.
  */
 #[Title('Suivi des paiements')]
 class Paiements extends PagePersonnel
@@ -27,8 +24,6 @@ class Paiements extends PagePersonnel
     use AvecTableau;
 
     private const CONSULTER = 'paiements.consulter';
-
-    private const AUTORISER = 'paiements.autoriser';
 
     private const CONTROLER = 'paiements.controler';
 
@@ -39,14 +34,12 @@ class Paiements extends PagePersonnel
     #[Url(except: '')]
     public string $internat = '';
 
-    /** Paiements cochés pour une autorisation groupée. */
-    public array $selection = [];
+    /** Mois suivi, au format AAAA-MM. */
+    #[Url(except: '')]
+    public string $periode = '';
 
     #[Locked]
     public ?int $ligne = null;
-
-    /** @var array<string, string> */
-    public array $autorisation = ['montant' => ''];
 
     public function mount(): void
     {
@@ -55,20 +48,19 @@ class Paiements extends PagePersonnel
 
     protected function filtres(): array
     {
-        return ['statut', 'internat'];
+        return ['statut', 'periode', 'internat'];
     }
 
     public function updated(string $propriete): void
     {
         if ($propriete === 'recherche' || in_array($propriete, $this->filtres(), true)) {
-            $this->reset('selection');
             $this->resetPage();
         }
     }
 
     public function effacerFiltres(): void
     {
-        $this->reset('recherche', 'statut', 'internat', 'selection');
+        $this->reset('recherche', 'statut', 'periode', 'internat');
         $this->resetPage();
     }
 
@@ -79,60 +71,6 @@ class Paiements extends PagePersonnel
 
         return $paiement;
     }
-
-    /* --------------------------------------------- Autorisation (chef de pôle) */
-
-    public function preparerAutorisation(int $id): void
-    {
-        $paiement = $this->paiement($id, self::AUTORISER);
-        $this->ligne = $paiement->id;
-        $this->autorisation = ['montant' => (string) $paiement->montant];
-        $this->ouvrirDialogue('autorisation');
-    }
-
-    public function delivrer(SuiviPaiements $suivi): void
-    {
-        $paiement = $this->paiement((int) $this->ligne, self::AUTORISER);
-
-        $valides = $this->validate([
-            'autorisation.montant' => ['required', 'numeric', 'min:0', 'max:99999'],
-        ], [], [
-            'autorisation.montant' => 'montant',
-        ])['autorisation'];
-
-        if ($this->executer(fn () => $suivi->autoriser($paiement, $this->utilisateur(), (float) $valides['montant']),
-            'Autorisation de paiement délivrée : le stagiaire est notifié.')) {
-            $this->fermerDialogue();
-        }
-    }
-
-    /** Autorisation groupée : seules les lignes du périmètre et encore en attente sont traitées. */
-    public function autoriserSelection(SuiviPaiements $suivi): void
-    {
-        $this->exiger(self::AUTORISER);
-        $ids = collect($this->selection)->filter(fn ($id) => ctype_digit((string) $id))->map(fn ($id) => (int) $id)->unique()->take(200)->values();
-
-        if ($ids->isEmpty()) {
-            $this->message('Cochez au moins un paiement en attente d\'autorisation.', 'danger');
-
-            return;
-        }
-
-        $paiements = Paiement::visiblesPar($this->utilisateur())->whereIn('paiement.id', $ids)->where('paiement.statut', StatutPaiement::EnAttente->value)->get();
-
-        $this->executer(function () use ($suivi, $paiements, $ids) {
-            foreach ($paiements as $paiement) {
-                $suivi->autoriser($paiement, $this->utilisateur());
-            }
-
-            $ignores = $ids->count() - $paiements->count();
-            $this->message($paiements->count().' autorisation(s) délivrée(s)'.($ignores > 0 ? ', '.$ignores.' ligne(s) ignorée(s).' : '.'));
-        });
-
-        $this->reset('selection');
-    }
-
-    /* ------------------------------------------ Contrôle du reçu (gestionnaire) */
 
     public function valider(SuiviPaiements $suivi, int $id): void
     {
@@ -171,23 +109,24 @@ class Paiements extends PagePersonnel
         $terme = trim($this->recherche);
         $motif = '%'.addcslashes($terme, '%_\\').'%';
         $statuts = array_values(array_intersect(explode(',', $this->statut), StatutPaiement::valeurs()));
+        $periode = preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $this->periode) === 1 ? $this->periode : '';
 
         $paiements = Paiement::visiblesPar($this->utilisateur())
             ->with('demande.stagiaire:id,nom,prenom,cef', 'demande.campagne.internat:id,nom')
             ->when($statuts !== [], fn (Builder $q) => $q->whereIn('paiement.statut', $statuts))
+            ->when($periode !== '', fn (Builder $q) => $q->where('paiement.periode', $periode))
             ->when($this->internat !== '', fn (Builder $q) => $q->whereHas('demande.campagne', fn (Builder $c) => $c->where('internat_id', (int) $this->internat)))
             ->when($terme !== '', fn (Builder $q) => $q->whereHas('demande', fn (Builder $d) => $d->where(fn (Builder $s) => $s
                 ->where('numero_dossier', 'like', $motif)
                 ->orWhereHas('stagiaire', fn (Builder $st) => $st->where('nom', 'like', $motif)->orWhere('prenom', 'like', $motif)->orWhere('cef', 'like', $motif)))))
-            ->orderByDesc('paiement.id')
+            ->orderByDesc('paiement.periode')->orderByDesc('paiement.id')
             ->paginate(25);
 
         return view('livewire.personnel.paiements', [
             'paiements' => $paiements,
             'internats' => $this->internatsDuPerimetre(),
-            'peutAutoriser' => $this->peut(self::AUTORISER),
             'peutControler' => $this->peut(self::CONTROLER),
-            'filtresActifs' => $terme !== '' || $this->statut !== '' || $this->internat !== '',
+            'filtresActifs' => $terme !== '' || $this->statut !== '' || $this->periode !== '' || $this->internat !== '',
             'choisi' => $this->ligne !== null ? Paiement::with('demande.stagiaire:id,nom,prenom')->find($this->ligne) : null,
         ]);
     }

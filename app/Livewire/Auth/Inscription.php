@@ -182,7 +182,8 @@ class Inscription extends Component
             'formation.etablissement_id' => ['required', 'integer', Rule::exists('etablissement', 'id')->where('complexe_id', $this->complexeId ?: 0)],
             'campagneId' => [
                 'required', 'integer',
-                Rule::exists('campagne', 'id')->where('statut', StatutCampagne::Ouverte->value)->where('internat_id', $internatVise ?? 0),
+                Rule::exists('campagne', 'id')->where('statut', StatutCampagne::Ouverte->value)->where('internat_id', $internatVise ?? 0)
+                    ->where(fn ($q) => $q->whereDate('date_cloture', '>=', now()->toDateString())),
             ],
             'formation.nom_filiere' => ['required', 'string', 'min:3', 'max:190'],
             'formation.niveau_formation' => ['required', Rule::enum(NiveauFormation::class)],
@@ -293,7 +294,7 @@ class Inscription extends Component
                 $stagiaire = $inscription->declarerIdentite($stagiaire, $this->identiteNormalisee());
                 $stagiaire = $inscription->declarerFormation($stagiaire, collect($this->formation)->only(['etablissement_id', 'nom_filiere', 'niveau_formation', 'annee_formation', 'annee_scolaire'])->all());
 
-                $demande = $dossiers->ouvrirBrouillon($stagiaire->fresh());
+                $demande = $dossiers->ouvrirBrouillon($stagiaire->fresh(), Campagne::find((int) $this->campagneId));
                 $dossiers->enregistrer($demande, $this->situation);
 
                 foreach ($this->fichiers as $typeId => $fichier) {
@@ -347,13 +348,11 @@ class Inscription extends Component
         }
 
         return Campagne::query()
-            ->where('statut', StatutCampagne::Ouverte->value)
-            ->whereDate('date_ouverture', '<=', now())
-            ->whereDate('date_cloture', '>=', now())
+            ->accessibles()
             ->whereHas('internat', fn ($q) => $q->where('etablissement_id', $etablissementId)->where('genre', $this->identite['genre']))
-            ->orderByDesc('date_ouverture')
+            ->orderBy('date_ouverture')
             ->get()
-            ->mapWithKeys(fn (Campagne $c) => [$c->id => 'Campagne '.$c->annee.' — clôture le '.$c->date_cloture->format('d/m/Y')]);
+            ->mapWithKeys(fn (Campagne $c) => [$c->id => $c->libelleCandidature()]);
     }
 
     /** @return \Illuminate\Support\Collection<int, array{type: TypePiece, requise: bool, raison: string|null}> */

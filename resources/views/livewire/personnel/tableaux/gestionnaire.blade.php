@@ -50,8 +50,8 @@
 
     @if ($d['paiements']['recus_manquants'] > 0)
         <p class="text-sm text-discret">
-            {{ $d['paiements']['recus_manquants'] }} résident(s) n’ont pas encore déposé leur reçu pour {{ Format::mois(now()->format('Y-m')) }}.
-            <a href="/paiements?statut=autorise" wire:navigate class="text-bleu hover:underline">Voir les paiements</a>
+            {{ $d['paiements']['recus_manquants'] }} mensualité(s) attendent encore le justificatif de paiement du stagiaire.
+            <a href="/paiements?statut=en_attente,autorise" wire:navigate class="text-bleu hover:underline">Voir les paiements</a>
         </p>
     @endif
 </div>

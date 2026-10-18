@@ -7,6 +7,7 @@ use App\Domain\Applications\TransitionDemande;
 use App\Domain\Audit\Journal;
 use App\Domain\Identity\Perimetre;
 use App\Domain\Notifications\Notifieur;
+use App\Domain\Payments\SuiviPaiements;
 use App\Domain\Shared\Parametres;
 use App\Domain\Shared\RegleMetierException;
 use App\Enums\StatutBatiment;
@@ -45,39 +46,20 @@ class AffectationLits
         private readonly Perimetre $perimetre,
         private readonly TransitionDemande $transition,
         private readonly ListeAttente $listeAttente,
-        private readonly Parametres $parametres,
         private readonly Notifieur $notifieur,
         private readonly Journal $journal,
+        private readonly SuiviPaiements $paiements,
     ) {}
 
     /**
-     * Ce qui manque encore pour autoriser l'occupation, selon les règles configurées.
+     * Ce qui manque encore pour autoriser l'occupation. Le paiement n'en fait jamais partie : il se
+     * suit à part, mois par mois, et ne conditionne ni l'occupation, ni l'affectation, ni l'arrivée.
      *
      * @return list<string>
      */
     public function obstaclesOccupation(Demande $demande): array
     {
-        $obstacles = [];
-        $paiements = $demande->paiements()->get();
-
-        if ($demande->statut !== StatutDemande::Confirme) {
-            $obstacles[] = 'Le candidat n\'a pas confirmé sa place.';
-        }
-
-        $autorise = $paiements->contains(fn ($p) => in_array($p->statut, [
-            StatutPaiement::Autorise, StatutPaiement::RecuDepose, StatutPaiement::Valide,
-        ], true));
-
-        if ($this->parametres->vrai('occupation.exiger_autorisation_paiement') && ! $autorise) {
-            $obstacles[] = 'L\'autorisation de paiement n\'a pas été délivrée par le chef de pôle.';
-        }
-
-        if ($this->parametres->vrai('occupation.exiger_recu_valide')
-            && ! $paiements->contains(fn ($p) => $p->statut === StatutPaiement::Valide)) {
-            $obstacles[] = 'Aucun reçu de paiement validé.';
-        }
-
-        return $obstacles;
+        return $demande->statut === StatutDemande::Confirme ? [] : ['La place du candidat n\'a pas encore été confirmée.'];
     }
 
     /**
@@ -133,6 +115,9 @@ class AffectationLits
                 $this->journal->consigner('hebergement.affectation', $affectation, details: [
                     'demande_id' => $demande->id, 'lit_id' => $lit->id, 'chambre' => $chambre->numero,
                 ]);
+
+                // Le séjour commence : la mensualité du premier mois est ouverte, à payer aussitôt.
+                $this->paiements->ouvrirMensualite($demande, $dateDebut);
 
                 $this->notifieur->versStagiaire(
                     $demande->stagiaire,
@@ -326,7 +311,7 @@ class AffectationLits
     {
         if ($demande->statut !== StatutDemande::Confirme) {
             throw new RegleMetierException(
-                'Un lit ne s\'attribue qu\'à un admis validé par le chef de pôle et ayant confirmé sa place.',
+                'Un lit ne s\'attribue qu\'à un candidat admis dont la place a été confirmée.',
                 'candidat_non_autorise',
             );
         }

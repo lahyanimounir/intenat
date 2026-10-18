@@ -92,14 +92,14 @@ class AffectationLitsTest extends TestCase
         ]);
         $this->assertRegle('candidat_non_autorise', fn () => $this->affecter($admis, $lit));
 
-        // Confirmé, mais occupation pas encore autorisée (autorisation de paiement non délivrée).
+        // Confirmé, mais occupation pas encore autorisée par le gestionnaire.
         $admis->forceFill(['statut' => StatutDemande::Confirme])->save();
         $this->assertRegle('occupation_non_autorisee', fn () => $this->affecter($admis, $lit));
-        $this->assertRegle('occupation_non_autorisable', fn () => app(AffectationLits::class)->autoriserOccupation($admis->fresh(), $this->gestionnaireFilles));
 
-        // À l'écran, la même règle s'applique et s'explique.
-        $this->ecran($this->gestionnaireFilles, Affectations::class)->call('autoriserOccupation', $admis->id);
-        $this->assertFalse($admis->fresh()->occupationAutorisee());
+        // L'occupation s'autorise sans aucun paiement : le paiement n'en est jamais une condition.
+        $this->ecran($this->gestionnaireFilles, Affectations::class)->call('autoriserOccupation', $admis->id)->assertHasNoErrors();
+        $this->assertTrue($admis->fresh()->occupationAutorisee());
+        $this->assertSame(0, $admis->paiements()->count());
 
         $this->assertSame(0, Affectation::count());
         $this->assertSame(StatutLit::Disponible, $lit->fresh()->statut);

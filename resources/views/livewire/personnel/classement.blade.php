@@ -123,7 +123,7 @@
         @endif
 
         @if ($dialogue === 'deliberation')
-            <x-dialogue titre="Valider les admissions" :description="'Campagne '.$choisie->annee.' — '.$choisie->internat->nom">
+            <x-dialogue titre="Valider les admissions" :description="'Campagne '.$choisie->libellePeriode().' — '.$choisie->internat->nom">
                 <div class="space-y-4">
                     <x-definitions>
                         <x-definition terme="Places offertes"><span class="chiffres">{{ $apercu['places'] }}</span></x-definition>

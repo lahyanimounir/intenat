@@ -15,7 +15,7 @@ use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Suivi des paiements côté personnel : le chef de pôle autorise, le
+ * Suivi des paiements côté personnel : le chef de pôle consulte, le
  * gestionnaire contrôle les reçus. Aucun paiement en ligne.
  */
 class PaiementController extends Controller
@@ -43,38 +43,6 @@ class PaiementController extends Controller
         ]);
 
         return response()->json($page);
-    }
-
-    public function delivrerAutorisation(Request $request, Paiement $paiement): JsonResponse
-    {
-        $this->autoriser($paiement, 'paiements.autoriser');
-
-        $donnees = $request->validate([
-            'montant' => ['nullable', 'numeric', 'min:0', 'max:99999'],
-        ]);
-
-        $paiement = $this->paiements->autoriser(
-            $paiement,
-            $this->personnel(),
-            isset($donnees['montant']) ? (float) $donnees['montant'] : null,
-        );
-
-        return response()->json(self::paiement($paiement));
-    }
-
-    /** Autorisation groupée : seules les lignes du périmètre et encore en attente sont traitées. */
-    public function autoriserLot(Request $request): JsonResponse
-    {
-        $ids = $request->validate(['ids' => ['required', 'array', 'min:1', 'max:200'], 'ids.*' => ['integer', 'distinct']])['ids'];
-
-        $paiements = Paiement::visiblesPar($this->personnel())->whereIn('id', $ids)
-            ->where('statut', StatutPaiement::EnAttente->value)->get();
-
-        foreach ($paiements as $paiement) {
-            $this->paiements->autoriser($paiement, $this->personnel());
-        }
-
-        return response()->json(['autorises' => $paiements->count(), 'ignores' => count($ids) - $paiements->count()]);
     }
 
     public function controler(Request $request, Paiement $paiement): JsonResponse
@@ -105,7 +73,6 @@ class PaiementController extends Controller
     public function autorisation(Paiement $paiement, DocumentsAdministratifs $documents): Response
     {
         $this->autoriser($paiement, 'paiements.consulter');
-        abort_if($paiement->date_autorisation === null, 404);
 
         return $documents->autorisationDePaiement($paiement);
     }
@@ -116,6 +83,8 @@ class PaiementController extends Controller
         return [
             'id' => $p->id,
             'demande_id' => $p->demande_id,
+            'periode' => $p->periode,
+            'genere_auto' => $p->genere_auto,
             'montant' => $p->montant,
             'statut' => self::enum($p->statut),
             'date_autorisation' => $p->date_autorisation,

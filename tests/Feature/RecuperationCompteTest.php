@@ -7,6 +7,7 @@ use App\Domain\Shared\RegleMetierException;
 use App\Enums\EtatCompte;
 use App\Enums\RoleCode;
 use App\Livewire\Auth\Connexion;
+use App\Livewire\Auth\ConnexionPersonnel;
 use App\Livewire\Auth\MotDePasseOublie;
 use App\Livewire\Auth\Reinitialisation;
 use App\Models\JournalAudit;
@@ -41,13 +42,13 @@ class RecuperationCompteTest extends TestCase
 
     private function demander(string $espace, string $email): Testable
     {
-        return Livewire::test(MotDePasseOublie::class)->set('espace', $espace)->set('email', $email)->call('envoyer')->assertHasNoErrors();
+        return Livewire::test(MotDePasseOublie::class, ['espace' => $espace])->set('email', $email)->call('envoyer')->assertHasNoErrors();
     }
 
     private function reinitialiser(string $espace, string $email, string $jeton, string $motDePasse = self::NOUVEAU): Testable
     {
-        return Livewire::test(Reinitialisation::class)->set('email', $email)->set('mot_de_passe', $motDePasse)->set('mot_de_passe_confirmation', $motDePasse)
-            ->call('enregistrer', $espace, $jeton);
+        return Livewire::test(Reinitialisation::class, ['espace' => $espace])->set('email', $email)->set('mot_de_passe', $motDePasse)->set('mot_de_passe_confirmation', $motDePasse)
+            ->call('enregistrer', $jeton);
     }
 
     private function jetonEnvoye(object $compte): string
@@ -64,7 +65,7 @@ class RecuperationCompteTest extends TestCase
 
     private function connexion(string $espace, string $email, string $motDePasse): Testable
     {
-        return Livewire::test(Connexion::class)->set('espace', $espace)->set('email', $email)->set('mot_de_passe', $motDePasse)->call('connecter');
+        return Livewire::test($espace === 'stagiaire' ? Connexion::class : ConnexionPersonnel::class)->set('email', $email)->set('mot_de_passe', $motDePasse)->call('connecter');
     }
 
     public function test_un_stagiaire_reinitialise_son_mot_de_passe_internat_par_un_lien_a_usage_unique(): void
@@ -79,7 +80,7 @@ class RecuperationCompteTest extends TestCase
         $this->assertSame(0, DB::table('password_reset_tokens')->count());
         $this->assertNotSame($jeton, DB::table('stagiaire_password_reset_tokens')->value('token'));
 
-        $this->reinitialiser('stagiaire', 'salma@exemple.test', $jeton)->assertHasNoErrors()->assertRedirect(route('connexion', ['espace' => 'stagiaire']));
+        $this->reinitialiser('stagiaire', 'salma@exemple.test', $jeton)->assertHasNoErrors()->assertRedirect(route('connexion'));
 
         $stagiaire->refresh();
         $this->assertStringStartsWith('$argon2id$', $stagiaire->mot_de_passe_hash);
@@ -160,7 +161,7 @@ class RecuperationCompteTest extends TestCase
 
         // Une session est ouverte sur un autre poste avant la réinitialisation.
         $this->connexion('personnel', 'admin@test.local', self::ANCIEN)->assertRedirect(route('tableau-de-bord'));
-        $this->get('/')->assertOk();
+        $this->get(route('tableau-de-bord'))->assertOk();
         $empreinte = $admin->fresh()->mot_de_passe_hash;
 
         $this->demander('personnel', 'admin@test.local');
@@ -169,7 +170,7 @@ class RecuperationCompteTest extends TestCase
         // L'empreinte a changé : la session ouverte avec l'ancien mot de passe n'est plus acceptée.
         $this->assertNotSame($empreinte, $admin->fresh()->mot_de_passe_hash);
         $this->app['auth']->forgetGuards();
-        $this->get('/')->assertRedirect(route('connexion'));
+        $this->get(route('tableau-de-bord'))->assertRedirect(route('backend.connexion'));
 
         $this->connexion('personnel', 'admin@test.local', self::ANCIEN)->assertHasErrors('email');
         $this->connexion('personnel', 'admin@test.local', self::NOUVEAU)->assertHasNoErrors()->assertRedirect(route('tableau-de-bord'));
@@ -184,7 +185,10 @@ class RecuperationCompteTest extends TestCase
         // Le jeton voyage dans le fragment : ni chemin, ni paramètres de requête.
         $this->assertSame('/reinitialisation', parse_url($lien, PHP_URL_PATH));
         $this->assertNull(parse_url($lien, PHP_URL_QUERY));
-        $this->assertSame('espace=stagiaire&jeton=jeton-de-test', parse_url($lien, PHP_URL_FRAGMENT));
+        $this->assertSame('jeton=jeton-de-test', parse_url($lien, PHP_URL_FRAGMENT));
+
+        // Le lien du personnel mène à la page de son propre espace.
+        $this->assertSame('/backend/reinitialisation', parse_url((new ReinitialisationMotDePasse('jeton-de-test', 'personnel'))->lien(), PHP_URL_PATH));
 
         // En file d'attente, la charge est chiffrée : le jeton n'est pas lisible dans la table des tâches.
         $this->assertInstanceOf(ShouldBeEncrypted::class, $notification);

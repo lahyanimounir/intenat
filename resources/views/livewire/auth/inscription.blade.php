@@ -4,7 +4,7 @@
     use App\Enums\NiveauFormation;
 @endphp
 <div>
-    <x-bouton variante="lien" taille="sm" class="mb-4" icone="arrow-left" :href="route('connexion', ['espace' => 'stagiaire'])">Retour à la connexion</x-bouton>
+    <x-bouton variante="lien" taille="sm" class="mb-4" icone="arrow-left" :href="route('connexion')">Retour à la connexion</x-bouton>
 
     <h1 class="text-xl font-semibold text-encre">Inscription à l’internat</h1>
     <p class="mt-1 mb-5 text-base text-discret">

@@ -7,6 +7,7 @@ use App\Domain\Shared\RegleMetierException;
 use App\Http\Middleware\EnTetesSecurite;
 use App\Http\Middleware\ExigerAdresseVerifiee;
 use App\Http\Middleware\ExigerInscriptionVerifiee;
+use App\Http\Middleware\ExigerLitAffecte;
 use App\Http\Middleware\ExigerPermission;
 use App\Http\Middleware\ExigerPersonnel;
 use App\Http\Middleware\ExigerProfilComplet;
@@ -44,10 +45,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'adresse.verifiee' => ExigerAdresseVerifiee::class,
             'profil.complet' => ExigerProfilComplet::class,
             'inscription.verifiee' => ExigerInscriptionVerifiee::class,
+            'lit.affecte' => ExigerLitAffecte::class,
         ]);
 
-        // Un visiteur est renvoyé à la connexion ; un compte déjà connecté, à l'accueil de son espace.
-        $middleware->redirectGuestsTo(fn () => route('connexion'));
+        // Un visiteur est renvoyé à la connexion de l'espace demandé ; un compte déjà connecté, à l'accueil du sien.
+        $middleware->redirectGuestsTo(fn (Request $request) => $request->is('stagiaire', 'stagiaire/*') ? route('connexion') : route('backend.connexion'));
         $middleware->redirectUsersTo(fn () => auth('stagiaire')->check() ? route('stagiaire.accueil') : route('tableau-de-bord'));
     })
     ->withExceptions(function (Exceptions $exceptions): void {

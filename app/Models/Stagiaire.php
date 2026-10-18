@@ -218,6 +218,15 @@ class Stagiaire extends Authenticatable
             ->first();
     }
 
+    /**
+     * Un lit lui a été affecté (séjour en cours ou passé) : condition d'accès aux services du séjour.
+     * Ni la validation du dossier, ni l'admission, ni la confirmation de la place n'y suffisent.
+     */
+    public function aUnLitAffecte(): bool
+    {
+        return Affectation::query()->whereHas('demande', fn ($q) => $q->where('stagiaire_id', $this->id))->exists();
+    }
+
     /** Le genre devient définitif dès qu'un dossier a quitté l'état de brouillon. */
     public function genreVerrouille(): bool
     {

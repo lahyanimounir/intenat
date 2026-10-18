@@ -11,19 +11,19 @@
 @endphp
 <div>
     <x-page.entete :titre="'Dossier '.$demande->numero_dossier" :fil="[['Dossiers', route('dossiers')], [$demande->numero_dossier, null]]"
-        :description="$stagiaire->nom.' '.$stagiaire->prenom.' — '.$demande->campagne->internat->nom.', campagne '.$demande->campagne->annee">
+        :description="$stagiaire->nom.' '.$stagiaire->prenom.' — '.$demande->campagne->internat->nom.', campagne '.$demande->campagne->libellePeriode()">
         <x-slot:marque><x-statut :etat="$demande->statut" /></x-slot:marque>
         <x-slot:actions>
             <x-bouton icone="download" :href="route('dossiers.accuse', $demande)" :navigation="false">Accusé de réception</x-bouton>
             @if ($gererHebergement && $demande->statut === StatutDemande::Admis)
                 <x-bouton variante="primaire" icone="circle-check" cible="confirmerPlace"
-                    x-on:click="$confirmer({ titre: 'Confirmer la place du candidat ?', texte: 'Vous confirmez la place de ce candidat admis à l’internat. L’autorisation de paiement pourra ensuite être délivrée par le chef de pôle.', libelle: 'Confirmer la place' }).then(() => $wire.confirmerPlace())">
+                    x-on:click="$confirmer({ titre: 'Confirmer la place du candidat ?', texte: 'Vous confirmez la place de ce candidat admis à l’internat. Vous pourrez ensuite lui affecter un lit, sans attendre son paiement.', libelle: 'Confirmer la place' }).then(() => $wire.confirmerPlace())">
                     Confirmer la place
                 </x-bouton>
             @endif
             @if ($gererHebergement && $demande->statut === StatutDemande::Confirme && ! $demande->occupationAutorisee())
                 <x-bouton variante="primaire" icone="key-round" :disabled="count($obstacles) > 0" cible="autoriserOccupation"
-                    x-on:click="$confirmer({ titre: 'Autoriser l’occupation ?', texte: 'Le candidat pourra recevoir un lit. Cette décision est distincte du paiement de l’hébergement et reste tracée.', libelle: 'Autoriser' }).then(() => $wire.autoriserOccupation())">
+                    x-on:click="$confirmer({ titre: 'Autoriser l’occupation ?', texte: 'Le candidat pourra recevoir un lit. Le paiement des frais d’internat n’en est pas une condition. La décision reste tracée.', libelle: 'Autoriser' }).then(() => $wire.autoriserOccupation())">
                     Autoriser l’occupation
                 </x-bouton>
             @endif

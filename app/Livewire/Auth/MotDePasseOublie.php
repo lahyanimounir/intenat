@@ -5,8 +5,8 @@ namespace App\Livewire\Auth;
 use App\Domain\Identity\RecuperationCompte;
 use App\Livewire\Concerns\AvecLimiteDeDebit;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
-use Livewire\Attributes\Url;
 use Livewire\Component;
 
 /** Demande d'un lien de réinitialisation. La réponse est la même que l'adresse corresponde ou non à un compte. */
@@ -16,18 +16,17 @@ class MotDePasseOublie extends Component
 {
     use AvecLimiteDeDebit;
 
-    #[Url(except: 'personnel')]
-    public string $espace = 'personnel';
+    /** Fixé par la route : « /mot-de-passe-oublie » pour les stagiaires, « /backend/mot-de-passe-oublie » pour le personnel. */
+    #[Locked]
+    public string $espace = 'stagiaire';
 
     public string $email = '';
 
     public ?string $envoyeA = null;
 
-    public function mount(): void
+    public function mount(string $espace = 'stagiaire'): void
     {
-        if (! in_array($this->espace, RecuperationCompte::ESPACES, true)) {
-            $this->espace = 'personnel';
-        }
+        $this->espace = $espace === 'personnel' ? 'personnel' : 'stagiaire';
     }
 
     public function envoyer(RecuperationCompte $recuperation): void

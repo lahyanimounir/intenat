@@ -181,7 +181,7 @@ class AuditEtAdministrationTest extends TestCase
         // Désactivation sans suppression ; le compte désactivé perd tout accès.
         $this->assertFalse($comptes->basculer($compte, $this->admin)->actif);
         $this->assertSame([], app(Perimetre::class)->internatIds($compte->fresh()));
-        $this->connecter($compte->fresh())->get('/dossiers')->assertRedirect(route('connexion'));
+        $this->connecter($compte->fresh())->get('/dossiers')->assertRedirect(route('backend.connexion'));
     }
 
     public function test_un_administrateur_ne_peut_pas_se_retirer_ses_droits_ni_supprimer_le_dernier_administrateur(): void

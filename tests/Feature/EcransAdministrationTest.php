@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Domain\Audit\Journal;
+use App\Domain\Identity\ComptesPersonnel;
 use App\Domain\Reporting\Exports;
 use App\Domain\Shared\Parametres as LectureParametres;
 use App\Enums\EtatCompte;
@@ -10,6 +11,7 @@ use App\Enums\Genre;
 use App\Enums\ResultatVerification;
 use App\Enums\RoleCode;
 use App\Enums\StatutExport;
+use App\Enums\StatutInscription;
 use App\Jobs\GenererExport;
 use App\Livewire\Administration\Audit;
 use App\Livewire\Administration\ComptesStagiaires;
@@ -25,6 +27,7 @@ use App\Models\Internat;
 use App\Models\JournalAudit;
 use App\Models\Parametre;
 use App\Models\Region;
+use App\Models\Stagiaire;
 use App\Models\Utilisateur;
 use App\Models\VerificationIdentite;
 use App\Notifications\ReinitialisationMotDePasse;
@@ -66,9 +69,12 @@ class EcransAdministrationTest extends TestCase
             ->set('saisie.role', RoleCode::Gestionnaire->value)->set('saisie.mot_de_passe', 'court')->call('enregistrer')
             ->assertHasErrors(['saisie.email', 'saisie.mot_de_passe', 'saisie.internat_id']);
 
-        // Les niveaux étrangers au rôle sont remis à vide, même s'ils ont été renseignés.
+        // Le gestionnaire est rattaché au dernier niveau parcouru, l'internat ; les niveaux parents ne sont pas conservés.
+        $complexe = $this->etablissement->complexe;
         $ecran->set('saisie.email', 'Salma.Bennani@internat.test')->set('saisie.mot_de_passe', self::MOT_DE_PASSE)
-            ->set('saisie.internat_id', (string) $this->filles->id)->set('saisie.region_id', (string) $this->region->id)
+            ->set('saisie.region_id', (string) $this->region->id)->set('saisie.province_id', (string) $complexe->province_id)
+            ->set('saisie.complexe_id', (string) $complexe->id)->set('saisie.etablissement_id', (string) $this->etablissement->id)
+            ->set('saisie.internat_id', (string) $this->filles->id)
             ->call('enregistrer')->assertHasNoErrors()->assertSet('dialogue', null)->assertSee('salma.bennani@internat.test');
 
         $compte = Utilisateur::where('email', 'salma.bennani@internat.test')->sole();
@@ -79,9 +85,10 @@ class EcransAdministrationTest extends TestCase
         $trace = JournalAudit::where('action', 'utilisateur.creation')->sole();
         $this->assertStringNotContainsString(self::MOT_DE_PASSE, json_encode($trace->details));
 
-        // Changer de rôle change le niveau de périmètre ; le mot de passe laissé vide est conservé.
+        // Changer de rôle change le niveau de périmètre (la région parcourue reste choisie) ; le mot de passe laissé vide est conservé.
         Livewire::actingAs($this->admin)->test(Utilisateurs::class)->call('modifier', $compte->id)->assertSet('saisie.email', 'salma.bennani@internat.test')
-            ->set('saisie.role', RoleCode::DirRegionale->value)->call('enregistrer')->assertHasErrors('saisie.region_id')
+            ->set('saisie.role', RoleCode::DirRegionale->value)->assertSet('saisie.internat_id', '')->assertSet('saisie.province_id', '')
+            ->set('saisie.region_id', '')->call('enregistrer')->assertHasErrors('saisie.region_id')
             ->set('saisie.region_id', (string) $this->region->id)->call('enregistrer')->assertHasNoErrors();
 
         $compte->refresh()->load('roles');
@@ -92,6 +99,72 @@ class EcransAdministrationTest extends TestCase
         Livewire::actingAs($this->admin)->test(Utilisateurs::class)->set('role', RoleCode::DirRegionale->value)
             ->assertSee($compte->email)->assertDontSee($this->gestionnaireFilles->email)
             ->set('role', '')->set('recherche', 'bennani')->assertSee($compte->email)->assertDontSee($this->chefDePole->email);
+    }
+
+    public function test_le_formulaire_de_compte_parcourt_la_hierarchie_du_role(): void
+    {
+        $complexe = $this->etablissement->complexe;
+        $province = $complexe->province;
+        $autreRegion = $this->ailleurs->etablissement->complexe->province->region;
+
+        $ecran = Livewire::actingAs($this->admin)->test(Utilisateurs::class)->call('creer')
+            ->set('saisie.prenom', 'Nora')->set('saisie.nom', 'Alami')->set('saisie.email', 'nora.alami@internat.test')
+            ->set('saisie.mot_de_passe', self::MOT_DE_PASSE);
+
+        // Gestionnaire : région, province, complexe, établissement, internat ; chaque liste filtrée par son parent.
+        $ecran->assertViewHas('niveaux', ComptesPersonnel::HIERARCHIE['GESTIONNAIRE'])
+            ->assertViewHas('listes', fn (array $l) => $l['region_id']->has($this->region->id) && $l['province_id']->isEmpty())
+            ->set('saisie.region_id', (string) $this->region->id)
+            ->assertViewHas('listes', fn (array $l) => $l['province_id']->keys()->all() === [$province->id])
+            ->set('saisie.province_id', (string) $province->id)->set('saisie.complexe_id', (string) $complexe->id)
+            ->set('saisie.etablissement_id', (string) $this->etablissement->id)
+            ->assertViewHas('listes', fn (array $l) => $l['internat_id']->keys()->sort()->values()->all() === collect([$this->filles->id, $this->garcons->id])->sort()->values()->all())
+            ->set('saisie.internat_id', (string) $this->garcons->id);
+
+        // Changer un niveau efface ceux d'en dessous.
+        $ecran->set('saisie.region_id', (string) $autreRegion->id)
+            ->assertSet('saisie.province_id', '')->assertSet('saisie.complexe_id', '')->assertSet('saisie.etablissement_id', '')->assertSet('saisie.internat_id', '')
+            ->call('enregistrer')->assertHasErrors(['saisie.province_id', 'saisie.complexe_id', 'saisie.etablissement_id', 'saisie.internat_id']);
+
+        // Changer de rôle ne garde que les niveaux qu'il demande : le chef de pôle s'arrête à l'établissement.
+        $ecran->set('saisie.region_id', (string) $this->region->id)->set('saisie.province_id', (string) $province->id)
+            ->set('saisie.complexe_id', (string) $complexe->id)->set('saisie.etablissement_id', (string) $this->etablissement->id)
+            ->set('saisie.internat_id', (string) $this->filles->id)
+            ->set('saisie.role', RoleCode::ChefPole->value)->assertViewHas('niveaux', ComptesPersonnel::HIERARCHIE['CHEF_POLE'])
+            ->assertSet('saisie.internat_id', '')->assertSet('saisie.etablissement_id', (string) $this->etablissement->id);
+
+        // Le directeur s'arrête au complexe / CMC et y est rattaché directement.
+        $ecran->set('saisie.role', RoleCode::Directeur->value)->assertSet('saisie.etablissement_id', '')
+            ->call('enregistrer')->assertHasNoErrors()->assertSet('dialogue', null);
+        $directeur = Utilisateur::where('email', 'nora.alami@internat.test')->sole();
+        $this->assertSame([RoleCode::Directeur, $complexe->id, null, null], [$directeur->roleCode(), $directeur->complexe_id, $directeur->etablissement_id, $directeur->internat_id]);
+
+        // À l'ouverture d'une fiche, la hiérarchie se reconstitue depuis le rattachement actuel.
+        Livewire::actingAs($this->admin)->test(Utilisateurs::class)->call('modifier', $this->gestionnaireFilles->id)
+            ->assertSet('saisie.region_id', (string) $this->region->id)->assertSet('saisie.province_id', (string) $province->id)
+            ->assertSet('saisie.complexe_id', (string) $complexe->id)->assertSet('saisie.etablissement_id', (string) $this->etablissement->id)
+            ->assertSet('saisie.internat_id', (string) $this->filles->id)
+            // Seul le rattachement change ; le reste du compte est conservé.
+            ->set('saisie.internat_id', (string) $this->garcons->id)->call('enregistrer')->assertHasNoErrors();
+        $this->gestionnaireFilles->refresh()->load('roles');
+        $this->assertSame([$this->garcons->id, RoleCode::Gestionnaire], [$this->gestionnaireFilles->internat_id, $this->gestionnaireFilles->roleCode()]);
+
+        // Un directeur rattaché autrefois à un établissement retrouve le complexe de cet établissement.
+        Livewire::actingAs($this->admin)->test(Utilisateurs::class)->call('modifier', $this->directeur->id)
+            ->assertSet('saisie.complexe_id', (string) $complexe->id)->assertSet('saisie.etablissement_id', '');
+
+        // Côté serveur : un rattachement étranger à la hiérarchie transmise est refusé.
+        $this->agirEnTantQue($this->admin);
+        $intrus = ['nom' => 'Intrus', 'prenom' => 'Test', 'email' => 'intrus@internat.test', 'mot_de_passe' => self::MOT_DE_PASSE, 'role' => 'GESTIONNAIRE'];
+        $this->assertRegle('hierarchie_incoherente', fn () => app(ComptesPersonnel::class)->creer($intrus + [
+            'region_id' => $autreRegion->id, 'internat_id' => $this->filles->id,
+        ], $this->admin));
+
+        // Et nul ne confie une structure hors de son propre périmètre.
+        $this->chefDePole->givePermissionTo('utilisateurs.gerer');
+        $this->assertRegle('hors_perimetre', fn () => app(ComptesPersonnel::class)->creer($intrus + ['internat_id' => $this->ailleurs->id], $this->chefDePole));
+        Livewire::actingAs($this->chefDePole)->test(Utilisateurs::class)->call('creer')
+            ->assertViewHas('listes', fn (array $l) => $l['region_id']->keys()->all() === [$this->region->id]);
     }
 
     public function test_les_comptes_se_filtrent_niveau_par_niveau_de_la_hierarchie(): void
@@ -228,6 +301,38 @@ class EcransAdministrationTest extends TestCase
         Livewire::actingAs($this->chefDePole, 'web')->test(ComptesStagiaires::class)->assertForbidden();
     }
 
+    public function test_les_comptes_stagiaires_se_filtrent_par_la_hierarchie_sans_creation_possible(): void
+    {
+        $complexe = $this->etablissement->complexe;
+        $ici = $this->creerStagiaire($this->filles);
+        $ailleurs = $this->creerStagiaire($this->ailleurs);
+        $sansEtablissement = Stagiaire::factory()->create(['etablissement_id' => null, 'cef' => null, 'nom' => null, 'prenom' => null, 'nom_filiere' => null, 'statut_inscription' => StatutInscription::NonDeclaree]);
+        $autreRegion = $this->ailleurs->etablissement->complexe->province->region;
+
+        $ecran = Livewire::actingAs($this->admin)->test(ComptesStagiaires::class)
+            ->assertSee($ici->email)->assertSee($ailleurs->email)->assertSee($sansEtablissement->email)
+            // Aucun ajout : le stagiaire crée lui-même son compte en soumettant son inscription.
+            ->assertDontSee('Nouveau compte')
+            ->assertViewHas('filtre', fn (array $f) => $f['regions']->has($this->region->id) && $f['provinces']->isEmpty());
+
+        // Chaque niveau resserre la liste sur les stagiaires des établissements qu'il couvre.
+        $ecran->set('region', (string) $this->region->id)
+            ->assertSee($ici->email)->assertDontSee($ailleurs->email)->assertDontSee($sansEtablissement->email)
+            ->set('province', (string) $complexe->province_id)->set('complexe', (string) $complexe->id)
+            ->assertViewHas('filtre', fn (array $f) => $f['etablissements']->keys()->all() === [$this->etablissement->id])
+            ->set('etablissement', (string) $this->etablissement->id)->assertSee($ici->email)->assertDontSee($ailleurs->email);
+
+        // Les filtres existants s'y ajoutent.
+        $ecran->set('etat', EtatCompte::Suspendu->value)->assertDontSee($ici->email)->set('etat', '')
+            ->set('recherche', $ailleurs->email)->assertDontSee($ici->email)->assertDontSee($ailleurs->email)->set('recherche', '');
+
+        // Changer un parent efface les niveaux en dessous ; tout s'efface d'un geste.
+        $ecran->set('region', (string) $autreRegion->id)
+            ->assertSet('province', '')->assertSet('complexe', '')->assertSet('etablissement', '')
+            ->assertSee($ailleurs->email)->assertDontSee($ici->email)
+            ->call('effacerFiltres')->assertSet('region', '')->assertSee($sansEtablissement->email);
+    }
+
     public function test_les_verifications_myway_ne_sont_plus_qu_une_archive(): void
     {
         // Sans archive, l'onglet n'apparaît pas.
@@ -312,9 +417,9 @@ class EcransAdministrationTest extends TestCase
         $this->assertTrue(app(LectureParametres::class)->vrai('restauration.sortie_annule_repas'));
 
         // Confirmer une règle provisoire : elle n'est plus provisoire ensuite.
-        $ecran->set('valeurs.occupation__exiger_recu_valide', true)->set('confirmees.occupation__exiger_recu_valide', true)
-            ->call('enregistrer', 'occupation.exiger_recu_valide')->assertHasNoErrors();
-        $regle = Parametre::findOrFail('occupation.exiger_recu_valide');
+        $ecran->set('valeurs.places__exclure_isolement_infirmerie', true)->set('confirmees.places__exclure_isolement_infirmerie', true)
+            ->call('enregistrer', 'places.exclure_isolement_infirmerie')->assertHasNoErrors();
+        $regle = Parametre::findOrFail('places.exclure_isolement_infirmerie');
         $this->assertSame([true, false, $this->admin->id], [$regle->valeur, $regle->a_valider, $regle->modifie_par]);
 
         $trace = JournalAudit::where('action', 'parametre.modification')->orderBy('id')->first();

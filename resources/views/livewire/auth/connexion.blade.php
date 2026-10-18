@@ -1,6 +1,7 @@
+{{-- Accueil de l'espace stagiaires et candidats : se connecter, créer son compte, récupérer son mot de passe. --}}
 <div>
-    <h1 class="text-xl font-semibold text-encre">Connexion</h1>
-    <p class="mt-1 mb-6 text-base text-discret">Choisissez votre espace pour vous identifier.</p>
+    <h1 class="text-xl font-semibold text-encre">Espace stagiaires</h1>
+    <p class="mt-1 mb-6 text-base text-discret">Demandez une place à l’internat et suivez votre séjour.</p>
 
     @if (session('succes'))
         <x-alerte ton="succes" class="mb-5">{{ session('succes') }}</x-alerte>
@@ -12,47 +13,30 @@
         </x-alerte>
     @endif
 
-    <x-onglets libelle="Espace de connexion">
-        <x-onglet :actif="$espace === 'personnel'" wire:click="choisir('personnel')">Personnel</x-onglet>
-        <x-onglet :actif="$espace === 'stagiaire'" wire:click="choisir('stagiaire')">Stagiaire</x-onglet>
-    </x-onglets>
-
-    <div class="pt-5" wire:key="espace-{{ $espace }}">
+    <section aria-labelledby="titre-connexion" class="rounded-md border border-bord bg-surface px-4 py-4">
+        <h2 id="titre-connexion" class="mb-4 text-base font-semibold text-encre">Se connecter</h2>
         <form wire:submit="connecter" novalidate class="space-y-4">
             @if ($refus)
                 <x-alerte ton="danger">{{ $refus }}</x-alerte>
             @endif
 
             <x-saisie libelle="Adresse e-mail" type="email" wire:model="email" autocomplete="username" inputmode="email" requis />
-            <x-mot-de-passe :libelle="$espace === 'stagiaire' ? 'Mot de passe INTERNAT' : 'Mot de passe'" wire:model="mot_de_passe" autocomplete="current-password" requis />
+            <x-mot-de-passe libelle="Mot de passe INTERNAT" wire:model="mot_de_passe" autocomplete="current-password" requis />
 
             <x-bouton type="submit" variante="primaire" class="w-full" cible="connecter">Se connecter</x-bouton>
 
             <p class="text-center text-sm">
-                <a href="{{ route('mot-de-passe.oubli', ['espace' => $espace]) }}" wire:navigate class="rounded-sm text-bleu underline-offset-4 hover:underline">Mot de passe oublié ?</a>
+                <a href="{{ route('mot-de-passe.oubli') }}" wire:navigate class="rounded-sm text-bleu underline-offset-4 hover:underline">Mot de passe oublié ?</a>
             </p>
         </form>
+    </section>
 
-        @if ($espace === 'stagiaire')
-            <div class="mt-6 rounded-md border border-bord bg-surface px-4 py-3.5">
-                <p class="text-base font-medium text-encre">Première visite ?</p>
-                <p class="mt-0.5 text-sm text-discret">
-                    Créez votre compte INTERNAT, renseignez votre identité et votre formation, puis faites vérifier votre inscription par votre établissement.
-                </p>
-                <x-bouton :href="route('inscription')" class="mt-3" taille="sm">Créer mon compte</x-bouton>
-            </div>
-        @elseif ($demonstration->isNotEmpty())
-            <details class="mt-5 rounded-md border border-bord bg-surface text-sm">
-                <summary class="px-3.5 py-2.5 font-medium text-encre-2 select-none">Comptes du personnel (démonstration)</summary>
-                <ul class="border-t border-bord-doux px-3.5 py-2">
-                    @foreach ($demonstration as $compte)
-                        <li class="flex flex-wrap items-baseline justify-between gap-x-3 py-1">
-                            <span class="text-discret">{{ $compte['role'] }}</span>
-                            <code class="text-xs text-encre">{{ $compte['email'] }}</code>
-                        </li>
-                    @endforeach
-                </ul>
-            </details>
-        @endif
-    </div>
+    <section aria-labelledby="titre-inscription" class="mt-4 rounded-md border border-bord bg-surface px-4 py-3.5">
+        <h2 id="titre-inscription" class="text-base font-medium text-encre">Nouveau candidat ?</h2>
+        <p class="mt-0.5 text-sm text-discret">
+            Renseignez en six étapes votre identité, votre formation, votre situation et vos pièces. Votre compte est créé
+            lorsque vous soumettez votre candidature.
+        </p>
+        <x-bouton :href="route('inscription')" class="mt-3" taille="sm" icone="user-plus">Créer mon compte</x-bouton>
+    </section>
 </div>

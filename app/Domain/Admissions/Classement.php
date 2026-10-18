@@ -29,6 +29,30 @@ class Classement
     public function __construct(private readonly Parametres $parametres) {}
 
     /**
+     * Actualise le classement d'une campagne dès qu'un dossier y entre ou en sort (validation,
+     * annulation, inscription remise en cause). Le calcul est immédiat, dans la même transaction :
+     * il ne dépend ni d'une file d'attente, ni d'un clic sur « Recalculer ». Une campagne délibérée
+     * garde son classement figé.
+     */
+    public function actualiser(int $campagneId): void
+    {
+        $campagne = Campagne::find($campagneId);
+
+        if ($campagne !== null && ! $campagne->estDeliberee()) {
+            $this->recalculer($campagne);
+        }
+    }
+
+    /** Un dossier complet attend encore son rang : le classement n'est plus à jour (rattrapage). */
+    public function enRetard(Campagne $campagne): bool
+    {
+        return ! $campagne->estDeliberee() && Demande::where('campagne_id', $campagne->id)
+            ->where('statut', StatutDemande::Complet->value)
+            ->whereHas('stagiaire', fn ($q) => $q->where('statut_inscription', StatutInscription::Verifiee->value))
+            ->whereNull('rang')->exists();
+    }
+
+    /**
      * @return array{classes: int, places: int, ex_aequo_a_la_limite: bool, score_limite: int|null}
      */
     public function recalculer(Campagne $campagne): array

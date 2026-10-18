@@ -1,6 +1,6 @@
 @php use App\Support\Affichage\Format; @endphp
 <div>
-    <x-page.entete titre="Campagnes" description="Une campagne par internat et par année de formation : dates de dépôt, places offertes, pièces exigées et grille de notation.">
+    <x-page.entete titre="Campagnes" description="Une ou plusieurs campagnes par internat et par année de formation, sur des périodes de dépôt distinctes : dates de dépôt, places offertes, pièces exigées et grille de notation.">
         @if ($gerer)
             <x-slot:actions><x-bouton variante="primaire" icone="plus" wire:click="preparer">Nouvelle campagne</x-bouton></x-slot:actions>
         @endif
@@ -50,7 +50,7 @@
             <form wire:submit="creer" id="creation-campagne" novalidate class="space-y-5">
                 <div class="grid gap-4 sm:grid-cols-2">
                     <x-saisie libelle="Année de formation" wire:model="nouvelle.annee" placeholder="2026-2027" requis autofocus />
-                    <x-saisie libelle="Frais d’internat (DH)" wire:model="nouvelle.frais" type="number" min="0" step="0.01" inputmode="decimal"
+                    <x-saisie libelle="Frais d’internat par mois (DH)" wire:model="nouvelle.frais" type="number" min="0" step="0.01" inputmode="decimal"
                         aide="Montant de l’hébergement, repris dans les autorisations de paiement." />
                     <x-saisie libelle="Ouverture du dépôt" wire:model="nouvelle.date_ouverture" type="date" requis />
                     <x-saisie libelle="Clôture du dépôt" wire:model="nouvelle.date_cloture" type="date" requis />

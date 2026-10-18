@@ -8,6 +8,7 @@ use App\Livewire\Auth;
 use App\Livewire\Notifications;
 use App\Livewire\Personnel;
 use App\Livewire\Stagiaire;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -28,12 +29,24 @@ use Illuminate\Support\Facades\Route;
 */
 
 // ------------------------------------------------------------------ Hors session
+// Deux entrées distinctes, sans choix d'espace à faire : un compte déjà connecté est renvoyé à l'accueil du sien.
 Route::middleware('guest:web,stagiaire')->group(function () {
-    Route::get('connexion', Auth\Connexion::class)->name('connexion');
+    // Stagiaires et candidats (frontend) : connexion, création du compte, récupération.
+    Route::get('/', Auth\Connexion::class)->name('connexion');
     Route::get('inscription', Auth\Inscription::class)->name('inscription');
     Route::get('mot-de-passe-oublie', Auth\MotDePasseOublie::class)->name('mot-de-passe.oubli');
     Route::get('reinitialisation', Auth\Reinitialisation::class)->name('mot-de-passe.reinitialisation');
+
+    // Personnel (backend) : connexion et récupération, sans lien vers l'espace stagiaire.
+    Route::prefix('backend')->name('backend.')->group(function () {
+        Route::get('/', Auth\ConnexionPersonnel::class)->name('connexion');
+        Route::get('mot-de-passe-oublie', Auth\MotDePasseOublie::class)->defaults('espace', 'personnel')->name('mot-de-passe.oubli');
+        Route::get('reinitialisation', Auth\Reinitialisation::class)->defaults('espace', 'personnel')->name('mot-de-passe.reinitialisation');
+    });
 });
+
+// Ancienne page commune : chacun est renvoyé vers sa propre entrée (le personnel par défaut, comme autrefois).
+Route::get('connexion', fn (Request $requete) => redirect($requete->query('espace') === 'stagiaire' ? route('connexion') : route('backend.connexion')));
 
 Route::post('deconnexion', [SessionController::class, 'deconnecter'])->name('deconnexion');
 
@@ -63,17 +76,20 @@ Route::middleware(['auth:stagiaire', 'auth.session', 'stagiaire'])->prefix('stag
             Route::get('dossier/accuse', [FichierController::class, 'accuseDuStagiaire'])->name('dossier.accuse');
             Route::get('dossier/pieces/{piece}', [FichierController::class, 'pieceDuStagiaire'])->name('dossier.piece');
 
-            // Séjour.
-            Route::get('hebergement', Stagiaire\Hebergement::class)->name('hebergement');
-            Route::get('hebergement/attestation', [FichierController::class, 'attestationDuStagiaire'])->name('hebergement.attestation');
-            Route::get('paiements', Stagiaire\Paiements::class)->name('paiements');
-            Route::get('paiements/{paiement}/recu', [FichierController::class, 'recuDuStagiaire'])->name('paiements.recu');
-            Route::get('paiements/{paiement}/autorisation', [FichierController::class, 'autorisationDuStagiaire'])->name('paiements.autorisation');
-            Route::get('repas', Stagiaire\Repas::class)->name('repas');
-            Route::get('sorties', Stagiaire\Sorties::class)->name('sorties');
+            // Séjour et réclamations : seulement une fois un lit affecté. Valider le dossier,
+            // admettre ou confirmer la place n'ouvre pas encore les services de l'internat.
+            Route::middleware('lit.affecte')->group(function () {
+                Route::get('hebergement', Stagiaire\Hebergement::class)->name('hebergement');
+                Route::get('hebergement/attestation', [FichierController::class, 'attestationDuStagiaire'])->name('hebergement.attestation');
+                Route::get('paiements', Stagiaire\Paiements::class)->name('paiements');
+                Route::get('paiements/{paiement}/recu', [FichierController::class, 'recuDuStagiaire'])->name('paiements.recu');
+                Route::get('paiements/{paiement}/autorisation', [FichierController::class, 'autorisationDuStagiaire'])->name('paiements.autorisation');
+                Route::get('repas', Stagiaire\Repas::class)->name('repas');
+                Route::get('sorties', Stagiaire\Sorties::class)->name('sorties');
+                Route::get('reclamations', Stagiaire\Reclamations::class)->name('reclamations');
+            });
 
             // Services.
-            Route::get('reclamations', Stagiaire\Reclamations::class)->name('reclamations');
             Route::get('documents', Stagiaire\DocumentsUtiles::class)->name('documents');
             Route::get('documents/{document}', [FichierController::class, 'documentDuStagiaire'])->name('documents.fichier');
         });
@@ -85,7 +101,7 @@ Route::get('notifications', Notifications::class)->middleware(['auth:web,stagiai
 
 // ====================================================================== PERSONNEL
 Route::middleware(['auth:web', 'auth.session', 'personnel'])->group(function () {
-    Route::get('/', Personnel\TableauDeBord::class)->name('tableau-de-bord');
+    Route::get('backend/tableau-de-bord', Personnel\TableauDeBord::class)->name('tableau-de-bord');
 
     // ------------------------------------------ Vérification des inscriptions en formation
     Route::middleware('permission:inscriptions.verifier')->group(function () {

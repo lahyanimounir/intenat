@@ -18,11 +18,13 @@ use App\Models\Internat;
 use App\Models\Lit;
 use App\Models\TypePiece;
 use App\Models\Utilisateur;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
  * Cycle de vie d'une campagne : Préparée → Ouverte → Clôturée, puis délibérée
- * et archivée. Les pièces exigées ne sont modifiables qu'en préparation. Les
+ * et archivée. Un internat peut ouvrir plusieurs campagnes la même année scolaire,
+ * sur des périodes de dépôt qui ne se chevauchent pas. Les pièces exigées ne sont modifiables qu'en préparation. Les
  * critères de sélection sont figés (définis au niveau national par la Direction
  * centrale) et ne se corrigent pas en cours de campagne.
  */
@@ -48,14 +50,8 @@ class GestionCampagne
 
             foreach ($donnees['internats'] as $ligne) {
                 $this->perimetre->exigerInternat($chefDePole, (int) $ligne['internat_id']);
-                $internat = Internat::findOrFail($ligne['internat_id']);
-
-                if (Campagne::where('internat_id', $internat->id)->where('annee', $donnees['annee'])->exists()) {
-                    throw RegleMetierException::conflit(
-                        "Une campagne {$donnees['annee']} existe déjà pour « {$internat->nom} ».",
-                        'campagne_existante',
-                    );
-                }
+                $internat = Internat::lockForUpdate()->findOrFail($ligne['internat_id']);
+                $this->exigerPeriodeLibre($internat, $donnees['date_ouverture'], $donnees['date_cloture']);
 
                 $campagne = Campagne::create([
                     'internat_id' => $internat->id,
@@ -110,6 +106,10 @@ class GestionCampagne
             throw new RegleMetierException('La date de clôture doit suivre la date d\'ouverture.', 'dates_incoherentes');
         }
 
+        if ($campagne->isDirty(['date_ouverture', 'date_cloture'])) {
+            $this->exigerPeriodeLibre($campagne->internat, $campagne->date_ouverture, $campagne->date_cloture, $campagne);
+        }
+
         $campagne->save();
         $this->journal->consigner('campagne.modification', $campagne, details: $this->journal->differences($campagne));
 
@@ -136,7 +136,7 @@ class GestionCampagne
             $blocages[] = 'Le nombre de places offertes doit être d\'au moins 1.';
         }
         if ($campagne->frais === null) {
-            $blocages[] = 'Les frais d\'internat ne sont pas renseignés.';
+            $blocages[] = 'Les frais mensuels d\'internat ne sont pas renseignés.';
         }
         if ($campagne->typesPieces->isEmpty()) {
             $blocages[] = 'Aucune pièce justificative n\'est définie.';
@@ -216,6 +216,32 @@ class GestionCampagne
 
         $this->journal->consigner('campagne.suppression', $campagne, details: ['annee' => $campagne->annee]);
         $campagne->delete();
+    }
+
+    /**
+     * Deux campagnes d'un même internat ne reçoivent jamais de dépôts en même temps : leurs périodes
+     * (dates d'ouverture et de clôture comprises) ne se chevauchent pas, quelle que soit leur année.
+     */
+    public function exigerPeriodeLibre(Internat $internat, mixed $ouverture, mixed $cloture, ?Campagne $saufCelleCi = null): void
+    {
+        $debut = Carbon::parse($ouverture)->toDateString();
+        $fin = Carbon::parse($cloture)->toDateString();
+
+        $concurrente = Campagne::where('internat_id', $internat->id)
+            ->when($saufCelleCi, fn ($q) => $q->whereKeyNot($saufCelleCi->id))
+            ->whereDate('date_ouverture', '<=', $fin)
+            ->whereDate('date_cloture', '>=', $debut)
+            ->orderBy('date_ouverture')
+            ->first();
+
+        if ($concurrente !== null) {
+            throw RegleMetierException::conflit(
+                "La période chevauche la campagne {$concurrente->annee} de « {$internat->nom} » "
+                ."(du {$concurrente->date_ouverture->format('d/m/Y')} au {$concurrente->date_cloture->format('d/m/Y')}). "
+                .'Choisissez des dates qui ne se recouvrent pas.',
+                'periode_chevauchante',
+            );
+        }
     }
 
     /** Tâche planifiée : clôture les campagnes dont la date de clôture est passée. */

@@ -210,11 +210,6 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('paiements/{paiement}/autorisation', [PaiementController::class, 'autorisation']);
         });
 
-        Route::middleware('permission:paiements.autoriser')->group(function () {
-            Route::post('paiements/autorisations', [PaiementController::class, 'autoriserLot']);
-            Route::post('paiements/{paiement}/autorisation', [PaiementController::class, 'delivrerAutorisation']);
-        });
-
         Route::post('paiements/{paiement}/controle', [PaiementController::class, 'controler'])
             ->middleware('permission:paiements.controler');
 

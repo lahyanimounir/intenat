@@ -36,7 +36,6 @@ final class Permissions
             'admissions.promouvoir' => 'Appeler un candidat de la liste d\'attente',
             'admissions.annuler_validation' => 'Annuler la validation d\'une candidature et la renvoyer au gestionnaire',
             'paiements.consulter' => 'Consulter le suivi des paiements',
-            'paiements.autoriser' => 'Délivrer les autorisations de paiement',
             'paiements.controler' => 'Valider ou refuser les reçus de paiement',
             'referentiel.consulter' => 'Consulter bâtiments, chambres et lits',
             'referentiel.gerer' => 'Importer et mettre à jour le référentiel de son internat',
@@ -74,7 +73,8 @@ final class Permissions
                 // Il consulte les candidatures validées, rectifie les notes après clôture et peut annuler une
                 // validation, mais ne délibère plus.
                 'inscriptions.verifier', 'demandes.consulter', 'admissions.consulter', 'admissions.noter', 'admissions.annuler_validation',
-                'paiements.consulter', 'paiements.autoriser',
+                // Il consulte et suit les paiements, sans les autoriser : le stagiaire paie directement.
+            'paiements.consulter',
                 'referentiel.consulter', 'hebergement.consulter', 'restauration.consulter',
                 'documents.gerer', 'reclamations.traiter', 'pilotage.consulter', 'exports.creer',
             ],

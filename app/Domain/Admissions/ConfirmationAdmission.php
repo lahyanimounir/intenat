@@ -46,25 +46,8 @@ class ConfirmationAdmission
                 'date_confirmation' => now(),
             ]);
 
-            $campagne = $demande->campagne;
-
-            // Un seul paiement par dossier : en attente de l'autorisation du chef de pôle.
-            Paiement::firstOrCreate(
-                ['demande_id' => $demande->id],
-                ['montant' => $campagne->frais ?? 0, 'statut' => StatutPaiement::EnAttente],
-            );
-
-            $this->notifieur->versRole(
-                RoleCode::ChefPole,
-                $campagne->internat_id,
-                TypeNotification::Approbation,
-                'Autorisation de paiement à délivrer',
-                "La place de {$demande->stagiaire->nomComplet()} (dossier {$demande->numero_dossier}) a été confirmée par le gestionnaire.",
-                '/paiements?statut=en_attente',
-                "paiement_a_autoriser:{$demande->id}",
-                email: false,
-            );
-
+            // Les frais d'internat ne naissent qu'avec le séjour : la première mensualité est ouverte
+            // à l'affectation du lit (AffectationLits), sans autorisation préalable.
             return $demande;
         });
     }

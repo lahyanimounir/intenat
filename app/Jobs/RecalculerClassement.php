@@ -27,10 +27,7 @@ class RecalculerClassement implements ShouldBeUnique, ShouldQueue
 
     public function handle(Classement $classement): void
     {
-        $campagne = Campagne::find($this->campagneId);
-
-        if ($campagne !== null && ! $campagne->estDeliberee()) {
-            $classement->recalculer($campagne);
-        }
+        // Le classement est désormais actualisé immédiatement ; la tâche ne sert plus qu'aux recalculs déjà en file.
+        $classement->actualiser($this->campagneId);
     }
 }

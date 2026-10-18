@@ -22,9 +22,13 @@
             <x-tableau legende="Comptes stagiaires" :lignes="$comptes" :tri="$tri" :sens="$sens"
                 :vide="$filtresActifs ? 'Aucun compte ne correspond aux filtres' : 'Aucun compte stagiaire pour l’instant'">
                 <x-slot:barre>
-                    <x-recherche placeholder="Nom, CEF ou adresse e-mail" libelle="Rechercher un compte" />
+                    <x-filtres-hierarchiques :filtre="$filtre" :region="$region" :province="$province" :complexe="$complexe" :etablissement="$etablissement" />
+                    <x-recherche placeholder="Nom, CEF ou adresse e-mail" libelle="Rechercher un stagiaire" />
                     <x-filtre libelle="État" wire:model.live="etat" :options="EtatCompte::options()" :actif="$etat !== ''" />
                     <x-filtre libelle="Inscription" wire:model.live="inscription" :options="StatutInscription::options()" tous="toutes" :actif="$inscription !== ''" />
+                    @if ($filtresActifs)
+                        <x-bouton taille="sm" variante="discret" icone="x" wire:click="effacerFiltres">Effacer les filtres</x-bouton>
+                    @endif
                 </x-slot:barre>
 
                 <x-slot:entete>

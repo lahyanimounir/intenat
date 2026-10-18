@@ -37,6 +37,7 @@
             @if ($campagneOuverte)
                 <x-vide titre="Une campagne est ouverte pour votre internat">
                     {{ $campagneOuverte->internat->nom }} — dépôt des dossiers jusqu’au <strong>{{ Format::dateLongue($campagneOuverte->date_cloture) }}</strong>.
+                    @if ($campagneOuverte->avantOuverture()) Les candidatures sont déjà acceptées ; l’ouverture officielle est fixée au {{ Format::dateLongue($campagneOuverte->date_ouverture) }}.@endif
                     <x-slot:action><x-bouton variante="primaire" wire:click="ouvrir" cible="ouvrir">Commencer ma demande</x-bouton></x-slot:action>
                 </x-vide>
             @else
@@ -252,7 +253,11 @@
                     @case(StatutDemande::Confirme)
                         <x-alerte ton="succes" titre="Place confirmée">
                             Confirmée le {{ Format::dateHeure($demande->date_confirmation) }}.
-                            <x-slot:action><x-bouton taille="sm" :href="url('/stagiaire/paiements')">Mes paiements</x-bouton></x-slot:action>
+                            @if ($stagiaire->aUnLitAffecte())
+                                <x-slot:action><x-bouton taille="sm" :href="url('/stagiaire/paiements')">Mes paiements</x-bouton></x-slot:action>
+                            @else
+                                Les services du séjour (hébergement, paiements, repas, sorties, réclamations) s’ouvriront dès qu’un lit vous sera affecté.
+                            @endif
                         </x-alerte>
                         @break
                     @case(StatutDemande::EnAttente)

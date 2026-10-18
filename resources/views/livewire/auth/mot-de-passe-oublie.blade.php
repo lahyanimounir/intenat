@@ -1,5 +1,5 @@
 <div>
-    <x-bouton variante="lien" taille="sm" class="mb-4" icone="arrow-left" :href="route('connexion', ['espace' => $espace])">Retour à la connexion</x-bouton>
+    <x-bouton variante="lien" taille="sm" class="mb-4" icone="arrow-left" :href="route($espace === 'personnel' ? 'backend.connexion' : 'connexion')">Retour à la connexion</x-bouton>
 
     @if ($envoyeA)
         <section>

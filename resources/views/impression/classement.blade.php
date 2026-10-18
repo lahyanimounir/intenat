@@ -45,7 +45,7 @@
     <header>
         <h1>Liste des candidats {{ $deliberee ? '— résultats' : 'en vue de la délibération' }}</h1>
         <p class="meta">
-            <strong>{{ $campagne->internat->nom }}</strong> · Campagne {{ $campagne->annee }}<br>
+            <strong>{{ $campagne->internat->nom }}</strong> · Campagne {{ $campagne->libellePeriode() }}<br>
             Établissement : <strong>{{ $campagne->internat->etablissement->nom_efp }}</strong> ({{ $campagne->internat->etablissement->code_efp }})
             · {{ $campagne->nombre_places }} place(s) offerte(s)
         </p>

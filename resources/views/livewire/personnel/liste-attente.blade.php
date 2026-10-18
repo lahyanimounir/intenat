@@ -10,7 +10,7 @@
             @foreach ($listes as $liste)
                 @php $premier = $liste->candidats->first(); @endphp
                 <x-carte wire:key="liste-{{ $liste->campagne->id }}" :class="(string) $liste->campagne->id === $campagne ? 'ring-2 ring-marine-200' : null">
-                    <x-carte.entete :titre="$liste->campagne->internat->nom" :description="'Campagne '.$liste->campagne->annee.' · '.$liste->campagne->internat->genre->libelle()">
+                    <x-carte.entete :titre="$liste->campagne->internat->nom" :description="'Campagne '.$liste->campagne->libellePeriode().' · '.$liste->campagne->internat->genre->libelle()">
                         <x-slot:actions>
                             <x-badge :ton="$liste->placesLibres > 0 ? 'alerte' : 'neutre'">{{ $liste->placesLibres }} place(s) libre(s)</x-badge>
                             <x-badge>{{ $liste->candidats->count() }} en attente</x-badge>

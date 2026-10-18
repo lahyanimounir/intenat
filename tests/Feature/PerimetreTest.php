@@ -139,7 +139,7 @@ class PerimetreTest extends TestCase
 
         // Le directeur consulte son tableau de bord, les dossiers et le classement (il délibère),
         // mais il n'instruit pas et ne touche pas à l'hébergement.
-        $this->connecter($this->directeur)->get('/')->assertOk()->assertSee('Tableau de bord du complexe');
+        $this->connecter($this->directeur)->get(route('tableau-de-bord'))->assertOk()->assertSee('Tableau de bord du complexe');
         $this->get('/dossiers')->assertOk();
         $this->get('/admissions/classement')->assertOk();
         $this->get('/hebergement/residents')->assertForbidden();

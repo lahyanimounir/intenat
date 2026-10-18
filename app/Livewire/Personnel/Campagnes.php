@@ -69,7 +69,7 @@ class Campagnes extends PagePersonnel
             'nouvelle.date_cloture.after_or_equal' => 'La clôture ne peut pas précéder l\'ouverture.',
         ], [
             'nouvelle.annee' => 'année', 'nouvelle.date_ouverture' => 'date d\'ouverture', 'nouvelle.date_cloture' => 'date de clôture',
-            'nouvelle.frais' => 'frais d’internat', 'places.*' => 'nombre de places',
+            'nouvelle.frais' => 'frais mensuels d’internat', 'places.*' => 'nombre de places',
         ]);
 
         [$debut, $fin] = array_map('intval', explode('-', $valides['nouvelle']['annee']));
@@ -117,7 +117,7 @@ class Campagnes extends PagePersonnel
             ->when($this->statut !== '', fn (Builder $q) => $q->where('statut', $this->statut))
             ->when($this->internat !== '', fn (Builder $q) => $q->where('internat_id', (int) $this->internat))
             ->when(! $this->archives, fn (Builder $q) => $q->whereNull('archivee_le'))
-            ->orderByDesc('annee')->orderBy('internat_id');
+            ->orderByDesc('annee')->orderBy('internat_id')->orderByDesc('date_ouverture');
 
         $gerer = $utilisateur->can('campagnes.gerer');
 

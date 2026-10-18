@@ -15,9 +15,6 @@
 <div>
     <x-page.entete titre="Plan d’occupation" :description="$choisi ? $choisi->nom.' — '.$choisi->etablissement->nom_efp : 'Bâtiments, chambres et lits de l’internat.'">
         <x-slot:actions>
-            @if ($internats->count() > 1)
-                <div class="w-64"><x-liste wire:model.live="internat" :options="$internats" taille="sm" aria-label="Internat" /></div>
-            @endif
             @if ($gerer)
                 <x-bouton icone="file-spreadsheet" :href="url('/hebergement/import')">Importer un CSV</x-bouton>
                 <x-bouton variante="primaire" icone="plus" wire:click="preparerBatiment">Ajouter un bâtiment</x-bouton>
@@ -25,7 +22,22 @@
         </x-slot:actions>
     </x-page.entete>
 
-    @if ($choisi === null)
+    {{-- Plusieurs internats en charge : l'internat s'atteint par la hiérarchie administrative. --}}
+    @if ($filtre !== null)
+        <div class="non-imprime mb-5 flex flex-wrap items-center gap-2" role="group" aria-label="Choix de l’internat">
+            <x-filtres-hierarchiques :filtre="$filtre" :region="$region" :province="$province" :complexe="$complexe" :etablissement="$etablissement" />
+            <x-filtre libelle="Internat" wire:model.live="internat" :options="$filtre['internats']" tous="à choisir" :actif="$internat !== ''"
+                :disabled="$etablissement === ''" wire:key="filtre-internat-{{ $etablissement }}" />
+        </div>
+    @endif
+
+    @if ($choisi === null && $filtre !== null)
+        <x-carte>
+            <x-vide titre="Choisissez un internat" icone="building-complex">
+                Sélectionnez la région, la province, le complexe / CMC et l’établissement, puis l’internat dont vous voulez voir le plan.
+            </x-vide>
+        </x-carte>
+    @elseif ($choisi === null)
         <x-carte><x-vide titre="Aucun internat dans votre périmètre" icone="building-complex" /></x-carte>
     @else
         <div class="mb-5 grid gap-3 sm:grid-cols-3 lg:grid-cols-6">

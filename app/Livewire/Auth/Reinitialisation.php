@@ -7,6 +7,7 @@ use App\Domain\Shared\RegleMetierException;
 use App\Livewire\Concerns\AvecLimiteDeDebit;
 use Illuminate\Validation\Rules\Password;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use SensitiveParameter;
@@ -33,10 +34,19 @@ class Reinitialisation extends Component
 
     public ?string $refus = null;
 
-    public function enregistrer(RecuperationCompte $recuperation, string $espace, #[SensitiveParameter] string $jeton): void
+    /** Fixé par la route : « /reinitialisation » pour les stagiaires, « /backend/reinitialisation » pour le personnel. */
+    #[Locked]
+    public string $espace = 'stagiaire';
+
+    public function mount(string $espace = 'stagiaire'): void
+    {
+        $this->espace = $espace === 'personnel' ? 'personnel' : 'stagiaire';
+    }
+
+    public function enregistrer(RecuperationCompte $recuperation, #[SensitiveParameter] string $jeton): void
     {
         $this->refus = null;
-        $espace = in_array($espace, RecuperationCompte::ESPACES, true) ? $espace : 'personnel';
+        $espace = $this->espace;
 
         $this->validate([
             'email' => ['required', 'email', 'max:190'],
@@ -58,7 +68,7 @@ class Reinitialisation extends Component
 
         session()->flash('succes', 'Votre mot de passe a été modifié. Vous pouvez vous connecter.');
 
-        $this->redirect(route('connexion', ['espace' => $espace]), navigate: false);
+        $this->redirect(route($espace === 'personnel' ? 'backend.connexion' : 'connexion'), navigate: false);
     }
 
     public function render()

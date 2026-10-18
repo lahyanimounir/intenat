@@ -7,7 +7,6 @@ use App\Domain\Admissions\ConfirmationAdmission;
 use App\Domain\Admissions\Deliberation;
 use App\Domain\Applications\Instruction;
 use App\Domain\Identity\Perimetre;
-use App\Domain\Payments\SuiviPaiements;
 use App\Domain\Shared\RegleMetierException;
 use App\Enums\CategorieCritere;
 use App\Enums\DeclencheurCritere;
@@ -209,7 +208,7 @@ trait MondeInternat
         return app(Deliberation::class)->valider($campagne->fresh(), $this->directeur, [], true);
     }
 
-    /** Admis confirmé, paiement autorisé, occupation autorisée : prêt à recevoir un lit. */
+    /** Admis confirmé, occupation autorisée : prêt à recevoir un lit (le paiement n'en est pas une condition). */
     protected function creerConfirme(Campagne $campagne): Demande
     {
         $demande = Demande::factory()->deposee(StatutDemande::Admis)->create([
@@ -221,11 +220,6 @@ trait MondeInternat
         // La place est confirmée par le gestionnaire de l'internat (plus par le stagiaire).
         $this->agirEnTantQue($gestionnaire);
         app(ConfirmationAdmission::class)->confirmer($demande, $gestionnaire);
-
-        $this->agirEnTantQue($this->chefDePole);
-        app(SuiviPaiements::class)->autoriser($demande->paiements()->first(), $this->chefDePole);
-
-        $this->agirEnTantQue($gestionnaire);
 
         return app(AffectationLits::class)->autoriserOccupation($demande->fresh(), $gestionnaire);
     }

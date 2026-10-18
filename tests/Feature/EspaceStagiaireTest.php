@@ -47,7 +47,10 @@ class EspaceStagiaireTest extends TestCase
 {
     use MondeInternat, RefreshDatabase;
 
-    private const ECRANS = ['accueil', 'inscription', 'dossier', 'profil', 'hebergement', 'paiements', 'repas', 'sorties', 'reclamations', 'documents'];
+    private const ECRANS = ['accueil', 'inscription', 'dossier', 'profil', 'documents'];
+
+    /** Écrans du séjour : ouverts seulement une fois un lit affecté. */
+    private const ECRANS_DU_SEJOUR = ['hebergement', 'paiements', 'repas', 'sorties', 'reclamations'];
 
     protected function setUp(): void
     {
@@ -61,12 +64,19 @@ class EspaceStagiaireTest extends TestCase
         return UploadedFile::fake()->createWithContent($nom, "%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF");
     }
 
-    private function ouvrirTousLesEcrans(Stagiaire $stagiaire): void
+    private function ouvrirTousLesEcrans(Stagiaire $stagiaire, bool $heberge = false): void
     {
         $this->connecter($stagiaire);
 
         foreach (self::ECRANS as $ecran) {
             $this->get(route('stagiaire.'.$ecran))->assertOk();
+        }
+
+        // Sans lit affecté, les services du séjour ramènent à l'accueil.
+        foreach (self::ECRANS_DU_SEJOUR as $ecran) {
+            $heberge
+                ? $this->get(route('stagiaire.'.$ecran))->assertOk()
+                : $this->get(route('stagiaire.'.$ecran))->assertRedirect(route('stagiaire.accueil'));
         }
 
         $this->get(route('notifications'))->assertOk();
@@ -102,7 +112,7 @@ class EspaceStagiaireTest extends TestCase
             'nom_original' => 'reglement.pdf', 'mime' => 'application/pdf', 'date_publication' => now(), 'publie_par' => $this->gestionnaireFilles->id,
         ]);
 
-        $this->ouvrirTousLesEcrans($stagiaire);
+        $this->ouvrirTousLesEcrans($stagiaire, heberge: true);
 
         $this->get(route('stagiaire.hebergement'))->assertSee('Mon affectation')->assertSee('Arrivée enregistrée');
         $this->get(route('stagiaire.repas'))->assertSee('Tajine de légumes');
@@ -182,11 +192,12 @@ class EspaceStagiaireTest extends TestCase
     public function test_le_resident_depose_le_recu_de_son_paiement_d_hebergement(): void
     {
         $campagne = $this->creerCampagne($this->filles);
-        $demande = $this->creerConfirme($campagne);
+        $lits = $this->creerLits($this->filles);
+        $demande = $this->creerResident($campagne, $lits[0])->demande;
         $paiement = $demande->paiements()->sole();
-        $autre = $this->creerConfirme($campagne)->paiements()->sole();
+        $autre = $this->creerResident($campagne, $lits[1])->demande->paiements()->sole();
 
-        $ecran = Livewire::actingAs($demande->stagiaire, 'stagiaire')->test(Paiements::class)->assertSee('Autorisé');
+        $ecran = Livewire::actingAs($demande->stagiaire, 'stagiaire')->test(Paiements::class)->assertSee('En attente de paiement');
         $ecran->set("recus.{$paiement->id}", $this->pdf('recu.pdf'));
 
         $this->assertSame(StatutPaiement::RecuDepose, $paiement->fresh()->statut);

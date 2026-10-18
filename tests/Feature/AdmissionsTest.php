@@ -322,7 +322,8 @@ class AdmissionsTest extends TestCase
 
         $this->assertSame(StatutDemande::Confirme, $a->fresh()->statut);
         $this->assertNotNull($a->fresh()->date_confirmation);
-        $this->assertDatabaseHas('paiement', ['demande_id' => $a->id, 'statut' => 'en_attente']);
+        // Les frais ne naissent qu'avec le séjour : aucun paiement à la confirmation, ni autorisation à délivrer.
+        $this->assertDatabaseMissing('paiement', ['demande_id' => $a->id]);
     }
 
     public function test_la_tache_planifiee_libere_les_places_non_confirmees_sans_doublon(): void

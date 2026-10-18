@@ -102,7 +102,7 @@ class CampagneFiche extends PagePersonnel
             'parametres.frais' => ['nullable', 'numeric', 'min:0', 'max:99999'],
         ], ['parametres.annee.regex' => 'Année attendue au format 2026-2027.'], [
             'parametres.annee' => 'année', 'parametres.date_ouverture' => 'date d\'ouverture', 'parametres.date_cloture' => 'date de clôture',
-            'parametres.nombre_places' => 'nombre de places', 'parametres.frais' => 'frais d’internat',
+            'parametres.nombre_places' => 'nombre de places', 'parametres.frais' => 'frais mensuels d’internat',
         ])['parametres'];
 
         $valides['frais'] = ($valides['frais'] ?? '') === '' ? null : $valides['frais'];

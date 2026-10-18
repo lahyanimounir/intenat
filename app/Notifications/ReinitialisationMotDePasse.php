@@ -35,10 +35,10 @@ class ReinitialisationMotDePasse extends Notification implements ShouldBeEncrypt
 
     public function lien(): string
     {
-        return rtrim((string) config('app.url'), '/').'/reinitialisation#'.http_build_query([
-            'espace' => $this->espace,
-            'jeton' => $this->jeton,
-        ]);
+        // Chaque espace a sa page : le lien mène à celle du compte concerné.
+        $page = $this->espace === 'stagiaire' ? '/reinitialisation' : '/backend/reinitialisation';
+
+        return rtrim((string) config('app.url'), '/').$page.'#'.http_build_query(['jeton' => $this->jeton]);
     }
 
     public function toMail(object $notifiable): MailMessage

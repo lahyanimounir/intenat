@@ -171,9 +171,8 @@ class TableauxDeBord
             'paiements' => [
                 'recus_a_controler' => Paiement::where('statut', StatutPaiement::RecuDepose->value)
                     ->whereHas('demande.campagne', fn ($q) => $q->whereIn('internat_id', $ids))->count(),
-                // Paiement d'internat autorisé mais dont le reçu n'a pas encore été déposé
-                // (un seul paiement par campagne : plus de filtre mensuel).
-                'recus_manquants' => Paiement::where('statut', StatutPaiement::Autorise->value)
+                // Mensualités à payer dont le justificatif n'a pas encore été déposé.
+                'recus_manquants' => Paiement::whereIn('statut', [StatutPaiement::EnAttente->value, StatutPaiement::Autorise->value])
                     ->whereHas('demande.campagne', fn ($q) => $q->whereIn('internat_id', $ids))->count(),
             ],
             'quotidien' => [
@@ -226,7 +225,8 @@ class TableauxDeBord
             'a_traiter' => [
                 'deliberations' => $deliberables,
                 'places_a_pourvoir' => $lignes->filter(fn ($l) => ($l['places_libres'] ?? 0) > 0 && $l['en_attente'] > 0)->count(),
-                'paiements_a_autoriser' => Paiement::where('statut', StatutPaiement::EnAttente->value)
+                // Suivi seulement : mensualités non encore réglées (à payer ou justificatif rejeté).
+                'mensualites_impayees' => Paiement::whereIn('statut', [StatutPaiement::EnAttente->value, StatutPaiement::Autorise->value, StatutPaiement::Refuse->value])
                     ->whereHas('demande.campagne', fn ($q) => $q->whereIn('internat_id', $ids))->count(),
                 'recours' => Reclamation::whereIn('internat_id', $ids)->where('domaine', DomaineReclamation::Selection->value)
                     ->where('statut', '!=', StatutReclamation::Traitee->value)->count(),

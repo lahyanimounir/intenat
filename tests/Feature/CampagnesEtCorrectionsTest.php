@@ -60,13 +60,13 @@ class CampagnesEtCorrectionsTest extends TestCase
         $this->assertSame(['Stagiaire démuni'], $filles->criteres->pluck('condition_texte')->all());
         $this->assertSame(['Attestation sociale'], $filles->typesPieces->pluck('libelle')->all());
 
-        // Pas de doublon pour la même année ; pas de campagne hors périmètre ; année sur deux ans consécutifs.
+        // Plusieurs campagnes par année, mais jamais sur des périodes qui se chevauchent ; pas de campagne hors périmètre ; année sur deux ans consécutifs.
         $donnees = [
             'annee' => '2026-2027', 'date_ouverture' => now()->toDateString(), 'date_cloture' => now()->addMonth()->toDateString(), 'frais_mensuels' => 150,
             'internats' => [['internat_id' => $this->filles->id, 'nombre_places' => 3]],
         ];
         $this->agirEnTantQue($this->chefDePole);
-        $refus = $this->assertRegle('campagne_existante', fn () => app(GestionCampagne::class)->creer($this->chefDePole, $donnees));
+        $refus = $this->assertRegle('periode_chevauchante', fn () => app(GestionCampagne::class)->creer($this->chefDePole, $donnees));
         $this->assertSame(409, $refus->statutHttp);
 
         $saisir($this->ecran($this->chefDePole, Campagnes::class), [$this->ailleurs->id => '1'], '2027-2028')->assertForbidden();

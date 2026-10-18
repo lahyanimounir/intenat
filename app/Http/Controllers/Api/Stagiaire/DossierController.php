@@ -67,7 +67,7 @@ class DossierController extends Controller
                 'date_debut' => $affectation->date_debut->toDateString(),
             ] : null,
             'paiements_a_regler' => $demande
-                ? $demande->paiements()->whereIn('statut', [StatutPaiement::Autorise->value, StatutPaiement::Refuse->value])->count() : 0,
+                ? $demande->paiements()->whereIn('statut', [StatutPaiement::EnAttente->value, StatutPaiement::Autorise->value, StatutPaiement::Refuse->value])->count() : 0,
             'repas_reserves' => ReservationRepas::where('stagiaire_id', $stagiaire->id)->where('statut', StatutReservation::Reserve->value)
                 ->whereHas('menu', fn ($q) => $q->where('statut', StatutMenu::Valide->value)->whereDate('date_repas', '>=', now()->toDateString()))->count(),
             'notifications' => NotificationInterne::where('stagiaire_id', $stagiaire->id)->where('lue', false)

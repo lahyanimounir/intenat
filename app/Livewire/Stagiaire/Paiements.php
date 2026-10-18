@@ -10,7 +10,8 @@ use Livewire\Attributes\Title;
 use Livewire\WithFileUploads;
 
 /**
- * Paiement de l'hébergement : périodes autorisées par le chef de pôle, dépôt du
+ * Paiement de l'hébergement, mois par mois : le stagiaire paie directement et dépose son justificatif,
+ * que le gestionnaire vérifie. Aucune autorisation préalable.
  * reçu par le stagiaire, contrôle par le gestionnaire. Sans rapport avec les
  * frais de scolarité, vérifiés à l'inscription.
  */
@@ -38,7 +39,7 @@ class Paiements extends PageStagiaire
         }
 
         $paiement = $this->paiement((int) $cle);
-        $this->executer(fn () => app(SuiviPaiements::class)->deposerRecu($paiement, $fichier), 'Reçu déposé. Il sera contrôlé par le gestionnaire.');
+        $this->executer(fn () => app(SuiviPaiements::class)->deposerRecu($paiement, $fichier), 'Justificatif déposé. Il sera vérifié par le gestionnaire.');
 
         unset($this->recus[$cle]);
     }
@@ -63,7 +64,7 @@ class Paiements extends PageStagiaire
 
         return view('livewire.stagiaire.paiements', [
             'demande' => $demande,
-            'paiements' => $demande ? $demande->paiements()->get() : collect(),
+            'paiements' => $demande ? $demande->paiements()->orderByDesc('periode')->get() : collect(),
         ]);
     }
 }

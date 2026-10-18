@@ -3,6 +3,7 @@
 namespace App\Domain\Applications;
 
 use App\Domain\Admissions\CalculScore;
+use App\Domain\Admissions\Classement;
 use App\Domain\Audit\Journal;
 use App\Domain\Identity\ControleInscription;
 use App\Domain\Notifications\Notifieur;
@@ -12,7 +13,6 @@ use App\Enums\StatutDemande;
 use App\Enums\StatutPiece;
 use App\Enums\StatutVerificationInscription;
 use App\Enums\TypeNotification;
-use App\Jobs\RecalculerClassement;
 use App\Models\Demande;
 use App\Models\PieceJointe;
 use App\Models\Stagiaire;
@@ -37,6 +37,7 @@ class Instruction
         private readonly Journal $journal,
         private readonly Notifieur $notifieur,
         private readonly ControleInscription $controle,
+        private readonly Classement $classement,
     ) {}
 
     public function controlerPiece(PieceJointe $piece, StatutPiece $statut, ?string $commentaire, Utilisateur $gestionnaire): PieceJointe
@@ -110,10 +111,10 @@ class Instruction
                 'motif_rectification' => null,
             ]);
 
-            // Le score n'est calculé que pour un dossier déclaré complet.
+            // Le score n'est calculé que pour un dossier déclaré complet ; le candidat entre aussitôt au classement.
             $this->calcul->calculer($demande->fresh());
 
-            RecalculerClassement::dispatch($demande->campagne_id)->afterCommit();
+            $this->classement->actualiser($demande->campagne_id);
 
             $this->notifieur->versStagiaire(
                 $demande->stagiaire,
@@ -228,7 +229,7 @@ class Instruction
                 email: false,
             );
 
-            RecalculerClassement::dispatch($demande->campagne_id)->afterCommit();
+            $this->classement->actualiser($demande->campagne_id);
 
             return $demande;
         });

@@ -3,8 +3,10 @@
 namespace App\Livewire\Personnel;
 
 use App\Domain\Accommodation\Referentiel;
+use App\Domain\Identity\ComptesPersonnel;
 use App\Enums\StatutBatiment;
 use App\Enums\TypeChambre;
+use App\Livewire\Concerns\AvecHierarchie;
 use App\Livewire\PagePersonnel;
 use App\Models\Batiment;
 use App\Models\Chambre;
@@ -19,10 +21,18 @@ use Livewire\Attributes\Url;
  * l'état de chaque lit. Le gestionnaire y tient son référentiel à la main, en
  * complément de l'import CSV. L'identité des occupants n'est montrée qu'aux
  * rôles chargés de l'hébergement.
+ *
+ * Un compte qui a plusieurs internats en charge atteint le sien par la hiérarchie
+ * Région → Province → Complexe / CMC → Établissement → Internat ; à l'ouverture, le
+ * premier internat de son périmètre est choisi, comme auparavant. Un compte attaché
+ * à un seul internat n'a rien à choisir.
  */
 #[Title('Plan d’occupation')]
 class Plan extends PagePersonnel
 {
+    use AvecHierarchie;
+
+    /** Internat affiché : dernier niveau de la hiérarchie, il fixe les niveaux au-dessus. */
     #[Url(except: '')]
     public string $internat = '';
 
@@ -45,6 +55,38 @@ class Plan extends PagePersonnel
     public function mount(): void
     {
         $this->exiger('referentiel.consulter');
+
+        // Sans choix dans l'adresse, le premier internat du périmètre reste proposé par défaut.
+        if ($this->internat === '' && $this->region === '' && $this->plusieursInternats()) {
+            $this->internat = (string) ($this->internatChoisi(null)?->id ?? '');
+        }
+    }
+
+    private function plusieursInternats(): bool
+    {
+        return $this->internatsDuPerimetre()->count() > 1;
+    }
+
+    /* ------------------------------------------------- Hiérarchie : changer un niveau efface ceux d'en dessous */
+
+    public function updatedRegion(): void
+    {
+        $this->reset('province', 'complexe', 'etablissement', 'internat');
+    }
+
+    public function updatedProvince(): void
+    {
+        $this->reset('complexe', 'etablissement', 'internat');
+    }
+
+    public function updatedComplexe(): void
+    {
+        $this->reset('etablissement', 'internat');
+    }
+
+    public function updatedEtablissement(): void
+    {
+        $this->reset('internat');
     }
 
     private function gerer(Batiment|Chambre|Lit $modele): void
@@ -199,7 +241,35 @@ class Plan extends PagePersonnel
     {
         $this->exiger('referentiel.consulter');
         $utilisateur = $this->utilisateur();
-        $internat = $this->internatChoisi($this->internat);
+        $plusieurs = $this->plusieursInternats();
+        $filtre = null;
+
+        if ($plusieurs) {
+            // Un internat hors du périmètre est refusé ; un internat choisi fixe les niveaux au-dessus de lui.
+            $internat = $this->internat === '' ? null : $this->internatChoisi($this->internat);
+
+            if ($internat !== null) {
+                $chaine = ComptesPersonnel::ascendance('internat_id', $internat->id);
+                [$this->region, $this->province, $this->complexe, $this->etablissement] = array_map(
+                    fn ($id) => (string) ($id ?? ''),
+                    [$chaine['region_id'], $chaine['province_id'], $chaine['complexe_id'], $chaine['etablissement_id']],
+                );
+            }
+
+            [$listes, $choix] = $this->cascade([
+                'region_id' => $this->region, 'province_id' => $this->province, 'complexe_id' => $this->complexe,
+                'etablissement_id' => $this->etablissement, 'internat_id' => $this->internat,
+            ], ComptesPersonnel::NIVEAUX);
+            [$this->region, $this->province, $this->complexe, $this->etablissement, $this->internat] = array_values($choix);
+
+            $filtre = [
+                'regions' => $listes['region_id'], 'provinces' => $listes['province_id'], 'complexes' => $listes['complexe_id'],
+                'etablissements' => $listes['etablissement_id'], 'internats' => $listes['internat_id'],
+            ];
+        } else {
+            $internat = $this->internatChoisi($this->internat);
+        }
+
         $nominatif = $utilisateur->can('hebergement.consulter');
 
         $batiments = $internat === null ? collect() : Batiment::where('internat_id', $internat->id)->orderBy('code')
@@ -238,7 +308,7 @@ class Plan extends PagePersonnel
 
         return view('livewire.personnel.plan', [
             'choisi' => $internat,
-            'internats' => $this->internatsDuPerimetre(),
+            'filtre' => $filtre,
             'batiments' => $batiments,
             'totaux' => $totaux,
             'nominatif' => $nominatif,

@@ -34,7 +34,7 @@ class ExigerPersonnel
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
-            return redirect()->route('connexion')->with('danger', 'Ce compte est désactivé. Adressez-vous à l\'administrateur de l\'application.');
+            return redirect()->route('backend.connexion')->with('danger', 'Ce compte est désactivé. Adressez-vous à l\'administrateur de l\'application.');
         }
 
         return $next($request);

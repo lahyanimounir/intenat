@@ -20,11 +20,12 @@ enum StatutPaiement: string
     public function libelle(): string
     {
         return match ($this) {
-            self::EnAttente => 'En attente',
-            self::Autorise => 'Autorisé',
-            self::RecuDepose => 'Reçu déposé',
-            self::Valide => 'Validé',
-            self::Refuse => 'Refusé',
+            self::EnAttente => 'En attente de paiement',
+            // Ancien statut (autorisation par le chef de pôle, supprimée) : même sens que « en attente de paiement ».
+            self::Autorise => 'En attente de paiement',
+            self::RecuDepose => 'Justificatif déposé, en cours de vérification',
+            self::Valide => 'Paiement validé',
+            self::Refuse => 'Justificatif rejeté, à corriger',
         };
     }
 }

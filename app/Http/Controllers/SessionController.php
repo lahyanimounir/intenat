@@ -12,10 +12,11 @@ class SessionController extends Controller
 {
     public function deconnecter(Connexion $connexion): RedirectResponse
     {
-        $espace = auth('stagiaire')->check() ? 'stagiaire' : 'personnel';
+        // Chacun revient à l'entrée de son espace.
+        $entree = auth('stagiaire')->check() ? 'connexion' : 'backend.connexion';
         $connexion->fermer();
 
-        return redirect()->route('connexion', $espace === 'stagiaire' ? ['espace' => 'stagiaire'] : []);
+        return redirect()->route($entree);
     }
 
     /**
@@ -31,7 +32,7 @@ class SessionController extends Controller
         $connecte = auth('stagiaire')->id() === $stagiaire->id;
 
         return redirect()
-            ->route($connecte ? 'stagiaire.inscription' : 'connexion', $connecte ? [] : ['espace' => 'stagiaire'])
+            ->route($connecte ? 'stagiaire.inscription' : 'connexion')
             ->with('succes', 'Votre adresse e-mail est confirmée.');
     }
 }

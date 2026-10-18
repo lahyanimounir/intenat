@@ -55,7 +55,7 @@ class ListeAttente extends PagePersonnel
 
         $listes = Campagne::visiblesPar($utilisateur)
             ->whereNotNull('date_deliberation')->whereNull('archivee_le')
-            ->with('internat.etablissement:id,nom_efp')->orderByDesc('annee')->orderBy('internat_id')->get()
+            ->with('internat.etablissement:id,nom_efp')->orderByDesc('annee')->orderBy('internat_id')->orderByDesc('date_ouverture')->get()
             ->map(fn (Campagne $c) => (object) [
                 'campagne' => $c,
                 'placesLibres' => $c->placesLibres(),

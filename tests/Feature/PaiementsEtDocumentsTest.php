@@ -194,7 +194,7 @@ class PaiementsEtDocumentsTest extends TestCase
         $this->creerDossierRecu($this->campagne, [], $autreStagiaire);
 
         // Sans session : renvoi à la connexion.
-        $this->get(route('dossiers.piece', $piece))->assertRedirect(route('connexion'));
+        $this->get(route('dossiers.piece', $piece))->assertRedirect(route('backend.connexion'));
         $this->get(route('stagiaire.dossier.piece', $piece))->assertRedirect(route('connexion'));
 
         // Le propriétaire lit sa pièce ; un autre stagiaire ne peut pas, même en devinant l'identifiant.

@@ -3,6 +3,7 @@
 namespace App\Livewire\Stagiaire;
 
 use App\Domain\Applications\DossierStagiaire;
+use App\Domain\Payments\SuiviPaiements;
 use App\Enums\StatutMenu;
 use App\Enums\StatutPaiement;
 use App\Enums\StatutPiece;
@@ -34,8 +35,9 @@ class Accueil extends PageStagiaire
             'campagneOuverte' => $demande === null ? $dossiers->campagneOuverte($stagiaire)?->load('internat') : null,
             'piecesManquantes' => $manquantes,
             'affectation' => $stagiaire->affectationActive(),
-            // Paiement de l'hébergement : périodes autorisées sans reçu, ou dont le reçu a été refusé.
-            'paiementsARegler' => $demande?->paiements()->whereIn('statut', [StatutPaiement::Autorise->value, StatutPaiement::Refuse->value])->count() ?? 0,
+            'heberge' => $stagiaire->aUnLitAffecte(),
+            // Mensualités à régler : sans justificatif, ou dont le justificatif a été rejeté.
+            'paiementsARegler' => ! $stagiaire->aUnLitAffecte() ? 0 : $demande?->paiements()->whereIn('statut', array_map(fn ($s) => $s->value, SuiviPaiements::A_REGLER))->count() ?? 0,
             'repasReserves' => ReservationRepas::where('stagiaire_id', $stagiaire->id)->where('statut', StatutReservation::Reserve->value)
                 ->whereHas('menu', fn ($q) => $q->where('statut', StatutMenu::Valide->value)->whereDate('date_repas', '>=', now()->toDateString()))->count(),
             'notifications' => NotificationInterne::where('stagiaire_id', $stagiaire->id)->where('lue', false)->latest('date_envoi')->limit(5)->get(),

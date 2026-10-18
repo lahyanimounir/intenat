@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Domain\Admissions\CalculScore;
+use App\Domain\Admissions\Classement;
 use App\Enums\StatutDemande;
 use App\Models\Campagne;
 use App\Models\Demande;
@@ -18,7 +19,7 @@ use Illuminate\Contracts\View\View;
  */
 class ImpressionClassementController extends Controller
 {
-    public function imprimer(Campagne $campagne, CalculScore $calcul): View
+    public function imprimer(Campagne $campagne, CalculScore $calcul, Classement $classement): View
     {
         $utilisateur = auth('web')->user();
         abort_unless($utilisateur?->can('admissions.consulter'), 403);
@@ -27,6 +28,11 @@ class ImpressionClassementController extends Controller
 
         $campagne->load('internat.etablissement');
         $deliberee = $campagne->estDeliberee();
+
+        // La liste imprimée est toujours celle du classement à jour.
+        if ($classement->enRetard($campagne)) {
+            $classement->recalculer($campagne);
+        }
 
         $statuts = $deliberee
             ? [StatutDemande::Admis, StatutDemande::Confirme, StatutDemande::EnAttente, StatutDemande::Refuse, StatutDemande::Desiste, StatutDemande::DelaiDepasse, StatutDemande::SejourTermine]

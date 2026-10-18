@@ -6,6 +6,7 @@ use App\Domain\Identity\ComptesStagiaires as Comptes;
 use App\Enums\EtatCompte;
 use App\Enums\ResultatVerification;
 use App\Enums\StatutInscription;
+use App\Livewire\Concerns\AvecHierarchie;
 use App\Livewire\Concerns\AvecTableau;
 use App\Livewire\PagePersonnel;
 use App\Models\Stagiaire;
@@ -26,7 +27,7 @@ use Livewire\Attributes\Url;
 #[Title('Comptes stagiaires')]
 class ComptesStagiaires extends PagePersonnel
 {
-    use AvecTableau;
+    use AvecHierarchie, AvecTableau;
 
     private const PERMISSION = 'stagiaires.gerer';
 
@@ -47,7 +48,13 @@ class ComptesStagiaires extends PagePersonnel
 
     protected function filtres(): array
     {
-        return ['etat', 'inscription'];
+        return [...$this->filtresHierarchiques(), 'etat', 'inscription'];
+    }
+
+    public function effacerFiltres(): void
+    {
+        $this->reset('recherche', 'region', 'province', 'complexe', 'etablissement', 'etat', 'inscription');
+        $this->resetPage();
     }
 
     public function voir(string $onglet): void
@@ -98,7 +105,11 @@ class ComptesStagiaires extends PagePersonnel
             $terme = trim($this->recherche);
             $debut = addcslashes($terme, '%_\\').'%';
 
+            $donnees['filtre'] = $this->listesDesFiltres();
+
+            // Un stagiaire relève de la hiérarchie par l'établissement qu'il a déclaré.
             $requete = Stagiaire::query()->with('etablissement:id,code_efp,nom_efp')
+                ->when($this->etablissementsFiltres(), fn (Builder $q, Builder $etablissements) => $q->whereIn('stagiaire.etablissement_id', $etablissements))
                 ->when(EtatCompte::tryFrom($this->etat), fn (Builder $q, EtatCompte $etat) => $q->where('etat_compte', $etat->value))
                 ->when(StatutInscription::tryFrom($this->inscription), fn (Builder $q, StatutInscription $statut) => $q->where('statut_inscription', $statut->value))
                 ->when($terme !== '', fn (Builder $q) => $q->where(fn (Builder $s) => $s
@@ -107,7 +118,7 @@ class ComptesStagiaires extends PagePersonnel
             $this->appliquerTri($requete, ['nom' => 'nom', 'cef' => 'cef', 'cree_le' => 'inscrit_le'], 'nom')->orderBy('id');
 
             $donnees['comptes'] = $this->paginer($requete);
-            $donnees['filtresActifs'] = $terme !== '' || $this->etat !== '' || $this->inscription !== '';
+            $donnees['filtresActifs'] = $terme !== '' || $this->etat !== '' || $this->inscription !== '' || $this->hierarchieFiltree();
         }
 
         return view('livewire.administration.comptes-stagiaires', $donnees);

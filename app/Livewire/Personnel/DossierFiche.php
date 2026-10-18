@@ -112,7 +112,7 @@ class DossierFiche extends PagePersonnel
         // La confirmation de la place est désormais prononcée par le gestionnaire de l'internat.
         $this->autoriser($demande, 'hebergement.gerer');
 
-        $this->executer(fn () => $confirmation->confirmer($demande, $this->utilisateur()), 'Place confirmée pour le candidat. L’autorisation de paiement peut être délivrée par le chef de pôle.');
+        $this->executer(fn () => $confirmation->confirmer($demande, $this->utilisateur()), 'Place confirmée pour le candidat. Vous pouvez lui affecter un lit.');
     }
 
     public function autoriserOccupation(AffectationLits $affectations): void

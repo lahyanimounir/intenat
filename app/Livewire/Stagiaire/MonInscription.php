@@ -157,13 +157,11 @@ class MonInscription extends PageStagiaire
         }
 
         return Campagne::query()
-            ->where('statut', StatutCampagne::Ouverte->value)
-            ->whereDate('date_ouverture', '<=', now())
-            ->whereDate('date_cloture', '>=', now())
+            ->accessibles()
             ->whereHas('internat', fn ($q) => $q->where('etablissement_id', $etablissementId)->where('genre', $genre->value))
-            ->orderByDesc('date_ouverture')
+            ->orderBy('date_ouverture')
             ->get()
-            ->mapWithKeys(fn (Campagne $c) => [$c->id => 'Campagne '.$c->annee.' — clôture le '.$c->date_cloture->format('d/m/Y')]);
+            ->mapWithKeys(fn (Campagne $c) => [$c->id => $c->libelleCandidature()]);
     }
 
     /** Dossier de candidature courant du stagiaire (brouillon ou en instruction). */
@@ -198,7 +196,7 @@ class MonInscription extends PageStagiaire
         }
 
         try {
-            return $dossiers->ouvrirBrouillon($this->stagiaire());
+            return $dossiers->ouvrirBrouillon($this->stagiaire(), $this->campagneId !== '' ? Campagne::find((int) $this->campagneId) : null);
         } catch (RegleMetierException) {
             return null;
         }
@@ -308,7 +306,8 @@ class MonInscription extends PageStagiaire
                 'required', 'integer',
                 Rule::exists('campagne', 'id')
                     ->where('statut', StatutCampagne::Ouverte->value)
-                    ->where('internat_id', $internatVise ?? 0),
+                    ->where('internat_id', $internatVise ?? 0)
+                    ->where(fn ($q) => $q->whereDate('date_cloture', '>=', now()->toDateString())),
             ],
             'formation.nom_filiere' => ['required', 'string', 'min:3', 'max:190'],
             'formation.niveau_formation' => ['required', Rule::enum(NiveauFormation::class)],

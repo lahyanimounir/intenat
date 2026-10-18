@@ -5,6 +5,7 @@ namespace App\Domain\Reporting;
 use App\Models\Affectation;
 use App\Models\Demande;
 use App\Models\Paiement;
+use App\Support\Affichage\Format;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -50,10 +51,10 @@ class DocumentsAdministratifs
         $paiement->loadMissing('demande.stagiaire', 'demande.campagne.internat.etablissement', 'autorisateur');
         $demande = $paiement->demande;
 
-        return $this->rendre("autorisation-paiement-{$demande->numero_dossier}.pdf", [
-            'titre' => 'Autorisation de paiement',
-            'sousTitre' => 'Frais d\'internat de la campagne',
-            'reference' => 'AP-'.str_pad((string) $paiement->id, 6, '0', STR_PAD_LEFT),
+        return $this->rendre("avis-paiement-{$demande->numero_dossier}-{$paiement->periode}.pdf", [
+            'titre' => 'Avis de paiement',
+            'sousTitre' => 'Frais mensuels d\'internat — '.Format::mois($paiement->periode),
+            'reference' => 'AV-'.$paiement->periode.'-'.str_pad((string) $paiement->id, 6, '0', STR_PAD_LEFT),
             'etablissement' => $demande->campagne->internat->etablissement->nom_efp,
             'blocs' => [
                 ['titre' => 'Bénéficiaire', 'lignes' => [
@@ -62,16 +63,16 @@ class DocumentsAdministratifs
                     'Numéro de dossier' => $demande->numero_dossier,
                     'Internat' => $demande->campagne->internat->nom,
                 ]],
-                ['titre' => 'Paiement autorisé', 'lignes' => [
+                ['titre' => 'Mensualité à régler', 'lignes' => [
+                    'Mois' => Format::mois($paiement->periode),
                     'Montant dû' => number_format((float) $paiement->montant, 2, ',', ' ').' DH',
-                    'Autorisé le' => $paiement->date_autorisation?->format('d/m/Y'),
-                    'Autorisé par' => $paiement->autorisateur?->nomComplet(),
+                    'État' => $paiement->statut->libelle(),
                 ]],
             ],
             'paragraphes' => [
-                'Le stagiaire règle le montant indiqué selon les modalités de l\'établissement, puis téléverse son reçu dans son espace INTERNAT.',
+                'Le stagiaire règle le montant indiqué selon les modalités de l\'établissement, puis téléverse son justificatif de paiement dans son espace INTERNAT. Le gestionnaire de l\'internat le vérifie.',
             ],
-            'signataire' => 'Le chef de pôle scolarité',
+            'signataire' => 'Le gestionnaire de l\'internat',
         ]);
     }
 

@@ -19,8 +19,8 @@ class Paiement extends Model
     protected $table = 'paiement';
 
     protected $fillable = [
-        'demande_id', 'montant', 'recu_fichier', 'recu_nom_original', 'recu_mime', 'statut',
-        'date_autorisation', 'autorise_par', 'date_depot', 'date_validation', 'valide_par',
+        'demande_id', 'periode', 'montant', 'recu_fichier', 'recu_nom_original', 'recu_mime', 'statut',
+        'genere_auto', 'date_autorisation', 'autorise_par', 'date_depot', 'date_validation', 'valide_par',
         'motif_refus',
     ];
 
@@ -31,6 +31,7 @@ class Paiement extends Model
         return [
             'statut' => StatutPaiement::class,
             'montant' => 'decimal:2',
+            'genere_auto' => 'boolean',
             'date_autorisation' => 'datetime',
             'date_depot' => 'datetime',
             'date_validation' => 'datetime',

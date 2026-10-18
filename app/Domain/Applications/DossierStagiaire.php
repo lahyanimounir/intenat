@@ -36,7 +36,10 @@ class DossierStagiaire
         private readonly Notifieur $notifieur,
     ) {}
 
-    /** Campagne ouverte de l'internat correspondant au genre du stagiaire. */
+    /**
+     * Campagne accessible de l'internat correspondant au genre du stagiaire : ouverte par le chef de
+     * pôle et non échue, même avant sa date d'ouverture. S'il y en a plusieurs, la plus proche.
+     */
     public function campagneOuverte(Stagiaire $stagiaire): ?Campagne
     {
         $internat = $stagiaire->internat();
@@ -45,16 +48,14 @@ class DossierStagiaire
             return null;
         }
 
-        return Campagne::query()
+        return Campagne::query()->accessibles()
             ->where('internat_id', $internat->id)
-            ->where('statut', 'ouverte')
-            ->whereDate('date_ouverture', '<=', now())
-            ->whereDate('date_cloture', '>=', now())
-            ->orderByDesc('date_ouverture')
+            ->orderBy('date_ouverture')
             ->first();
     }
 
-    public function ouvrirBrouillon(Stagiaire $stagiaire): Demande
+    /** @param  Campagne|null  $choisie  Campagne retenue par le candidat ; à défaut, la plus proche. */
+    public function ouvrirBrouillon(Stagiaire $stagiaire, ?Campagne $choisie = null): Demande
     {
         if (! $stagiaire->profilComplet()) {
             throw new RegleMetierException(
@@ -70,7 +71,12 @@ class DossierStagiaire
             );
         }
 
-        $campagne = $this->campagneOuverte($stagiaire);
+        $campagne = $choisie ?? $this->campagneOuverte($stagiaire);
+
+        // Une campagne choisie doit être celle de l'internat du stagiaire, et recevoir les candidatures.
+        if ($choisie !== null && ($choisie->internat_id !== $stagiaire->internat()?->id || ! $choisie->accepteLesDepots())) {
+            $campagne = null;
+        }
 
         if ($campagne === null) {
             throw new RegleMetierException(
@@ -86,6 +92,8 @@ class DossierStagiaire
             if ($existante !== null) {
                 return $existante;
             }
+
+            $this->exigerAucuneCandidatureEnCours($stagiaire, $campagne);
 
             $demande = Demande::create([
                 'campagne_id' => $campagne->id,
@@ -254,6 +262,7 @@ class DossierStagiaire
 
             if ($premiere) {
                 $this->exigerInscription($demande->stagiaire);
+                $this->exigerAucuneCandidatureEnCours($demande->stagiaire, $campagne, $demande);
             }
 
             if (blank($demande->adresse_complete)) {
@@ -275,7 +284,7 @@ class DossierStagiaire
             $attributs = ['motif_rectification' => null];
 
             if ($toutePremiere) {
-                $campagne->increment('compteur_dossiers');
+                $this->attribuerNumeroDOrdre($campagne);
                 $attributs['numero_dossier'] = $this->numeroDossier($campagne);
             }
 
@@ -338,6 +347,46 @@ class DossierStagiaire
             },
             'inscription_non_verifiee',
         );
+    }
+
+    /** Statuts d'un dossier encore en cours : instruit, retenu ou en attente d'une place. */
+    public const CANDIDATURE_EN_COURS = [
+        StatutDemande::Recu, StatutDemande::RetourRectification, StatutDemande::Complet,
+        StatutDemande::Admis, StatutDemande::Confirme, StatutDemande::EnAttente,
+    ];
+
+    /**
+     * Plusieurs campagnes peuvent se succéder la même année scolaire : un stagiaire n'y candidate de
+     * nouveau que si son dossier précédent est clos (rejeté, refusé, désisté, délai dépassé, séjour terminé).
+     */
+    private function exigerAucuneCandidatureEnCours(Stagiaire $stagiaire, Campagne $campagne, ?Demande $saufCelleCi = null): void
+    {
+        $enCours = Demande::where('stagiaire_id', $stagiaire->id)
+            ->when($saufCelleCi, fn ($q) => $q->whereKeyNot($saufCelleCi->id))
+            ->whereIn('statut', array_map(fn (StatutDemande $s) => $s->value, self::CANDIDATURE_EN_COURS))
+            ->whereHas('campagne', fn ($q) => $q->where('annee', $campagne->annee))
+            ->with('campagne:id,annee,date_ouverture,date_cloture')
+            ->first();
+
+        if ($enCours !== null) {
+            throw new RegleMetierException(
+                "Vous avez déjà une candidature en cours pour l'année {$campagne->annee} (dossier {$enCours->numero_dossier}, "
+                ."{$enCours->statut->libelle()}). Une nouvelle candidature n'est possible qu'une fois celle-ci close.",
+                'candidature_en_cours',
+            );
+        }
+    }
+
+    /**
+     * Numéro d'ordre du dossier : il se poursuit d'une campagne à l'autre pour un même internat et une même
+     * année, afin que deux campagnes de l'année ne produisent jamais le même numéro de dossier.
+     */
+    private function attribuerNumeroDOrdre(Campagne $campagne): void
+    {
+        $dernier = (int) Campagne::where('internat_id', $campagne->internat_id)->where('annee', $campagne->annee)
+            ->lockForUpdate()->max('compteur_dossiers');
+
+        $campagne->forceFill(['compteur_dossiers' => $dernier + 1])->save();
     }
 
     private function exigerModifiable(Demande $demande): void

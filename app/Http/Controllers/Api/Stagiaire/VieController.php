@@ -61,7 +61,6 @@ class VieController extends Controller
     public function autorisation(Paiement $paiement, DocumentsAdministratifs $documents): Response
     {
         $this->exigerProprietaire($paiement);
-        abort_if($paiement->date_autorisation === null, 404);
 
         return $documents->autorisationDePaiement($paiement);
     }

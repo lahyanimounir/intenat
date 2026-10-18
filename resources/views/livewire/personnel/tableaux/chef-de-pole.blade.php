@@ -9,7 +9,7 @@
             ['Inscriptions en formation à vérifier', $inscriptionsAVerifier, '/inscriptions'],
             ['Campagnes prêtes à délibérer', $d['a_traiter']['deliberations'], '/admissions/classement'],
             ['Places libres avec candidats en attente', $d['a_traiter']['places_a_pourvoir'], '/admissions/liste-attente'],
-            ['Autorisations de paiement à délivrer', $d['a_traiter']['paiements_a_autoriser'], '/paiements?statut=en_attente'],
+            ['Mensualités non réglées', $d['a_traiter']['mensualites_impayees'], '/paiements?statut=en_attente,autorise,refuse'],
             ['Recours sur la sélection', $d['a_traiter']['recours'], '/reclamations'],
         ]])
 

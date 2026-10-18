@@ -11,7 +11,7 @@
     @if ($affectation === null)
         <x-carte>
             <x-vide titre="Aucun lit ne vous est attribué" icone="bed-double">
-                Un lit vous sera attribué par le gestionnaire de l’internat une fois votre place confirmée et votre occupation autorisée.
+                Un lit vous sera attribué par le gestionnaire de l’internat une fois votre place confirmée. Le paiement des frais n’est pas une condition de l’affectation.
             </x-vide>
         </x-carte>
     @else

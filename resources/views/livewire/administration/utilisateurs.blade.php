@@ -9,14 +9,7 @@
 
     <x-tableau legende="Comptes du personnel" :lignes="$comptes" :tri="$tri" :sens="$sens" vide="Aucun compte ne correspond aux filtres">
         <x-slot:barre>
-            {{-- Hiérarchie administrative : un niveau ne s'ouvre qu'une fois son parent choisi. --}}
-            <x-filtre libelle="Région" wire:model.live="region" :options="$filtre['regions']" tous="toutes" :actif="$region !== ''" />
-            <x-filtre libelle="Province" wire:model.live="province" :options="$filtre['provinces']" tous="toutes" :actif="$province !== ''"
-                :disabled="$region === ''" wire:key="filtre-province-{{ $region }}" />
-            <x-filtre libelle="Complexe / CMC" wire:model.live="complexe" :options="$filtre['complexes']" :actif="$complexe !== ''"
-                :disabled="$province === ''" wire:key="filtre-complexe-{{ $province }}" />
-            <x-filtre libelle="Établissement" wire:model.live="etablissement" :options="$filtre['etablissements']" :actif="$etablissement !== ''"
-                :disabled="$complexe === ''" wire:key="filtre-etablissement-{{ $complexe }}" />
+            <x-filtres-hierarchiques :filtre="$filtre" :region="$region" :province="$province" :complexe="$complexe" :etablissement="$etablissement" />
             <x-recherche placeholder="Nom ou adresse e-mail" libelle="Rechercher un compte" />
             <x-filtre libelle="Rôle" wire:model.live="role" :options="$roles" :actif="$role !== ''" />
             <x-filtre libelle="État" wire:model.live="actif" :options="['1' => 'Actifs', '0' => 'Désactivés']" :actif="$actif !== ''" />
@@ -77,22 +70,24 @@
 
                 <x-liste libelle="Rôle" wire:model.live="saisie.role" :options="$roles" :aide="$aide" requis class="sm:col-span-2" />
 
-                {{-- Le périmètre demandé dépend du rôle : un seul niveau est conservé. --}}
-                @if ($niveau === 'internat')
-                    <x-liste libelle="Internat dont il a la charge" wire:model="saisie.internat_id" :options="$internats" vide="Choisir un internat…" requis class="sm:col-span-2" wire:key="perimetre-internat" />
-                @endif
-                @if (in_array($niveau, ['etablissement', 'complexe'], true))
-                    <x-liste libelle="Établissement" wire:model="saisie.etablissement_id" :options="$etablissements" wire:key="perimetre-etablissement-{{ $niveau }}"
-                        :vide="$niveau === 'complexe' ? 'Aucun' : 'Choisir un établissement…'" :requis="$niveau === 'etablissement'"
-                        :aide="$niveau === 'complexe' ? 'À renseigner si le directeur ne couvre qu’un établissement.' : null"
-                        :class="$niveau === 'etablissement' ? 'sm:col-span-2' : ''" />
-                @endif
-                @if ($niveau === 'complexe')
-                    <x-liste libelle="Complexe / CMC" wire:model="saisie.complexe_id" :options="$complexes" vide="Aucun" aide="Prioritaire sur l’établissement s’il est renseigné." wire:key="perimetre-complexe" />
-                @endif
-                @if ($niveau === 'region')
-                    <x-liste libelle="Région" wire:model="saisie.region_id" :options="$regions" vide="Choisir une région…" requis class="sm:col-span-2" wire:key="perimetre-region" />
-                @endif
+                {{-- Le rôle fixe les niveaux à parcourir, du plus large au plus fin ; le dernier est le rattachement du compte. --}}
+                @php
+                    $libelles = ['region_id' => 'Région', 'province_id' => 'Province', 'complexe_id' => 'Complexe / CMC', 'etablissement_id' => 'Établissement', 'internat_id' => 'Internat'];
+                    $parent = null;
+                @endphp
+                @foreach ($niveaux as $niveau)
+                    @php
+                        $dernier = $loop->last;
+                        $ouvert = $parent === null || filled($saisie[$parent] ?? null);
+                    @endphp
+                    {{-- La clé suit le choix du parent : la liste est reconstruite avec les seuls enfants de ce choix. --}}
+                    <div @class(['sm:col-span-2' => $dernier && $loop->odd]) wire:key="perimetre-{{ $niveau }}-{{ $parent ? ($saisie[$parent] ?? '') : 'racine' }}">
+                        <x-liste :libelle="$libelles[$niveau]" wire:model.live="saisie.{{ $niveau }}" :options="$listes[$niveau]" requis
+                            :vide="$ouvert ? 'Choisir…' : 'Choisissez d’abord : '.$libelles[$parent]" :disabled="! $ouvert"
+                            :aide="$dernier && count($niveaux) > 1 ? 'Rattachement du compte : il en reçoit le périmètre.' : null" />
+                    </div>
+                    @php $parent = $niveau; @endphp
+                @endforeach
 
                 <x-mot-de-passe :libelle="$ligne ? 'Nouveau mot de passe' : 'Mot de passe initial'" wire:model="saisie.mot_de_passe" autocomplete="new-password" :requis="! $ligne" class="sm:col-span-2"
                     :aide="$ligne ? 'Laissez vide pour le conserver.' : 'Dix caractères au moins, avec majuscule, minuscule et chiffre.'" />

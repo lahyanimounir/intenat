@@ -156,6 +156,33 @@ class InscriptionStagiaireTest extends TestCase
         $this->assertTrue(JournalAudit::where('action', 'stagiaire.inscription')->where('stagiaire_id', $stagiaire->id)->exists());
     }
 
+    public function test_une_campagne_ouverte_par_le_chef_de_pole_accepte_les_candidatures_avant_sa_date_d_ouverture(): void
+    {
+        Storage::fake('prive');
+        // Ouverte par le chef de pôle, mais dont la date officielle d'ouverture n'est pas encore venue.
+        $anticipee = $this->creerCampagne($this->filles, [
+            'date_ouverture' => now()->addDays(20)->toDateString(), 'date_cloture' => now()->addDays(80)->toDateString(),
+        ]);
+        // Préparée seulement (pas encore rendue accessible), ou échue : jamais proposée.
+        $this->creerCampagne($this->filles, [
+            'statut' => \App\Enums\StatutCampagne::Preparee, 'date_ouverture' => now()->addDays(100)->toDateString(), 'date_cloture' => now()->addDays(120)->toDateString(),
+        ]);
+        $this->creerCampagne($this->filles, [
+            'date_ouverture' => now()->subDays(60)->toDateString(), 'date_cloture' => now()->subDays(30)->toDateString(),
+        ]);
+
+        $ecran = $this->remplirWizard('anticipe@exemple.ma', $anticipee)
+            ->assertViewHas('campagnes', fn ($c) => $c->all() === [$anticipee->id => $anticipee->libelleCandidature()]);
+
+        $ecran->call('soumettre')->assertHasNoErrors();
+        $demande = Stagiaire::where('email', 'anticipe@exemple.ma')->sole()->demandeCourante();
+        $this->assertSame([$anticipee->id, StatutDemande::Recu], [$demande->campagne_id, $demande->statut]);
+        $this->assertNotNull($demande->numero_dossier);
+
+        // Une campagne d'un autre internat, même choisie, n'ouvre pas de dossier.
+        $this->assertNull(app(\App\Domain\Applications\DossierStagiaire::class)->campagneOuverte($this->creerStagiaire($this->ailleurs)));
+    }
+
     public function test_l_etape_pieces_mene_a_l_etape_verification_puis_a_la_soumission(): void
     {
         Storage::fake('prive');
@@ -506,12 +533,42 @@ class InscriptionStagiaireTest extends TestCase
     public function test_le_sejour_s_ouvre_une_fois_l_inscription_verifiee(): void
     {
         $verifie = $this->creerStagiaire($this->filles);
+        $menu = fn () => collect(Menu::stagiaire($verifie))->flatMap(fn ($s) => $s['entrees'])->pluck('libelle')->all();
 
         $this->actingAs($verifie, 'stagiaire')->get(route('stagiaire.accueil'))->assertOk();
 
-        // Le menu complet réapparaît : séjour et dossier compris.
-        $libelles = collect(Menu::stagiaire($verifie))->flatMap(fn ($s) => $s['entrees'])->pluck('libelle');
-        $this->assertTrue($libelles->contains('Hébergement') && $libelles->contains('Mon dossier') && $libelles->count() > 1);
+        // Inscription vérifiée : l'accueil, le dossier, le profil et les documents ; pas encore le séjour.
+        $this->assertSame(['Accueil', 'Mon inscription', 'Mon dossier', 'Mon profil', 'Documents utiles'], $menu());
+    }
+
+    public function test_les_services_du_sejour_attendent_l_affectation_d_un_lit(): void
+    {
+        $campagne = $this->creerCampagne($this->filles);
+        $lit = $this->creerLits($this->filles)->first();
+        $sejour = ['Hébergement', 'Paiements', 'Repas', 'Sorties', 'Réclamations'];
+        $routes = ['stagiaire.hebergement', 'stagiaire.paiements', 'stagiaire.repas', 'stagiaire.sorties', 'stagiaire.reclamations'];
+
+        // Dossier validé, admis et place confirmée : toujours aucun service du séjour.
+        $demande = $this->creerConfirme($campagne);
+        $stagiaire = $demande->stagiaire;
+        $menu = fn () => collect(Menu::stagiaire($stagiaire->fresh()))->flatMap(fn ($s) => $s['entrees'])->pluck('libelle');
+
+        $this->assertSame([], $menu()->intersect($sejour)->values()->all());
+        foreach ($routes as $route) {
+            $this->actingAs($stagiaire, 'stagiaire')->get(route($route))->assertRedirect(route('stagiaire.accueil'))->assertSessionHas('info');
+        }
+        $this->get(route('stagiaire.dossier'))->assertOk()->assertDontSee(url('/stagiaire/paiements'), false);
+
+        // Un lit lui est affecté : les rubriques du séjour et les réclamations apparaissent.
+        $gestionnaire = $this->gestionnaireFilles;
+        $this->agirEnTantQue($gestionnaire);
+        app(\App\Domain\Accommodation\AffectationLits::class)->affecter($demande->fresh(), $lit, now(), $gestionnaire);
+
+        $this->assertSame($sejour, $menu()->intersect($sejour)->values()->all());
+        $this->app['auth']->forgetGuards();
+        foreach ($routes as $route) {
+            $this->actingAs($stagiaire->fresh(), 'stagiaire')->get(route($route))->assertOk();
+        }
     }
 
     /* ------------------------------------------------------------ Connexion */
@@ -520,13 +577,13 @@ class InscriptionStagiaireTest extends TestCase
     {
         $stagiaire = Stagiaire::factory()->create(['email' => 'salma@exemple.ma']);
 
-        Livewire::test(Connexion::class, ['espace' => 'stagiaire'])
-            ->set('espace', 'stagiaire')->set('email', 'salma@exemple.ma')->set('mot_de_passe', 'Mauvais-Motdepasse-9')
+        Livewire::test(Connexion::class)
+            ->set('email', 'salma@exemple.ma')->set('mot_de_passe', 'Mauvais-Motdepasse-9')
             ->call('connecter')->assertHasErrors('email');
         $this->assertFalse(Auth::guard('stagiaire')->check());
 
         Livewire::test(Connexion::class)
-            ->set('espace', 'stagiaire')->set('email', 'salma@exemple.ma')->set('mot_de_passe', 'Motdepasse-Test-1')
+            ->set('email', 'salma@exemple.ma')->set('mot_de_passe', 'Motdepasse-Test-1')
             ->call('connecter')->assertHasNoErrors()->assertRedirect(route('stagiaire.accueil'));
 
         $this->assertTrue(Auth::guard('stagiaire')->check());
@@ -538,7 +595,7 @@ class InscriptionStagiaireTest extends TestCase
         Stagiaire::factory()->create(['email' => 'suspendu@exemple.ma', 'etat_compte' => EtatCompte::Suspendu, 'suspendu_le' => now()]);
 
         Livewire::test(Connexion::class)
-            ->set('espace', 'stagiaire')->set('email', 'suspendu@exemple.ma')->set('mot_de_passe', 'Motdepasse-Test-1')
+            ->set('email', 'suspendu@exemple.ma')->set('mot_de_passe', 'Motdepasse-Test-1')
             ->call('connecter')
             ->assertSee('Votre compte INTERNAT est suspendu')
             ->assertNoRedirect();
@@ -548,13 +605,16 @@ class InscriptionStagiaireTest extends TestCase
 
     public function test_un_visiteur_est_renvoye_a_la_connexion_et_chacun_reste_dans_son_espace(): void
     {
-        $this->get('/')->assertRedirect(route('connexion'));
+        // « / » est l'accueil des stagiaires ; l'espace du personnel renvoie à sa propre entrée.
+        $this->get('/')->assertOk()->assertSee('Créer mon compte')->assertSee('Mot de passe oublié');
         $this->get(route('stagiaire.accueil'))->assertRedirect(route('connexion'));
+        $this->get(route('tableau-de-bord'))->assertRedirect(route('backend.connexion'));
 
         // Un stagiaire n'ouvre pas l'espace du personnel : il est ramené au sien.
         $stagiaire = Stagiaire::factory()->create();
-        $this->actingAs($stagiaire, 'stagiaire')->get('/')->assertRedirect(route('connexion'));
+        $this->actingAs($stagiaire, 'stagiaire')->get(route('tableau-de-bord'))->assertRedirect(route('backend.connexion'));
         $this->get(route('connexion'))->assertRedirect(route('stagiaire.accueil'));
-        $this->get('/inscriptions')->assertRedirect(route('connexion'));
+        $this->get(route('backend.connexion'))->assertRedirect(route('stagiaire.accueil'));
+        $this->get('/inscriptions')->assertRedirect(route('backend.connexion'));
     }
 }

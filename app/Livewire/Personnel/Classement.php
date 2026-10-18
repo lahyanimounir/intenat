@@ -137,7 +137,7 @@ class Classement extends PagePersonnel
 
         $campagne = $this->campagne !== ''
             ? (clone $campagnes)->find((int) $this->campagne)
-            : (clone $campagnes)->orderByDesc('annee')->orderBy('internat_id')->first();
+            : (clone $campagnes)->orderByDesc('annee')->orderBy('internat_id')->orderByDesc('date_ouverture')->first();
 
         if ($campagne !== null) {
             $this->autoriser($campagne, 'admissions.consulter');
@@ -232,11 +232,17 @@ class Classement extends PagePersonnel
         $campagne = $this->campagneChoisie()?->load('internat.etablissement');
 
         $campagnes = Campagne::visiblesPar($utilisateur)->whereNull('archivee_le')->whereIn('statut', ['ouverte', 'cloturee'])
-            ->with('internat:id,nom')->orderByDesc('annee')->orderBy('internat_id')->get()
-            ->mapWithKeys(fn (Campagne $c) => [$c->id => $c->annee.' — '.$c->internat->nom]);
+            ->with('internat:id,nom')->orderByDesc('annee')->orderBy('internat_id')->orderByDesc('date_ouverture')->get()
+            ->mapWithKeys(fn (Campagne $c) => [$c->id => $c->libellePeriode().' — '.$c->internat->nom]);
 
         if ($campagne === null) {
             return view('livewire.personnel.classement', ['choisie' => null, 'campagnes' => $campagnes, 'score' => $this->detailScore()]);
+        }
+
+        // Rattrapage : un dossier complet encore sans rang (classement resté en attente) est classé à l'affichage.
+        $classement = app(CalculDuClassement::class);
+        if ($classement->enRetard($campagne)) {
+            $classement->recalculer($campagne);
         }
 
         $deliberee = $campagne->estDeliberee();

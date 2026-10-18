@@ -67,7 +67,7 @@ class NavigationParRoleTest extends TestCase
 
         foreach ($this->comptes() as $role => $compte) {
             $permis = $this->chemins($compte);
-            $this->assertContains('/', $permis);
+            $this->assertContains('/backend/tableau-de-bord', $permis);
 
             foreach ($tous as $chemin) {
                 $reponse = $this->connecter($compte)->get($chemin);
@@ -126,7 +126,7 @@ class NavigationParRoleTest extends TestCase
     {
         $stagiaire = $this->creerStagiaire($this->filles);
 
-        foreach (['/', '/dossiers', '/administration/utilisateurs', '/paiements', '/restauration/menus'] as $chemin) {
+        foreach (['/backend/tableau-de-bord', '/dossiers', '/administration/utilisateurs', '/paiements', '/restauration/menus'] as $chemin) {
             $this->assertContains($this->connecter($stagiaire)->get($chemin)->status(), [302, 403], "Un stagiaire ne devrait pas ouvrir {$chemin}.");
         }
 
@@ -137,7 +137,7 @@ class NavigationParRoleTest extends TestCase
         // Hors session : tout renvoie à la connexion.
         $this->app['auth']->forgetGuards();
         $this->app['session.store']->flush();
-        $this->get('/administration/audit')->assertRedirect(route('connexion'));
+        $this->get('/administration/audit')->assertRedirect(route('backend.connexion'));
         $this->get('/stagiaire/dossier')->assertRedirect(route('connexion'));
     }
 }

@@ -17,7 +17,7 @@ final class Menu
 {
     /** @var list<array{titre?: string, entrees: list<array{0: string, 1: string, 2: string, 3?: list<string>}>}> libellé, chemin, icône, permissions */
     private const PERSONNEL = [
-        ['entrees' => [['Tableau de bord', '/', 'layout-dashboard']]],
+        ['entrees' => [['Tableau de bord', '/backend/tableau-de-bord', 'layout-dashboard']]],
         ['titre' => 'Admissions', 'entrees' => [
             ['Campagnes', '/campagnes', 'calendar-range', ['campagnes.consulter']],
             ['Dossiers', '/dossiers', 'folder-open', ['demandes.consulter']],
@@ -65,20 +65,21 @@ final class Menu
             ['Mon dossier', '/stagiaire/dossier', 'clipboard-check'],
             ['Mon profil', '/stagiaire/profil', 'user-round'],
         ]],
+        // « sejour » : entrée réservée au stagiaire à qui un lit a été affecté.
         ['titre' => 'Mon séjour', 'entrees' => [
-            ['Hébergement', '/stagiaire/hebergement', 'bed-double'],
-            ['Paiements', '/stagiaire/paiements', 'credit-card'],
-            ['Repas', '/stagiaire/repas', 'utensils-crossed'],
-            ['Sorties', '/stagiaire/sorties', 'door-open'],
+            ['Hébergement', '/stagiaire/hebergement', 'bed-double', ['sejour']],
+            ['Paiements', '/stagiaire/paiements', 'credit-card', ['sejour']],
+            ['Repas', '/stagiaire/repas', 'utensils-crossed', ['sejour']],
+            ['Sorties', '/stagiaire/sorties', 'door-open', ['sejour']],
         ]],
         ['titre' => 'Services', 'entrees' => [
-            ['Réclamations', '/stagiaire/reclamations', 'message-square-warning'],
+            ['Réclamations', '/stagiaire/reclamations', 'message-square-warning', ['sejour']],
             ['Documents utiles', '/stagiaire/documents', 'file-text'],
         ]],
     ];
 
     /** Chemins dont l'entrée n'est active que sur l'adresse exacte. */
-    private const EXACTS = ['/', '/stagiaire'];
+    private const EXACTS = ['/backend/tableau-de-bord', '/stagiaire'];
 
     /**
      * Sections dont au moins une entrée est accessible au compte.
@@ -93,8 +94,9 @@ final class Menu
     /**
      * Menu du candidat. Tant que son inscription en formation n'est pas vérifiée,
      * seul « Mon inscription » est proposé : les fonctionnalités du séjour
-     * n'apparaissent qu'après la validation par l'agent habilité. Ce filtrage
-     * double les verrous de route (middleware `inscription.verifiee`).
+     * n'apparaissent qu'après la validation par l'agent habilité. Les rubriques du
+     * séjour et les réclamations attendent en outre l'affectation d'un lit. Ce
+     * filtrage double les verrous de route (`inscription.verifiee`, `lit.affecte`).
      *
      * @return list<array{titre: string|null, entrees: list<array{libelle: string, chemin: string, icone: string, actif: bool}>}>
      */
@@ -104,7 +106,9 @@ final class Menu
             ? self::STAGIAIRE
             : [['entrees' => [['Mon inscription', '/stagiaire/inscription', 'graduation-cap']]]];
 
-        return self::construire($sections, fn () => true);
+        $heberge = $stagiaire->inscriptionVerifiee() && $stagiaire->aUnLitAffecte();
+
+        return self::construire($sections, fn (array $conditions) => ! in_array('sejour', $conditions, true) || $heberge);
     }
 
     private static function construire(array $sections, callable $permis): array

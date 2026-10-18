@@ -93,8 +93,8 @@ abstract class PagePersonnel extends Component
      */
     protected function campagnesDuPerimetre(): Collection
     {
-        return Campagne::visiblesPar($this->utilisateur())->with('internat:id,nom')->orderByDesc('annee')->orderByDesc('id')->get()
-            ->mapWithKeys(fn (Campagne $c) => [$c->id => $c->annee.' — '.$c->internat->nom]);
+        return Campagne::visiblesPar($this->utilisateur())->with('internat:id,nom')->orderByDesc('annee')->orderByDesc('date_ouverture')->orderByDesc('id')->get()
+            ->mapWithKeys(fn (Campagne $c) => [$c->id => $c->libellePeriode().' — '.$c->internat->nom]);
     }
 
     /**

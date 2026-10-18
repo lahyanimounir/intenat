@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\EtatCompte;
 use App\Enums\RoleCode;
 use App\Livewire\Auth\Connexion;
+use App\Livewire\Auth\ConnexionPersonnel;
 use App\Models\JournalAudit;
 use App\Models\Stagiaire;
 use App\Models\Utilisateur;
@@ -35,12 +36,12 @@ class AuthentificationTest extends TestCase
 
     private function connexion(string $espace, string $email, string $motDePasse): Testable
     {
-        return Livewire::test(Connexion::class)->set('espace', $espace)->set('email', $email)->set('mot_de_passe', $motDePasse)->call('connecter');
+        return Livewire::test($espace === 'stagiaire' ? Connexion::class : ConnexionPersonnel::class)->set('email', $email)->set('mot_de_passe', $motDePasse)->call('connecter');
     }
 
     private function fermerLaSession(string $espace = 'personnel'): void
     {
-        $this->post(route('deconnexion'))->assertRedirect(route('connexion', $espace === 'stagiaire' ? ['espace' => 'stagiaire'] : []));
+        $this->post(route('deconnexion'))->assertRedirect(route($espace === 'stagiaire' ? 'connexion' : 'backend.connexion'));
         $this->app['auth']->forgetGuards();
     }
 
@@ -56,7 +57,7 @@ class AuthentificationTest extends TestCase
         $this->assertDatabaseHas('journal_audit', ['action' => 'auth.connexion', 'utilisateur_id' => $admin->id]);
 
         // Le menu reflète les permissions du rôle : l'administration, pas les dossiers.
-        $this->get('/')->assertOk()->assertSee('Utilisateurs')->assertSee('Journal d’audit', false)->assertDontSee('Classement');
+        $this->get(route('tableau-de-bord'))->assertOk()->assertSee('Utilisateurs')->assertSee('Journal d’audit', false)->assertDontSee('Classement');
     }
 
     public function test_un_mot_de_passe_errone_est_refuse_sans_reveler_si_le_compte_existe(): void
@@ -86,10 +87,10 @@ class AuthentificationTest extends TestCase
         // Désactivé pendant que sa session est ouverte : la requête suivante le ramène à la connexion.
         $actif = Utilisateur::factory()->role(RoleCode::Admin)->create(['email' => 'actif@test.local']);
         $this->connexion('personnel', 'actif@test.local', self::MOT_DE_PASSE)->assertRedirect(route('tableau-de-bord'));
-        $this->get('/')->assertOk();
+        $this->get(route('tableau-de-bord'))->assertOk();
         $actif->forceFill(['actif' => false])->save();
         $this->app['auth']->forgetGuards();
-        $this->get('/')->assertRedirect(route('connexion'))->assertSessionHas('danger');
+        $this->get(route('tableau-de-bord'))->assertRedirect(route('backend.connexion'))->assertSessionHas('danger');
         $this->assertGuest('web');
         $this->assertNull($inactif->fresh()->derniere_connexion_le);
     }
@@ -110,9 +111,11 @@ class AuthentificationTest extends TestCase
 
     public function test_une_route_protegee_exige_une_session(): void
     {
-        foreach (['/', '/dossiers', '/stagiaire/dossier', '/notifications', '/administration/utilisateurs'] as $chemin) {
-            $this->get($chemin)->assertRedirect(route('connexion'));
+        // Chacun est renvoyé à l'entrée de son espace : « / » pour les stagiaires, « /backend » pour le personnel.
+        foreach (['/backend/tableau-de-bord', '/dossiers', '/notifications', '/administration/utilisateurs'] as $chemin) {
+            $this->get($chemin)->assertRedirect(route('backend.connexion'));
         }
+        $this->get('/stagiaire/dossier')->assertRedirect(route('connexion'));
 
         // Une action Livewire hors session est refusée elle aussi.
         Livewire::test(\App\Livewire\Personnel\Dossiers::class)->assertForbidden();
@@ -123,10 +126,10 @@ class AuthentificationTest extends TestCase
         $admin = Utilisateur::factory()->role(RoleCode::Admin)->create();
         $stagiaire = Stagiaire::factory()->create();
 
-        $this->actingAs($admin, 'web')->get('/')->assertOk();
+        $this->actingAs($admin, 'web')->get(route('tableau-de-bord'))->assertOk();
         $this->fermerLaSession();
         $this->assertGuest('web');
-        $this->get('/')->assertRedirect(route('connexion'));
+        $this->get(route('tableau-de-bord'))->assertRedirect(route('backend.connexion'));
 
         $this->actingAs($stagiaire, 'stagiaire')->get('/stagiaire')->assertOk();
         $this->fermerLaSession('stagiaire');
@@ -203,6 +206,30 @@ class AuthentificationTest extends TestCase
         $this->connexion('stagiaire', 'salma@exemple.test', self::MOT_DE_PASSE)->assertHasNoErrors()->assertRedirect(route('stagiaire.accueil'));
     }
 
+    public function test_chaque_espace_a_sa_propre_entree_sans_choix_a_faire(): void
+    {
+        // Personnel : « /backend », sans onglet ni lien vers l'espace stagiaire.
+        $this->get('/backend')->assertOk()->assertSee('Espace personnel')->assertSee(route('backend.mot-de-passe.oubli'), false)
+            ->assertDontSee('Créer mon compte')->assertDontSee(route('inscription'), false)->assertDontSee('Stagiaire</', false);
+        $this->get('/backend/mot-de-passe-oublie')->assertOk()->assertSee('Espace personnel')->assertDontSee('Créer mon compte');
+        $this->get('/backend/reinitialisation')->assertOk()->assertSee(route('backend.connexion'), false);
+
+        // Stagiaires et candidats : « / », avec la connexion, l'inscription et la récupération du mot de passe.
+        $this->get('/')->assertOk()->assertSee('Espace stagiaires')->assertSee(route('inscription'), false)
+            ->assertSee(route('mot-de-passe.oubli'), false)->assertDontSee('Espace personnel');
+        $this->get('/mot-de-passe-oublie')->assertOk()->assertSee('Espace stagiaire');
+
+        // L'ancienne page commune renvoie chacun vers sa propre entrée.
+        $this->get('/connexion')->assertRedirect(route('backend.connexion'));
+        $this->get('/connexion?espace=stagiaire')->assertRedirect(route('connexion'));
+
+        // Après connexion, le personnel arrive sur le tableau de bord de son rôle ; ouvrir une entrée l'y ramène.
+        Utilisateur::factory()->role(RoleCode::Admin)->create(['email' => 'admin@test.local']);
+        $this->connexion('personnel', 'admin@test.local', self::MOT_DE_PASSE)->assertRedirect(route('tableau-de-bord'));
+        $this->get('/backend')->assertRedirect(route('tableau-de-bord'));
+        $this->get('/')->assertRedirect(route('tableau-de-bord'));
+    }
+
     public function test_un_stagiaire_ne_peut_pas_entrer_dans_l_espace_du_personnel_et_inversement(): void
     {
         $stagiaire = Stagiaire::factory()->create(['email' => 'stagiaire@exemple.test']);
@@ -214,7 +241,7 @@ class AuthentificationTest extends TestCase
         $this->assertGuest('web');
         $this->assertGuest('stagiaire');
 
-        foreach (['/administration/utilisateurs', '/'] as $chemin) {
+        foreach (['/administration/utilisateurs', '/backend/tableau-de-bord', '/backend'] as $chemin) {
             $this->assertContains($this->actingAs($stagiaire, 'stagiaire')->get($chemin)->status(), [302, 403]);
         }
 
