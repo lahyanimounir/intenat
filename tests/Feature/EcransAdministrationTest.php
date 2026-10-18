@@ -263,10 +263,10 @@ class EcransAdministrationTest extends TestCase
         $ecran->set('valeurs.restauration__sortie_annule_repas', true)->call('enregistrer', 'restauration.sortie_annule_repas')->assertHasNoErrors();
         $this->assertTrue(app(LectureParametres::class)->vrai('restauration.sortie_annule_repas'));
 
-        // Confirmer la règle de vérification des inscriptions : elle n'est plus provisoire.
-        $ecran->set('valeurs.inscription__depot_exige_verification', true)->set('confirmees.inscription__depot_exige_verification', true)
-            ->call('enregistrer', 'inscription.depot_exige_verification')->assertHasNoErrors();
-        $regle = Parametre::findOrFail('inscription.depot_exige_verification');
+        // Confirmer une règle provisoire : elle n'est plus provisoire ensuite.
+        $ecran->set('valeurs.occupation__exiger_recu_valide', true)->set('confirmees.occupation__exiger_recu_valide', true)
+            ->call('enregistrer', 'occupation.exiger_recu_valide')->assertHasNoErrors();
+        $regle = Parametre::findOrFail('occupation.exiger_recu_valide');
         $this->assertSame([true, false, $this->admin->id], [$regle->valeur, $regle->a_valider, $regle->modifie_par]);
 
         $trace = JournalAudit::where('action', 'parametre.modification')->orderBy('id')->first();

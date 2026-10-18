@@ -72,7 +72,6 @@ return [
     // Valeurs initiales de la table `parametre` (clé => [valeur, libellé, à valider]).
     'parametres' => [
         'inscription.justificatif_obligatoire' => [true, 'Un justificatif d\'inscription est exigé pour soumettre son inscription à la vérification', true],
-        'inscription.depot_exige_verification' => [false, 'Le dossier d\'hébergement ne peut être déposé qu\'une fois l\'inscription vérifiée (sinon : dès qu\'elle est soumise)', true],
         'classement.departage' => ['arbitrage_chef_pole', 'Règle de départage des ex æquo (arbitrage_chef_pole | date_soumission)', true],
         'places.exclure_isolement_infirmerie' => [true, 'Les chambres Isolement et Infirmerie ne comptent pas dans les places offertes', true],
         'instruction.masquer_score_gestionnaire' => [true, 'Le score et le rang sont masqués au gestionnaire', true],

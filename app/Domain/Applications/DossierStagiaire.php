@@ -5,7 +5,6 @@ namespace App\Domain\Applications;
 use App\Domain\Audit\Journal;
 use App\Domain\Notifications\Notifieur;
 use App\Domain\Shared\Documents;
-use App\Domain\Shared\Parametres;
 use App\Domain\Shared\RegleMetierException;
 use App\Enums\DeclencheurCritere;
 use App\Enums\NiveauFormation;
@@ -35,7 +34,6 @@ class DossierStagiaire
         private readonly Documents $documents,
         private readonly Journal $journal,
         private readonly Notifieur $notifieur,
-        private readonly Parametres $parametres,
     ) {}
 
     /** Campagne ouverte de l'internat correspondant au genre du stagiaire. */
@@ -319,25 +317,21 @@ class DossierStagiaire
     }
 
     /**
-     * Le dépôt suppose une inscription en formation soumise à la vérification — ou déjà vérifiée, si le
-     * paramètre l'exige. Un dossier déposé ne participe de toute façon à la sélection qu'une fois
-     * l'inscription vérifiée : il ne peut pas être déclaré complet avant (voir Instruction).
+     * Candidature unifiée : l'inscription en formation et le dossier sont soumis ensemble, puis le
+     * gestionnaire les examine en une seule revue. L'inscription est donc « soumise » (non encore
+     * vérifiée) au moment du dépôt, ce qui est normal ; seuls une correction demandée ou un rejet
+     * empêchent la soumission, le temps que le candidat corrige son inscription.
      */
     private function exigerInscription(Stagiaire $stagiaire): void
     {
         $statut = $stagiaire->statut_inscription;
 
-        if ($statut === StatutInscription::Verifiee) {
-            return;
-        }
-
-        if ($statut === StatutInscription::Soumise && ! $this->parametres->vrai('inscription.depot_exige_verification')) {
+        if (in_array($statut, [StatutInscription::Verifiee, StatutInscription::Soumise], true)) {
             return;
         }
 
         throw new RegleMetierException(
             match ($statut) {
-                StatutInscription::Soumise => 'Votre inscription en formation est en cours de vérification : vous pourrez déposer votre dossier dès qu\'elle sera vérifiée.',
                 StatutInscription::ACorriger => 'Une correction est demandée sur votre inscription en formation : corrigez-la et soumettez-la de nouveau avant de déposer votre dossier.',
                 StatutInscription::Rejetee => 'Votre inscription en formation a été rejetée : le dossier ne peut pas être déposé.',
                 default => 'Soumettez d\'abord votre inscription en formation à la vérification, avec son justificatif.',

@@ -156,6 +156,42 @@ class InscriptionStagiaireTest extends TestCase
         $this->assertTrue(JournalAudit::where('action', 'stagiaire.inscription')->where('stagiaire_id', $stagiaire->id)->exists());
     }
 
+    public function test_l_etape_pieces_mene_a_l_etape_verification_puis_a_la_soumission(): void
+    {
+        Storage::fake('prive');
+        $campagne = $this->creerCampagne($this->filles);
+        $cin = $campagne->typesPieces->firstWhere('obligatoire', true);
+        $e = $this->etablissement->loadMissing('complexe.province');
+
+        $ecran = Livewire::test(Inscription::class)
+            ->set('compte.email', 'reda.benali@exemple.ma')
+            ->set('compte.mot_de_passe', self::MOT_DE_PASSE)
+            ->set('compte.mot_de_passe_confirmation', self::MOT_DE_PASSE)
+            ->call('continuerCompte')->assertHasNoErrors()
+            ->set('identite', $this->identite())
+            ->call('continuerIdentite')->assertHasNoErrors()
+            ->set('regionId', (string) $e->complexe->province->region_id)
+            ->set('provinceId', (string) $e->complexe->province_id)
+            ->set('complexeId', (string) $e->complexe_id)
+            ->set('formation', $this->formation())
+            ->set('campagneId', (string) $campagne->id)
+            ->call('continuerFormation')->assertHasNoErrors()
+            ->set('situation.adresse_complete', '12 rue des Orangers, Hay Hassani')
+            ->call('continuerSituation')->assertHasNoErrors()
+            ->assertSet('etape', 4);
+
+        // Dépose la pièce obligatoire puis passe de l'étape 5 « Pièces » à l'étape 6 « Vérification ».
+        $ecran->set("fichiers.{$cin->id}", $this->fichier('cin.pdf'))
+            ->call('continuerPieces')->assertHasNoErrors()
+            ->assertSet('etape', 5);
+
+        // Depuis l'étape 6, la soumission crée le compte et la candidature.
+        $ecran->set('justificatif', $this->fichier('scolarite.pdf'))
+            ->call('soumettre')->assertHasNoErrors()->assertRedirect(route('stagiaire.inscription'));
+
+        $this->assertSame(StatutInscription::Soumise, Stagiaire::where('email', 'reda.benali@exemple.ma')->sole()->statut_inscription);
+    }
+
     public function test_le_mot_de_passe_doit_respecter_la_politique_et_etre_confirme(): void
     {
         $composant = Livewire::test(Inscription::class)->set('compte.email', 'nouveau@exemple.ma');

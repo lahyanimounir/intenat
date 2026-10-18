@@ -354,11 +354,11 @@ class VerificationInscriptionTest extends TestCase
         $this->assertNotNull($demande->fresh()->score);
     }
 
-    public function test_le_parametre_peut_exiger_la_verification_avant_tout_depot(): void
+    public function test_le_dossier_se_soumet_avec_une_inscription_seulement_soumise(): void
     {
-        Parametre::where('cle', 'inscription.depot_exige_verification')->update(['valeur' => json_encode(true)]);
-        app(Parametres::class)->oublier();
-
+        // Candidature unifiée : l'inscription et le dossier sont soumis ensemble, puis le gestionnaire
+        // les examine en une seule revue. Une inscription « soumise » (non encore vérifiée) ne doit donc
+        // pas empêcher le dépôt du dossier — c'est précisément l'état normal à la soumission.
         $campagne = $this->creerCampagne($this->filles);
         $stagiaire = $this->creerStagiaire($this->filles, ['statut_inscription' => StatutInscription::Declaree, 'inscription_verifiee_le' => null]);
         $this->soumettre($stagiaire);
@@ -368,7 +368,10 @@ class VerificationInscriptionTest extends TestCase
         $dossiers->enregistrer($demande, ['adresse_complete' => '12 rue des Orangers']);
         $this->joindrePiece($demande, $campagne->typesPieces->firstWhere('obligatoire', true));
 
-        $this->assertRegle('inscription_non_verifiee', fn () => $dossiers->soumettre($demande->fresh()));
+        $dossiers->soumettre($demande->fresh());
+
+        $this->assertSame(StatutDemande::Recu, $demande->fresh()->statut);
+        $this->assertSame(StatutInscription::Soumise, $stagiaire->fresh()->statut_inscription);
     }
 
     public function test_le_classement_ignore_un_dossier_dont_l_inscription_n_est_pas_verifiee(): void
