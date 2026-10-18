@@ -76,6 +76,27 @@ class EcransAdmissionsTest extends TestCase
         $this->assertSame($this->directeur->id, DecisionAdmission::where('demande_id', $premier->id)->sole()->valide_par);
     }
 
+    public function test_le_directeur_joint_un_message_general_affiche_dans_le_compte_de_chaque_candidat(): void
+    {
+        [$campagne, [$premier, , $troisieme]] = $this->campagneAClasser();
+        $message = 'Bravo aux admis et merci a tous les candidats pour leur participation.';
+
+        Livewire::actingAs($this->directeur)->test(Classement::class, ['campagne' => (string) $campagne->id])
+            ->set('messageDeliberation', $message)
+            ->call('deliberer')
+            ->assertHasNoErrors();
+
+        // Le message, unique, est conservé sur la campagne.
+        $this->assertTrue($campagne->fresh()->estDeliberee());
+        $this->assertSame($message, $campagne->fresh()->message_deliberation);
+
+        // Il s'affiche à l'identique dans le compte de chaque candidat, quel que soit son sort.
+        $this->ecran($premier->stagiaire, \App\Livewire\Stagiaire\Dossier::class)
+            ->assertSee('Message de l')->assertSee($message);
+        $this->ecran($troisieme->stagiaire, \App\Livewire\Stagiaire\Dossier::class)
+            ->assertSee($message);
+    }
+
     public function test_une_egalite_a_la_limite_bloque_la_validation_sans_confirmation_expresse(): void
     {
         $campagne = $this->creerCampagne($this->filles, ['nombre_places' => 1]);

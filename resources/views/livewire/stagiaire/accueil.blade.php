@@ -50,6 +50,12 @@
             </x-alerte>
         @endif
 
+        @if ($demande && $demande->campagne->estDeliberee() && filled($demande->campagne->message_deliberation))
+            <x-alerte ton="info" titre="Message de l’internat">
+                <p class="whitespace-pre-line">{{ $demande->campagne->message_deliberation }}</p>
+            </x-alerte>
+        @endif
+
         @if ($statut === StatutDemande::Brouillon && $piecesManquantes->isNotEmpty())
             <x-alerte ton="info" titre="Dossier en cours de préparation">
                 Pièces encore attendues : {{ $piecesManquantes->implode(', ') }}.

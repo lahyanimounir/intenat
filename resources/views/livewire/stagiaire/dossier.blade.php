@@ -279,6 +279,12 @@
                         @break
                 @endswitch
 
+                @if ($demande->campagne->estDeliberee() && filled($demande->campagne->message_deliberation))
+                    <x-alerte ton="info" titre="Message de l’internat">
+                        <p class="whitespace-pre-line">{{ $demande->campagne->message_deliberation }}</p>
+                    </x-alerte>
+                @endif
+
                 <x-carte>
                     <x-carte.entete titre="Mon dossier">
                         <x-slot:actions>

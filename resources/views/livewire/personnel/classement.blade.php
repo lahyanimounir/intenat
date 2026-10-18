@@ -135,6 +135,9 @@
                         Les résultats seront publiés et chaque candidat notifié. Les admis disposeront du délai de confirmation ; la liste d’attente ne sera jamais promue automatiquement.
                     </x-alerte>
 
+                    <x-zone-texte libelle="Message aux candidats (facultatif)" wire:model="messageDeliberation" rows="4"
+                        aide="Identique pour tous les candidats de la campagne, il s’affiche dans leur compte avec les résultats." />
+
                     @if ($exAequo)
                         <x-case wire:model="arbitrage" libelle="Je confirme l’ordre proposé malgré l’égalité à la limite des places." />
                     @endif

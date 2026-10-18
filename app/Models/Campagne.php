@@ -25,7 +25,7 @@ class Campagne extends Model
     protected $fillable = [
         'internat_id', 'annee', 'date_ouverture', 'date_cloture', 'nombre_places', 'statut', 'cree_par',
         'frais', 'version_grille', 'compteur_dossiers', 'date_deliberation', 'delibere_par',
-        'date_publication', 'archivee_le',
+        'date_publication', 'message_deliberation', 'archivee_le',
     ];
 
     protected function casts(): array

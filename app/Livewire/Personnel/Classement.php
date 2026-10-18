@@ -50,6 +50,9 @@ class Classement extends PagePersonnel
 
     public bool $arbitrage = false;
 
+    /** Message général adressé à tous les candidats, saisi au moment de la délibération. */
+    public string $messageDeliberation = '';
+
     #[Locked]
     public ?int $ajuste = null;
 
@@ -195,16 +198,20 @@ class Classement extends PagePersonnel
     {
         $campagne = $this->campagneExigee('admissions.deliberer');
 
+        $valides = $this->validate([
+            'messageDeliberation' => ['nullable', 'string', 'max:2000'],
+        ], attributes: ['messageDeliberation' => 'message']);
+
         $ajustements = collect($this->ajustements)
             ->filter(fn ($a) => is_array($a) && in_array($a['decision'] ?? null, TypeDecision::valeurs(), true))
             ->mapWithKeys(fn (array $a, $id) => [(int) $id => ['decision' => $a['decision'], 'motif' => (string) ($a['motif'] ?? '')]])
             ->all();
 
         if ($this->executer(
-            fn () => $deliberation->valider($campagne, $this->utilisateur(), $ajustements, $this->arbitrage),
+            fn () => $deliberation->valider($campagne, $this->utilisateur(), $ajustements, $this->arbitrage, $valides['messageDeliberation']),
             'Admissions validées. Les résultats sont publiés et les candidats notifiés.',
         )) {
-            $this->reset('ajustements', 'arbitrage');
+            $this->reset('ajustements', 'arbitrage', 'messageDeliberation');
             $this->fermerDialogue();
         }
     }

@@ -71,10 +71,11 @@ class Deliberation
 
     /**
      * @param  array<int, array{decision: string, motif: string}>  $ajustements  Indexés par identifiant de dossier.
+     * @param  string|null  $message  Message général affiché à tous les candidats de la campagne.
      */
-    public function valider(Campagne $campagne, Utilisateur $chefDePole, array $ajustements, bool $arbitrageConfirme): Campagne
+    public function valider(Campagne $campagne, Utilisateur $chefDePole, array $ajustements, bool $arbitrageConfirme, ?string $message = null): Campagne
     {
-        return DB::transaction(function () use ($campagne, $chefDePole, $ajustements, $arbitrageConfirme) {
+        return DB::transaction(function () use ($campagne, $chefDePole, $ajustements, $arbitrageConfirme, $message) {
             $campagne = Campagne::lockForUpdate()->findOrFail($campagne->id);
 
             if ($campagne->estDeliberee()) {
@@ -168,6 +169,7 @@ class Deliberation
                 'date_deliberation' => $maintenant,
                 'delibere_par' => $chefDePole->id,
                 'date_publication' => $maintenant,
+                'message_deliberation' => filled($message) ? trim($message) : null,
             ])->save();
 
             $this->journal->consigner('admission.deliberation', $campagne, details: [
