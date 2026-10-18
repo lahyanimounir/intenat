@@ -68,7 +68,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('dossier', [DossierStagiaireController::class, 'enregistrer']);
         Route::post('dossier/soumettre', [DossierStagiaireController::class, 'soumettre']);
         Route::get('dossier/accuse', [DossierStagiaireController::class, 'accuse']);
-        Route::post('dossier/confirmer', [DossierStagiaireController::class, 'confirmer']);
+        // La confirmation de la place est prononcée par le gestionnaire, plus par le stagiaire.
         Route::post('dossier/desister', [DossierStagiaireController::class, 'desister']);
         Route::post('dossier/pieces/{typePiece}', [DossierStagiaireController::class, 'deposerPiece'])->middleware('throttle:televersement');
         Route::get('dossier/pieces/{piece}/fichier', [DossierStagiaireController::class, 'fichierPiece']);
@@ -251,6 +251,7 @@ Route::middleware('auth:sanctum')->group(function () {
         });
 
         Route::middleware('permission:hebergement.gerer')->group(function () {
+            Route::post('dossiers/{demande}/confirmation', [DossierController::class, 'confirmer']);
             Route::post('dossiers/{demande}/dossier-physique', [DossierController::class, 'dossierPhysique']);
             Route::post('dossiers/{demande}/occupation', [DossierController::class, 'autoriserOccupation']);
             Route::post('hebergement/affectations', [HebergementController::class, 'affecter']);

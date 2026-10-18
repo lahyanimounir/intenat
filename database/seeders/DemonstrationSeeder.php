@@ -339,10 +339,10 @@ class DemonstrationSeeder extends Seeder
         $admis = Demande::with('stagiaire')->where('campagne_id', $campagne->id)->where('statut', StatutDemande::Admis->value)->orderBy('rang')->orderBy('id')->get()->values();
         $attente = Demande::where('campagne_id', $campagne->id)->where('statut', StatutDemande::EnAttente->value)->orderBy('rang')->orderBy('id')->get()->values();
 
-        // Confirmations : 14 admises confirment dans le délai.
+        // Confirmations : le gestionnaire confirme la place de 14 admises.
         foreach ($admis->take(14) as $i => $demande) {
-            $this->agir($demande->stagiaire, $this->j->subDays(5)->addHours(8 + $i));
-            $this->confirmation->confirmer($demande);
+            $this->agir($gestionnaire, $this->j->subDays(5)->addHours(8 + $i));
+            $this->confirmation->confirmer($demande, $gestionnaire);
         }
 
         // Deux désistements motivés libèrent deux places.

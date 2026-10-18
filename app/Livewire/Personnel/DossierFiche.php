@@ -3,6 +3,7 @@
 namespace App\Livewire\Personnel;
 
 use App\Domain\Accommodation\AffectationLits;
+use App\Domain\Admissions\ConfirmationAdmission;
 use App\Domain\Applications\DossierStagiaire;
 use App\Domain\Applications\Instruction;
 use App\Domain\Shared\Parametres;
@@ -103,6 +104,15 @@ class DossierFiche extends PagePersonnel
         $motif = $this->motifExige($motif, 10, 1000, 'Indiquez pourquoi vous annulez cette validation (10 caractères au moins).');
 
         $this->executer(fn () => $instruction->annulerValidation($demande, $motif, $this->utilisateur()), 'Validation annulée : le dossier est renvoyé au gestionnaire.');
+    }
+
+    public function confirmerPlace(ConfirmationAdmission $confirmation): void
+    {
+        $demande = $this->demande();
+        // La confirmation de la place est désormais prononcée par le gestionnaire de l'internat.
+        $this->autoriser($demande, 'hebergement.gerer');
+
+        $this->executer(fn () => $confirmation->confirmer($demande, $this->utilisateur()), 'Place confirmée pour le candidat. L’autorisation de paiement peut être délivrée par le chef de pôle.');
     }
 
     public function recevoirDossierPhysique(Instruction $instruction): void

@@ -216,13 +216,15 @@ trait MondeInternat
             'campagne_id' => $campagne->id, 'stagiaire_id' => $this->creerStagiaire($campagne->internat)->id,
         ]);
 
-        $this->agirEnTantQue($demande->stagiaire);
-        app(ConfirmationAdmission::class)->confirmer($demande);
+        $gestionnaire = $campagne->internat_id === $this->filles->id ? $this->gestionnaireFilles : $this->gestionnaireGarcons;
+
+        // La place est confirmée par le gestionnaire de l'internat (plus par le stagiaire).
+        $this->agirEnTantQue($gestionnaire);
+        app(ConfirmationAdmission::class)->confirmer($demande, $gestionnaire);
 
         $this->agirEnTantQue($this->chefDePole);
         app(SuiviPaiements::class)->autoriser($demande->paiements()->first(), $this->chefDePole);
 
-        $gestionnaire = $campagne->internat_id === $this->filles->id ? $this->gestionnaireFilles : $this->gestionnaireGarcons;
         $this->agirEnTantQue($gestionnaire);
 
         return app(AffectationLits::class)->autoriserOccupation($demande->fresh(), $gestionnaire);

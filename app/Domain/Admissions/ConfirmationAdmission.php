@@ -13,12 +13,16 @@ use App\Enums\TypeNotification;
 use App\Models\Demande;
 use App\Models\Desistement;
 use App\Models\Paiement;
+use App\Models\Utilisateur;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Suites de l'admission côté candidat : confirmation de la place et désistement
- * motivé. Il n'y a aucun délai de confirmation : un admis confirme quand il le
- * souhaite, tant que sa place n'a pas été libérée autrement.
+ * Suites de l'admission : confirmation de la place et désistement motivé.
+ *
+ * Depuis la refonte, le candidat ne confirme plus lui-même : la place est
+ * confirmée par le gestionnaire de l'internat, une fois le candidat admis. Le
+ * désistement, lui, reste à la main du candidat. Aucun délai de confirmation :
+ * la place est tenue tant qu'elle n'a pas été libérée autrement.
  */
 class ConfirmationAdmission
 {
@@ -28,16 +32,17 @@ class ConfirmationAdmission
         private readonly Notifieur $notifieur,
     ) {}
 
-    public function confirmer(Demande $demande): Demande
+    /** Confirmation prononcée par le gestionnaire de l'internat (plus par le stagiaire). */
+    public function confirmer(Demande $demande, Utilisateur $gestionnaire): Demande
     {
-        return DB::transaction(function () use ($demande) {
+        return DB::transaction(function () use ($demande, $gestionnaire) {
             $demande = Demande::lockForUpdate()->findOrFail($demande->id);
 
             if ($demande->statut !== StatutDemande::Admis) {
-                throw new RegleMetierException('Seul un candidat admis peut confirmer sa place.', 'non_admis');
+                throw new RegleMetierException('Seul un candidat admis peut voir sa place confirmée.', 'non_admis');
             }
 
-            $this->transition->appliquer($demande, StatutDemande::Confirme, 'Place confirmée par le stagiaire', [
+            $this->transition->appliquer($demande, StatutDemande::Confirme, 'Place confirmée par le gestionnaire', [
                 'date_confirmation' => now(),
             ]);
 
@@ -54,20 +59,9 @@ class ConfirmationAdmission
                 $campagne->internat_id,
                 TypeNotification::Approbation,
                 'Autorisation de paiement à délivrer',
-                "{$demande->stagiaire->nomComplet()} (dossier {$demande->numero_dossier}) a confirmé sa place.",
+                "La place de {$demande->stagiaire->nomComplet()} (dossier {$demande->numero_dossier}) a été confirmée par le gestionnaire.",
                 '/paiements?statut=en_attente',
                 "paiement_a_autoriser:{$demande->id}",
-                email: false,
-            );
-
-            $this->notifieur->versRole(
-                RoleCode::Gestionnaire,
-                $campagne->internat_id,
-                TypeNotification::ChangementStatut,
-                'Place confirmée',
-                "{$demande->stagiaire->nomComplet()} (dossier {$demande->numero_dossier}) a confirmé sa place : dossier physique et affectation à prévoir.",
-                '/hebergement/affectations',
-                "confirmation:{$demande->id}",
                 email: false,
             );
 

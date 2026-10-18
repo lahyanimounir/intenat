@@ -63,8 +63,9 @@ class EcransPaiementsEtRestaurationTest extends TestCase
             'campagne_id' => $campagne->id, 'stagiaire_id' => $this->creerStagiaire($campagne->internat)->id,
             'date_limite_confirmation' => now()->addDays(10),
         ]);
-        $this->agirEnTantQue($demande->stagiaire);
-        app(ConfirmationAdmission::class)->confirmer($demande);
+        $gestionnaire = $campagne->internat_id === $this->garcons->id ? $this->gestionnaireGarcons : $this->gestionnaireFilles;
+        $this->agirEnTantQue($gestionnaire);
+        app(ConfirmationAdmission::class)->confirmer($demande, $gestionnaire);
 
         return $demande->paiements()->firstOrFail();
     }

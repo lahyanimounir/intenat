@@ -158,17 +158,21 @@ class EspaceStagiaireTest extends TestCase
         $this->connecter($stagiaire)->get(route('stagiaire.dossier'))->assertSee('n’a pas encore été soumise à la vérification');
     }
 
-    public function test_un_admis_confirme_sa_place_ou_y_renonce(): void
+    public function test_un_admis_ne_confirme_plus_lui_meme_mais_peut_renoncer(): void
     {
         $campagne = $this->creerCampagne($this->filles);
         $admis = Demande::factory()->deposee(StatutDemande::Admis)->create([
-            'campagne_id' => $campagne->id, 'stagiaire_id' => $this->creerStagiaire($this->filles)->id, 'date_limite_confirmation' => now()->addDays(5),
+            'campagne_id' => $campagne->id, 'stagiaire_id' => $this->creerStagiaire($this->filles)->id,
         ]);
 
-        Livewire::actingAs($admis->stagiaire, 'stagiaire')->test(Dossier::class)->assertSee('Vous êtes admis à l’internat')->call('confirmer')->assertHasNoErrors();
-        $this->assertSame(StatutDemande::Confirme, $admis->fresh()->statut);
-
+        // L'admis voit qu'il est admis, mais n'a plus aucune action pour confirmer lui-même sa place.
         $ecran = Livewire::actingAs($admis->stagiaire, 'stagiaire')->test(Dossier::class);
+        $ecran->assertSee('Vous êtes admis à l’internat')
+            ->assertSee('confirmée par le gestionnaire')
+            ->assertDontSee('Confirmer ma place');
+        $this->assertFalse(method_exists(Dossier::class, 'confirmer'));
+
+        // Il peut en revanche renoncer à sa place, avec un motif.
         $ecran->set('raison', 'cout')->set('explication', 'court')->call('desister')->assertHasErrors('explication');
         $ecran->set('explication', 'Je ne peux pas assumer les frais mensuels cette année.')->call('desister')->assertHasNoErrors();
 

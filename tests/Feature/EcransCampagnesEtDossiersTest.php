@@ -297,4 +297,25 @@ class EcransCampagnesEtDossiersTest extends TestCase
         $fiche->call('autoriserOccupation');
         $this->assertFalse($demande->fresh()->occupationAutorisee());
     }
+
+    public function test_le_gestionnaire_confirme_la_place_de_l_admis_pas_le_stagiaire(): void
+    {
+        $campagne = $this->creerCampagne($this->filles);
+        $demande = Demande::factory()->deposee(StatutDemande::Admis)->create([
+            'campagne_id' => $campagne->id, 'stagiaire_id' => $this->creerStagiaire($this->filles)->id,
+        ]);
+
+        // Le chef de pôle, sans la gestion de l'hébergement, ne confirme pas la place.
+        Livewire::actingAs($this->chefDePole)->test(DossierFiche::class, ['demande' => $demande])
+            ->call('confirmerPlace')->assertForbidden();
+
+        // Le gestionnaire de l'internat confirme la place de l'admis ; le premier paiement attend l'autorisation.
+        Livewire::actingAs($this->gestionnaireFilles)->test(DossierFiche::class, ['demande' => $demande])
+            ->assertSee('Confirmer la place')
+            ->call('confirmerPlace')->assertHasNoErrors();
+
+        $this->assertSame(StatutDemande::Confirme, $demande->fresh()->statut);
+        $this->assertNotNull($demande->fresh()->date_confirmation);
+        $this->assertDatabaseHas('paiement', ['demande_id' => $demande->id, 'statut' => 'en_attente']);
+    }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Domain\Accommodation\AffectationLits;
+use App\Domain\Admissions\ConfirmationAdmission;
 use App\Domain\Applications\DossierStagiaire;
 use App\Domain\Applications\Instruction;
 use App\Domain\Audit\Journal;
@@ -131,6 +132,14 @@ class DossierController extends Controller
         };
 
         return new DemandeResource($demande->load('stagiaire', 'campagne.internat'));
+    }
+
+    /** Le gestionnaire de l'internat confirme la place d'un candidat admis. */
+    public function confirmer(Demande $demande, ConfirmationAdmission $confirmation): DemandeResource
+    {
+        $this->autoriser($demande, 'hebergement.gerer');
+
+        return new DemandeResource($confirmation->confirmer($demande, $this->personnel())->load('stagiaire', 'campagne.internat'));
     }
 
     /** Le gestionnaire atteste la réception et le contrôle du dossier papier. */

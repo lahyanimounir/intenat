@@ -51,9 +51,9 @@ class PaiementsEtDocumentsTest extends TestCase
             'campagne_id' => $this->campagne->id, 'stagiaire_id' => $this->creerStagiaire($this->filles)->id,
             'date_limite_confirmation' => now()->addDays(10),
         ]);
-        $this->agirEnTantQue($demande->stagiaire);
+        $this->agirEnTantQue($this->gestionnaireFilles);
 
-        return app(ConfirmationAdmission::class)->confirmer($demande)->fresh();
+        return app(ConfirmationAdmission::class)->confirmer($demande, $this->gestionnaireFilles)->fresh();
     }
 
     private function recu(): UploadedFile

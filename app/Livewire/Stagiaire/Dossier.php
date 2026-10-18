@@ -164,11 +164,6 @@ class Dossier extends PageStagiaire
         $this->executer(fn () => $dossiers->soumettre($this->demandeExigee()), 'Dossier déposé. Votre accusé de réception est disponible.');
     }
 
-    public function confirmer(ConfirmationAdmission $confirmation): void
-    {
-        $this->executer(fn () => $confirmation->confirmer($this->demandeExigee()), 'Place confirmée. L’autorisation de paiement vous sera délivrée par le chef de pôle.');
-    }
-
     public function desister(ConfirmationAdmission $confirmation): void
     {
         $valides = $this->validate([

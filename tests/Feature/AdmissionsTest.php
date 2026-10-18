@@ -308,21 +308,20 @@ class AdmissionsTest extends TestCase
 
     // ------------------------------------------------- Confirmation, échéances
 
-    public function test_la_confirmation_est_refusee_apres_l_echeance_cote_serveur(): void
+    public function test_la_place_est_confirmee_par_le_gestionnaire_et_non_par_le_stagiaire(): void
     {
         $a = $this->complet(true, true);
         $this->deliberer($this->campagne);
-        $stagiaire = $a->stagiaire;
 
-        $this->travelTo(now()->addDays(10)->addMinute());
-        $this->agirEnTantQue($stagiaire);
-        $this->assertRegle('delai_depasse', fn () => app(ConfirmationAdmission::class)->confirmer($a->fresh()));
-        $this->ecran($stagiaire, EcranDossier::class)->call('confirmer');
-        $this->assertSame(StatutDemande::Admis, $a->fresh()->statut);
+        // Le stagiaire ne dispose plus d'aucune action pour confirmer lui-même sa place.
+        $this->assertFalse(method_exists(EcranDossier::class, 'confirmer'));
 
-        $this->travelBack();
-        $this->ecran($stagiaire, EcranDossier::class)->call('confirmer')->assertHasNoErrors();
+        // La confirmation est prononcée par le gestionnaire de l'internat.
+        $this->agirEnTantQue($this->gestionnaireFilles);
+        app(ConfirmationAdmission::class)->confirmer($a->fresh(), $this->gestionnaireFilles);
+
         $this->assertSame(StatutDemande::Confirme, $a->fresh()->statut);
+        $this->assertNotNull($a->fresh()->date_confirmation);
         $this->assertDatabaseHas('paiement', ['demande_id' => $a->id, 'statut' => 'en_attente']);
     }
 

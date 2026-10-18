@@ -217,11 +217,6 @@ class DossierController extends Controller
         return $documents->accuseDeReception($demande);
     }
 
-    public function confirmer(ConfirmationAdmission $confirmation): DemandeResource
-    {
-        return new DemandeResource($confirmation->confirmer($this->demande()));
-    }
-
     public function desister(Request $request, ConfirmationAdmission $confirmation): DemandeResource
     {
         $donnees = $request->validate([

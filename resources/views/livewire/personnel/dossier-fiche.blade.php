@@ -16,6 +16,12 @@
         <x-slot:marque><x-statut :etat="$demande->statut" /></x-slot:marque>
         <x-slot:actions>
             <x-bouton icone="download" :href="route('dossiers.accuse', $demande)" :navigation="false">Accusé de réception</x-bouton>
+            @if ($gererHebergement && $demande->statut === StatutDemande::Admis)
+                <x-bouton variante="primaire" icone="circle-check" cible="confirmerPlace"
+                    x-on:click="$confirmer({ titre: 'Confirmer la place du candidat ?', texte: 'Vous confirmez la place de ce candidat admis à l’internat. L’autorisation de paiement pourra ensuite être délivrée par le chef de pôle.', libelle: 'Confirmer la place' }).then(() => $wire.confirmerPlace())">
+                    Confirmer la place
+                </x-bouton>
+            @endif
             @if ($gererHebergement && $admis && ! $demande->dossier_physique_depose)
                 <x-bouton icone="file-check-corner" cible="recevoirDossierPhysique"
                     x-on:click="$confirmer({ titre: 'Dossier physique reçu ?', texte: 'Vous attestez avoir reçu et contrôlé le dossier papier de ce candidat.', libelle: 'Enregistrer la réception' }).then(() => $wire.recevoirDossierPhysique())">

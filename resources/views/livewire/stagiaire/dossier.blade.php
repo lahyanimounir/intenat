@@ -238,16 +238,12 @@
                                     <div>
                                         <h2 class="text-md font-semibold">Vous êtes admis à l’internat</h2>
                                         <p class="mt-0.5 text-base text-encre-2">
-                                            Confirmez votre place pour la conserver.
+                                            Votre place sera confirmée par le gestionnaire de l’internat. Déposez votre dossier papier à l’internat ;
+                                            si vous ne souhaitez plus votre place, vous pouvez y renoncer ci-dessous.
                                         </p>
                                     </div>
                                 </div>
-                                <p class="text-sm text-discret">Pensez à déposer votre dossier papier à l’internat.</p>
                                 <div class="flex flex-wrap gap-2 pt-1">
-                                    <x-bouton variante="primaire" cible="confirmer"
-                                        x-on:click="$confirmer({ titre: 'Confirmer votre place ?', texte: 'Vous acceptez la place qui vous est attribuée à l’internat et vous vous engagez à déposer votre dossier papier.', libelle: 'Je confirme' }).then(() => $wire.confirmer())">
-                                        Confirmer ma place
-                                    </x-bouton>
                                     <x-bouton variante="danger-discret" wire:click="ouvrirDialogue('desistement')">Renoncer à ma place</x-bouton>
                                 </div>
                             </x-carte.corps>
