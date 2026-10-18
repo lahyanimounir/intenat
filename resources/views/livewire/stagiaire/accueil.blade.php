@@ -38,7 +38,7 @@
 
         @if ($aConfirmer)
             <x-alerte ton="succes" titre="Vous êtes admis à l’internat">
-                Votre place sera confirmée par le gestionnaire de l’internat. Pensez à déposer votre dossier papier.
+                Votre place sera confirmée par le gestionnaire de l’internat.
                 <x-slot:action><x-bouton taille="sm" :href="route('stagiaire.dossier')">Mon dossier</x-bouton></x-slot:action>
             </x-alerte>
         @endif

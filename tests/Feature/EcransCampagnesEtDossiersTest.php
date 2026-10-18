@@ -278,23 +278,18 @@ class EcransCampagnesEtDossiersTest extends TestCase
         $this->actingAs($this->chefDePole)->get(route('dossiers.fiche', $demande))->assertOk()->assertSee('Détail du score')->assertSee('35 / 80');
     }
 
-    public function test_le_gestionnaire_enregistre_le_dossier_physique_et_autorise_l_occupation(): void
+    public function test_l_occupation_reste_bloquee_tant_que_la_place_n_est_pas_confirmee(): void
     {
         $campagne = $this->creerCampagne($this->filles);
         $demande = Demande::factory()->deposee(StatutDemande::Admis)->create([
-            'campagne_id' => $campagne->id, 'stagiaire_id' => $this->creerStagiaire($this->filles)->id, 'date_limite_confirmation' => now()->addDays(5),
+            'campagne_id' => $campagne->id, 'stagiaire_id' => $this->creerStagiaire($this->filles)->id,
         ]);
 
         // Le chef de pôle n'a pas la main sur l'hébergement.
-        Livewire::actingAs($this->chefDePole)->test(DossierFiche::class, ['demande' => $demande])->call('recevoirDossierPhysique')->assertForbidden();
+        Livewire::actingAs($this->chefDePole)->test(DossierFiche::class, ['demande' => $demande])->call('autoriserOccupation')->assertForbidden();
 
-        $fiche = Livewire::actingAs($this->gestionnaireFilles)->test(DossierFiche::class, ['demande' => $demande]);
-        $fiche->call('recevoirDossierPhysique')->assertHasNoErrors();
-        $this->assertTrue($demande->fresh()->dossier_physique_depose);
-        $this->assertSame($this->gestionnaireFilles->id, $demande->fresh()->dossier_physique_valide_par);
-
-        // Tant que la place n'est pas confirmée, l'occupation ne s'autorise pas.
-        $fiche->call('autoriserOccupation');
+        // Admis mais pas encore confirmé : l'occupation ne s'autorise pas.
+        Livewire::actingAs($this->gestionnaireFilles)->test(DossierFiche::class, ['demande' => $demande])->call('autoriserOccupation');
         $this->assertFalse($demande->fresh()->occupationAutorisee());
     }
 

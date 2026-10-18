@@ -115,14 +115,6 @@ class DossierFiche extends PagePersonnel
         $this->executer(fn () => $confirmation->confirmer($demande, $this->utilisateur()), 'Place confirmée pour le candidat. L’autorisation de paiement peut être délivrée par le chef de pôle.');
     }
 
-    public function recevoirDossierPhysique(Instruction $instruction): void
-    {
-        $demande = $this->demande();
-        $this->autoriser($demande, 'hebergement.gerer');
-
-        $this->executer(fn () => $instruction->recevoirDossierPhysique($demande, $this->utilisateur()), 'Dossier physique enregistré.');
-    }
-
     public function autoriserOccupation(AffectationLits $affectations): void
     {
         $demande = $this->demande();

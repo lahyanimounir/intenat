@@ -167,7 +167,6 @@ class TableauxDeBord
                 'a_heberger' => $dossiers()->where('statut', StatutDemande::Confirme->value)->whereDoesntHave('affectationActive')->count(),
                 'arrivees_attendues' => $sejours()->whereDoesntHave('mouvements', fn ($q) => $q->where('type', TypeMouvement::Arrivee->value))->count(),
                 'departs_a_enregistrer' => $sejours()->whereHas('demande', fn ($q) => $q->where('statut', StatutDemande::Desiste->value))->count(),
-                'dossiers_physiques_attendus' => $dossiers()->where('statut', StatutDemande::Confirme->value)->where('dossier_physique_depose', false)->count(),
             ],
             'paiements' => [
                 'recus_a_controler' => Paiement::where('statut', StatutPaiement::RecuDepose->value)

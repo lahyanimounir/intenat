@@ -18,9 +18,9 @@ use Livewire\Attributes\Url;
 
 /**
  * Candidats à loger : admis ayant confirmé leur place et sans lit. Pour chacun,
- * dossier physique, paiement de l'hébergement et permission d'occuper sont
- * montrés côte à côte ; la permission est une décision propre du gestionnaire,
- * distincte du paiement.
+ * le paiement de l'hébergement et la permission d'occuper sont montrés côte à
+ * côte ; la permission est une décision propre du gestionnaire, distincte du
+ * paiement.
  */
 #[Title('Affectations')]
 class Affectations extends PagePersonnel

@@ -77,10 +77,6 @@ class AffectationLits
             $obstacles[] = 'Aucun reçu de paiement validé.';
         }
 
-        if ($this->parametres->vrai('occupation.exiger_dossier_physique') && ! $demande->dossier_physique_depose) {
-            $obstacles[] = 'Le dossier physique n\'a pas été déposé.';
-        }
-
         return $obstacles;
     }
 

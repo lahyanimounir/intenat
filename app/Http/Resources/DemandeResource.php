@@ -38,8 +38,6 @@ class DemandeResource extends JsonResource
             'motif_rectification' => $this->motif_rectification,
             'date_instruction' => $this->date_instruction,
             'date_confirmation' => $this->date_confirmation,
-            'dossier_physique_depose' => $this->dossier_physique_depose,
-            'date_depot_physique' => $this->date_depot_physique,
             'occupation' => [
                 'autorisee' => $this->occupationAutorisee(),
                 'autorisee_le' => $this->occupation_autorisee_le,

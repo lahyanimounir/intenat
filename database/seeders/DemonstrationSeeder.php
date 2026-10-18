@@ -380,14 +380,6 @@ class DemonstrationSeeder extends Seeder
         $this->agir($gestionnaire, $this->j->subDays(2)->addHours(12));
         $this->paiements->validerRecu($confirmees[10]->paiements()->first(), $gestionnaire);
 
-        // Dossiers physiques reçus pour neuf confirmées.
-        foreach ($confirmees->take(9) as $demande) {
-            $demande->forceFill([
-                'dossier_physique_depose' => true, 'date_depot_physique' => $this->j->subDays(3)->addHours(10),
-                'dossier_physique_valide_par' => $gestionnaire->id,
-            ])->save();
-        }
-
         // Occupation autorisée et lits attribués à dix confirmées, dont deux sans reçu (paiement non bloquant).
         $lits = Lit::where('statut', StatutLit::Disponible->value)
             ->whereHas('chambre', fn ($q) => $q->where('type_chambre', TypeChambre::Standard->value)

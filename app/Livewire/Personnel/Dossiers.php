@@ -25,10 +25,6 @@ class Dossiers extends PagePersonnel
     #[Url(except: '')]
     public string $internat = '';
 
-    /** `attendu` : candidats admis dont le dossier papier n'a pas été reçu (lien du tableau de bord). */
-    #[Url(as: 'dossier_physique', except: '')]
-    public string $dossierPhysique = '';
-
     public function mount(): void
     {
         $this->exiger('demandes.consulter');
@@ -36,12 +32,12 @@ class Dossiers extends PagePersonnel
 
     protected function filtres(): array
     {
-        return ['statut', 'campagne', 'internat', 'dossierPhysique'];
+        return ['statut', 'campagne', 'internat'];
     }
 
     public function effacerFiltres(): void
     {
-        $this->reset('recherche', 'statut', 'campagne', 'internat', 'dossierPhysique');
+        $this->reset('recherche', 'statut', 'campagne', 'internat');
         $this->resetPage();
     }
 
@@ -59,7 +55,6 @@ class Dossiers extends PagePersonnel
             ->when($statuts !== [], fn (Builder $q) => $q->whereIn('demande.statut', $statuts))
             ->when($this->campagne !== '', fn (Builder $q) => $q->where('campagne_id', (int) $this->campagne))
             ->when($this->internat !== '', fn (Builder $q) => $q->whereHas('campagne', fn (Builder $c) => $c->where('internat_id', (int) $this->internat)))
-            ->when($this->dossierPhysique === 'attendu', fn (Builder $q) => $q->where('dossier_physique_depose', false))
             ->when($terme !== '', fn (Builder $q) => $q->where(fn (Builder $s) => $s
                 ->where('numero_dossier', 'like', $motif)
                 ->orWhereHas('stagiaire', fn (Builder $st) => $st->where('nom', 'like', $motif)->orWhere('prenom', 'like', $motif)->orWhere('cef', 'like', $motif))));
@@ -74,7 +69,7 @@ class Dossiers extends PagePersonnel
             'statuts' => collect(StatutDemande::options())->reject(fn (array $o) => $o['valeur'] === StatutDemande::Brouillon->value)->values()->all(),
             'campagnes' => $this->campagnesDuPerimetre(),
             'internats' => $internats,
-            'filtresActifs' => $terme !== '' || $this->statut !== '' || $this->campagne !== '' || $this->internat !== '' || $this->dossierPhysique !== '',
+            'filtresActifs' => $terme !== '' || $this->statut !== '' || $this->campagne !== '' || $this->internat !== '',
         ]);
     }
 }

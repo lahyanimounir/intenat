@@ -6,13 +6,6 @@
     <x-page.entete titre="Dossiers de préinscription"
         description="Dossiers déposés par les stagiaires. Ouvrez un dossier pour contrôler ses pièces et décider : complet, à rectifier ou rejet motivé." />
 
-    @if ($dossierPhysique === 'attendu')
-        <x-alerte ton="info" class="mb-4">
-            Dossiers dont le dossier papier n’a pas encore été reçu.
-            <x-slot:action><x-bouton taille="sm" wire:click="$set('dossierPhysique', '')">Voir tous les dossiers</x-bouton></x-slot:action>
-        </x-alerte>
-    @endif
-
     <x-tableau legende="Dossiers de préinscription" :lignes="$dossiers" :tri="$tri" :sens="$sens"
         :vide="$filtresActifs ? 'Aucun dossier ne correspond aux filtres' : 'Aucun dossier déposé'"
         :vide-description="$filtresActifs ? null : 'Les dossiers apparaissent ici dès qu’un stagiaire soumet sa demande.'">

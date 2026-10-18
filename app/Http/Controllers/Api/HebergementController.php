@@ -25,7 +25,7 @@ class HebergementController extends Controller
 {
     public function __construct(private readonly AffectationLits $affectations) {}
 
-    /** Admis confirmés sans lit : dossier physique, paiement et permission d'occuper côte à côte. */
+    /** Admis confirmés sans lit : paiement et permission d'occuper côte à côte. */
     public function candidats(Request $request): JsonResponse
     {
         $requete = Demande::visiblesPar($this->personnel())
@@ -52,7 +52,6 @@ class HebergementController extends Controller
                 'besoins_specifiques' => $d->besoins_specifiques,
                 'precisions_besoins' => $d->precisions_besoins,
                 'date_confirmation' => $d->date_confirmation,
-                'dossier_physique_depose' => $d->dossier_physique_depose,
                 'paiement' => $paiement ? PaiementController::paiement($paiement) : null,
                 'recu_valide' => $d->paiements->contains(fn ($p) => $p->statut === StatutPaiement::Valide),
                 'occupation_autorisee' => $d->occupationAutorisee(),

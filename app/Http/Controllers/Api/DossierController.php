@@ -9,7 +9,6 @@ use App\Domain\Applications\Instruction;
 use App\Domain\Audit\Journal;
 use App\Domain\Reporting\DocumentsAdministratifs;
 use App\Domain\Shared\Documents;
-use App\Domain\Shared\RegleMetierException;
 use App\Enums\StatutDemande;
 use App\Enums\StatutPiece;
 use App\Http\Controllers\Controller;
@@ -42,7 +41,6 @@ class DossierController extends Controller
             ->when($request->filled('campagne_id'), fn ($q) => $q->where('campagne_id', $request->integer('campagne_id')))
             ->when($request->filled('statut'), fn ($q) => $q->whereIn('statut', explode(',', $request->string('statut')->toString())))
             ->when($request->filled('internat_id'), fn ($q) => $q->whereHas('campagne', fn ($c) => $c->where('internat_id', $request->integer('internat_id'))))
-            ->when($request->query('dossier_physique') === 'attendu', fn ($q) => $q->where('dossier_physique_depose', false))
             ->when($request->filled('recherche'), function ($q) use ($request) {
                 $terme = '%'.str_replace(['%', '_'], ['\%', '\_'], $request->string('recherche')->trim()).'%';
                 $q->where(fn ($s) => $s->where('numero_dossier', 'like', $terme)
@@ -140,30 +138,6 @@ class DossierController extends Controller
         $this->autoriser($demande, 'hebergement.gerer');
 
         return new DemandeResource($confirmation->confirmer($demande, $this->personnel())->load('stagiaire', 'campagne.internat'));
-    }
-
-    /** Le gestionnaire atteste la réception et le contrôle du dossier papier. */
-    public function dossierPhysique(Demande $demande, Journal $journal): DemandeResource
-    {
-        $this->autoriser($demande, 'hebergement.gerer');
-
-        if (! in_array($demande->statut, [StatutDemande::Admis, StatutDemande::Confirme], true)) {
-            throw new RegleMetierException('Le dossier physique ne concerne que les candidats admis.', 'non_admis');
-        }
-
-        if ($demande->dossier_physique_depose) {
-            throw RegleMetierException::conflit('Le dossier physique est déjà enregistré.');
-        }
-
-        $demande->forceFill([
-            'dossier_physique_depose' => true,
-            'date_depot_physique' => now(),
-            'dossier_physique_valide_par' => $this->personnel()->id,
-        ])->save();
-
-        $journal->consigner('demande.dossier_physique', $demande);
-
-        return new DemandeResource($demande->load('stagiaire', 'campagne.internat'));
     }
 
     public function autoriserOccupation(Demande $demande, AffectationLits $affectations): DemandeResource

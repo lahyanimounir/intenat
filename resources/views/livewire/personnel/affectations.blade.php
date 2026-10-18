@@ -14,7 +14,6 @@
         <x-slot:entete>
             <x-tableau.colonne>Candidat</x-tableau.colonne>
             <x-tableau.colonne>Confirmé le</x-tableau.colonne>
-            <x-tableau.colonne>Dossier physique</x-tableau.colonne>
             <x-tableau.colonne>Paiement de l’hébergement</x-tableau.colonne>
             <x-tableau.colonne>Occupation</x-tableau.colonne>
             <x-tableau.colonne><span class="sr-only">Actions</span></x-tableau.colonne>
@@ -30,9 +29,6 @@
                     @endif
                 </x-tableau.cellule>
                 <x-tableau.cellule class="chiffres text-encre-2">{{ Format::date($candidat->date_confirmation) }}</x-tableau.cellule>
-                <x-tableau.cellule>
-                    <x-oui-non :valeur="$candidat->dossier_physique_depose" oui="Reçu" non="Attendu" />
-                </x-tableau.cellule>
                 <x-tableau.cellule>
                     @if ($candidat->dernierPaiement)
                         <x-statut :etat="$candidat->dernierPaiement->statut" />

@@ -22,12 +22,6 @@
                     Confirmer la place
                 </x-bouton>
             @endif
-            @if ($gererHebergement && $admis && ! $demande->dossier_physique_depose)
-                <x-bouton icone="file-check-corner" cible="recevoirDossierPhysique"
-                    x-on:click="$confirmer({ titre: 'Dossier physique reçu ?', texte: 'Vous attestez avoir reçu et contrôlé le dossier papier de ce candidat.', libelle: 'Enregistrer la réception' }).then(() => $wire.recevoirDossierPhysique())">
-                    Dossier physique reçu
-                </x-bouton>
-            @endif
             @if ($gererHebergement && $demande->statut === StatutDemande::Confirme && ! $demande->occupationAutorisee())
                 <x-bouton variante="primaire" icone="key-round" :disabled="count($obstacles) > 0" cible="autoriserOccupation"
                     x-on:click="$confirmer({ titre: 'Autoriser l’occupation ?', texte: 'Le candidat pourra recevoir un lit. Cette décision est distincte du paiement de l’hébergement et reste tracée.', libelle: 'Autoriser' }).then(() => $wire.autoriserOccupation())">
@@ -251,7 +245,6 @@
                     <x-carte.corps>
                         <x-definitions>
                             <x-definition terme="Confirmation">{{ $demande->date_confirmation ? Format::dateHeure($demande->date_confirmation) : '' }}</x-definition>
-                            <x-definition terme="Dossier physique"><x-oui-non :valeur="$demande->dossier_physique_depose" oui="Reçu" non="Attendu" /></x-definition>
                             <x-definition terme="Occupation">{{ $demande->occupationAutorisee() ? ($demande->occupation_sans_recu ? 'Autorisée sans reçu' : 'Autorisée') : 'Non autorisée' }}</x-definition>
                             <x-definition terme="Lit attribué">
                                 @if ($demande->affectationActive)

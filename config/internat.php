@@ -78,7 +78,6 @@ return [
         'instruction.masquer_score_gestionnaire' => [true, 'Le score et le rang sont masqués au gestionnaire', true],
         'occupation.exiger_autorisation_paiement' => [true, 'Une autorisation de paiement est requise avant d\'autoriser l\'occupation', true],
         'occupation.exiger_recu_valide' => [false, 'Un reçu validé est requis avant d\'autoriser l\'occupation (documenté : non bloquant)', true],
-        'occupation.exiger_dossier_physique' => [false, 'Le dossier physique doit être déposé avant d\'autoriser l\'occupation', true],
         'restauration.heure_limite_reservation' => ['18:00', 'Heure limite de réservation ou d\'annulation, la veille du repas', true],
         'restauration.sortie_annule_repas' => [false, 'Une sortie acceptée annule les repas réservés sur la période', true],
         'absence.alerte_destinataires' => ['gestionnaire', 'Destinataires de l\'alerte d\'absence non autorisée (gestionnaire | gestionnaire_et_chef_pole)', true],

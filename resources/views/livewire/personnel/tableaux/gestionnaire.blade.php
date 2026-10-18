@@ -21,7 +21,6 @@
             ['Arrivées attendues', $h['arrivees_attendues'], '/hebergement/residents?arrivee=attendue'],
             ['Départs à enregistrer après désistement', $h['departs_a_enregistrer'], '/hebergement/residents'],
             ['Reçus de paiement à contrôler', $d['paiements']['recus_a_controler'], '/paiements?statut=recu_depose'],
-            ['Dossiers physiques attendus', $h['dossiers_physiques_attendus'], '/dossiers?dossier_physique=attendu'],
             ['Demandes de sortie à traiter', $d['quotidien']['sorties_a_traiter'], '/vie-internat/presences'],
             ['Absences non autorisées (7 derniers jours)', $d['quotidien']['absences_non_autorisees_7j'], '/vie-internat/presences?onglet=absences'],
             ['Demandes de maintenance ouvertes', $d['quotidien']['maintenances_ouvertes'], '/vie-internat/incidents?onglet=maintenance'],

@@ -252,7 +252,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::middleware('permission:hebergement.gerer')->group(function () {
             Route::post('dossiers/{demande}/confirmation', [DossierController::class, 'confirmer']);
-            Route::post('dossiers/{demande}/dossier-physique', [DossierController::class, 'dossierPhysique']);
             Route::post('dossiers/{demande}/occupation', [DossierController::class, 'autoriserOccupation']);
             Route::post('hebergement/affectations', [HebergementController::class, 'affecter']);
             Route::post('hebergement/residents/{affectation}/changement-lit', [HebergementController::class, 'changerDeLit']);

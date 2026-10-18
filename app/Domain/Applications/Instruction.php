@@ -234,32 +234,6 @@ class Instruction
         });
     }
 
-    /** Le gestionnaire atteste la réception et le contrôle du dossier papier d'un candidat admis. */
-    public function recevoirDossierPhysique(Demande $demande, Utilisateur $gestionnaire): Demande
-    {
-        return DB::transaction(function () use ($demande, $gestionnaire) {
-            $demande = Demande::lockForUpdate()->findOrFail($demande->id);
-
-            if (! in_array($demande->statut, [StatutDemande::Admis, StatutDemande::Confirme], true)) {
-                throw new RegleMetierException('Le dossier physique ne concerne que les candidats admis.', 'non_admis');
-            }
-
-            if ($demande->dossier_physique_depose) {
-                throw RegleMetierException::conflit('Le dossier physique est déjà enregistré.');
-            }
-
-            $demande->forceFill([
-                'dossier_physique_depose' => true,
-                'date_depot_physique' => now(),
-                'dossier_physique_valide_par' => $gestionnaire->id,
-            ])->save();
-
-            $this->journal->consigner('demande.dossier_physique', $demande, acteur: $gestionnaire);
-
-            return $demande;
-        });
-    }
-
     private function exigerEnInstruction(Demande $demande): void
     {
         if ($demande->statut !== StatutDemande::Recu) {

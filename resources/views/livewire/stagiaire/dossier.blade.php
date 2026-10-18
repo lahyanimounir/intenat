@@ -238,8 +238,8 @@
                                     <div>
                                         <h2 class="text-md font-semibold">Vous êtes admis à l’internat</h2>
                                         <p class="mt-0.5 text-base text-encre-2">
-                                            Votre place sera confirmée par le gestionnaire de l’internat. Déposez votre dossier papier à l’internat ;
-                                            si vous ne souhaitez plus votre place, vous pouvez y renoncer ci-dessous.
+                                            Votre place sera confirmée par le gestionnaire de l’internat.
+                                            Si vous ne souhaitez plus votre place, vous pouvez y renoncer ci-dessous.
                                         </p>
                                     </div>
                                 </div>
@@ -252,7 +252,6 @@
                     @case(StatutDemande::Confirme)
                         <x-alerte ton="succes" titre="Place confirmée">
                             Confirmée le {{ Format::dateHeure($demande->date_confirmation) }}.
-                            {{ $demande->dossier_physique_depose ? 'Votre dossier papier a bien été reçu.' : 'Pensez à déposer votre dossier papier à l’internat.' }}
                             <x-slot:action><x-bouton taille="sm" :href="url('/stagiaire/paiements')">Mes paiements</x-bouton></x-slot:action>
                         </x-alerte>
                         @break
