@@ -27,16 +27,21 @@ class CalculScore
     /**
      * Détail du score sans rien écrire en base.
      *
-     * @return array{total: int, lignes: list<array{critere: Critere, declare: bool, piece_requise: bool, piece_acceptee: bool, points: int}>}
+     * Une note peut avoir été rectifiée à la main (chef de pôle, après clôture) :
+     * elle prime alors sur les points déduits de la déclaration et des pièces.
+     *
+     * @return array{total: int, lignes: list<array{critere: Critere, declare: bool, piece_requise: bool, piece_acceptee: bool, points: int, points_auto: int, manuel: bool}>}
      */
     public function evaluer(Demande $demande): array
     {
-        $demande->loadMissing('campagne.criteres.typePiece', 'pieces', 'stagiaire');
+        $demande->loadMissing('campagne.criteres.typePiece', 'pieces', 'stagiaire', 'notesManuelles');
 
         $acceptees = $demande->pieces
             ->filter(fn ($piece) => $piece->statut === StatutPiece::Acceptee)
             ->pluck('type_piece_id')
             ->flip();
+
+        $manuelles = $demande->notesManuelles->keyBy('critere_id');
 
         $lignes = [];
         $total = 0;
@@ -45,7 +50,12 @@ class CalculScore
             $declare = $this->estDeclenche($critere, $demande);
             $pieceRequise = $critere->type_piece_id !== null;
             $pieceAcceptee = ! $pieceRequise || $acceptees->has($critere->type_piece_id);
-            $points = $declare && $pieceAcceptee ? $critere->points : 0;
+            $pointsAuto = $declare && $pieceAcceptee ? $critere->points : 0;
+
+            $override = $manuelles->get($critere->id);
+            $manuel = $override !== null;
+            // La note manuelle reste bornée au maximum du critère.
+            $points = $manuel ? max(0, min((int) $override->points, (int) $critere->points)) : $pointsAuto;
             $total += $points;
 
             $lignes[] = [
@@ -54,6 +64,8 @@ class CalculScore
                 'piece_requise' => $pieceRequise,
                 'piece_acceptee' => $pieceAcceptee,
                 'points' => $points,
+                'points_auto' => $pointsAuto,
+                'manuel' => $manuel,
             ];
         }
 

@@ -84,6 +84,11 @@ class Demande extends Model
         return $this->hasMany(DemandeCritere::class, 'demande_id');
     }
 
+    public function notesManuelles(): HasMany
+    {
+        return $this->hasMany(NoteManuelle::class, 'demande_id');
+    }
+
     public function historique(): HasMany
     {
         return $this->hasMany(HistoriqueDemande::class, 'demande_id')->orderByDesc('date_heure')->orderByDesc('id');

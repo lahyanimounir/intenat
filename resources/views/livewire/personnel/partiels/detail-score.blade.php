@@ -20,18 +20,32 @@
                 <x-alerte ton="alerte">Recalculé aujourd’hui, ce dossier obtiendrait {{ $score['recalcule'] }} point(s) : une pièce ou un critère a changé depuis le calcul.</x-alerte>
             @endif
 
+            @if ($score['ajustable'])
+                <x-alerte ton="info">
+                    Campagne clôturée : vous pouvez rectifier la note de chaque critère. Le score total et le classement sont recalculés
+                    automatiquement à l’enregistrement, et les notes rectifiées sont conservées.
+                </x-alerte>
+            @endif
+
             <x-tableau legende="Détail du score par critère" :plafonne="false">
                 <x-slot:entete>
                     <x-tableau.colonne>Critère</x-tableau.colonne>
                     <x-tableau.colonne>Déclaré</x-tableau.colonne>
                     <x-tableau.colonne>Pièce justificative</x-tableau.colonne>
-                    <x-tableau.colonne droite>Points</x-tableau.colonne>
+                    <x-tableau.colonne droite>{{ $score['ajustable'] ? 'Note' : 'Points' }}</x-tableau.colonne>
                 </x-slot:entete>
                 @foreach ($score['lignes'] as $ligne)
-                    <x-tableau.ligne>
+                    @php $critereId = $ligne['critere']->id; $manuelle = $score['notesManuelles'][$critereId] ?? null; @endphp
+                    <x-tableau.ligne wire:key="score-ligne-{{ $critereId }}">
                         <x-tableau.cellule>
                             <p class="font-medium">{{ $ligne['critere']->condition_texte }}</p>
                             <p class="text-xs text-discret">{{ $ligne['critere']->categorie->libelle() }} · {{ $ligne['critere']->points }} point(s) possibles</p>
+                            @if ($ligne['manuel'])
+                                <p class="mt-0.5 text-xs text-discret">
+                                    <x-badge ton="marine">Note rectifiée</x-badge>
+                                    <span class="ml-1">calcul automatique : {{ $ligne['points_auto'] }}@if ($manuelle?->auteur) · {{ $manuelle->auteur->nomComplet() }}@endif</span>
+                                </p>
+                            @endif
                         </x-tableau.cellule>
                         <x-tableau.cellule><x-oui-non :valeur="$ligne['declare']" /></x-tableau.cellule>
                         <x-tableau.cellule>
@@ -44,7 +58,23 @@
                                 @endif
                             @endif
                         </x-tableau.cellule>
-                        <x-tableau.cellule droite class="font-semibold">{{ $ligne['points'] }}</x-tableau.cellule>
+                        <x-tableau.cellule droite>
+                            @if ($score['ajustable'])
+                                <div class="flex items-center justify-end gap-1.5">
+                                    <div class="w-20">
+                                        <x-saisie type="number" min="0" :max="$ligne['critere']->points" taille="sm"
+                                            wire:model="notes.{{ $critereId }}" class="text-right"
+                                            aria-label="Note du critère {{ $ligne['critere']->condition_texte }}" />
+                                    </div>
+                                    <x-bouton taille="sm" variante="primaire" icone="check" wire:click="enregistrerNote({{ $critereId }})" cible="enregistrerNote({{ $critereId }})">Enregistrer</x-bouton>
+                                    @if ($ligne['manuel'])
+                                        <x-bouton taille="sm" variante="discret" icone="undo-2" wire:click="retablirNote({{ $critereId }})" cible="retablirNote({{ $critereId }})">Rétablir</x-bouton>
+                                    @endif
+                                </div>
+                            @else
+                                <span class="font-semibold">{{ $ligne['points'] }}</span>
+                            @endif
+                        </x-tableau.cellule>
                     </x-tableau.ligne>
                 @endforeach
             </x-tableau>

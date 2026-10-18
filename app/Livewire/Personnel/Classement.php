@@ -2,8 +2,10 @@
 
 namespace App\Livewire\Personnel;
 
+use App\Domain\Admissions\CalculScore;
 use App\Domain\Admissions\Classement as CalculDuClassement;
 use App\Domain\Admissions\Deliberation;
+use App\Domain\Admissions\NotationManuelle;
 use App\Enums\ListeAdmission;
 use App\Enums\StatutDemande;
 use App\Enums\TypeDecision;
@@ -11,6 +13,7 @@ use App\Livewire\Concerns\AvecDetailScore;
 use App\Livewire\Concerns\AvecTableau;
 use App\Livewire\PagePersonnel;
 use App\Models\Campagne;
+use App\Models\Critere;
 use App\Models\Demande;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Validation\Rule;
@@ -54,6 +57,9 @@ class Classement extends PagePersonnel
 
     public string $motif = '';
 
+    /** Saisie des notes par critère dans le détail du score : id de critère => points. */
+    public array $notes = [];
+
     public function mount(): void
     {
         $this->exiger('admissions.consulter');
@@ -71,8 +77,55 @@ class Classement extends PagePersonnel
     public function updatedCampagne(): void
     {
         // Les ajustements ne valent que pour la campagne en cours d'examen.
-        $this->reset('ajustements', 'arbitrage', 'liste', 'recherche');
+        $this->reset('ajustements', 'arbitrage', 'liste', 'recherche', 'notes');
         $this->resetPage();
+    }
+
+    /** Amorce les champs de saisie avec les points actuels de chaque critère. */
+    protected function primerNotes(Demande $demande): void
+    {
+        $this->notes = collect(app(CalculScore::class)->evaluer($demande)['lignes'])
+            ->mapWithKeys(fn (array $ligne) => [$ligne['critere']->id => $ligne['points']])
+            ->all();
+    }
+
+    /** Rectifie la note d'un critère pour le dossier dont le détail est ouvert. */
+    public function enregistrerNote(int $critere, NotationManuelle $notation): void
+    {
+        if ($this->scoreDe === null) {
+            return;
+        }
+
+        $demande = Demande::with('campagne')->findOrFail($this->scoreDe);
+        $this->autoriser($demande, 'admissions.noter');
+        $modeleCritere = Critere::where('campagne_id', $demande->campagne_id)->findOrFail($critere);
+
+        $valide = $this->validate([
+            "notes.$critere" => ['required', 'integer', 'min:0', 'max:'.(int) $modeleCritere->points],
+        ], [], ["notes.$critere" => 'note']);
+
+        $this->executer(function () use ($notation, $demande, $modeleCritere, $valide, $critere) {
+            $notation->fixer($demande, $modeleCritere, (int) $valide['notes'][$critere], null, $this->utilisateur());
+            $this->message('Note mise à jour : le score et le classement ont été recalculés.');
+        });
+    }
+
+    /** Rétablit la note automatique d'un critère. */
+    public function retablirNote(int $critere, NotationManuelle $notation): void
+    {
+        if ($this->scoreDe === null) {
+            return;
+        }
+
+        $demande = Demande::with('campagne')->findOrFail($this->scoreDe);
+        $this->autoriser($demande, 'admissions.noter');
+        $modeleCritere = Critere::where('campagne_id', $demande->campagne_id)->findOrFail($critere);
+
+        $this->executer(function () use ($notation, $demande, $modeleCritere) {
+            $demande = $notation->retablir($demande, $modeleCritere);
+            $this->primerNotes($demande->load('campagne.criteres.typePiece', 'pieces', 'stagiaire', 'notesManuelles'));
+            $this->message('Note automatique rétablie : le score et le classement ont été recalculés.');
+        });
     }
 
     private function campagneChoisie(): ?Campagne
@@ -161,6 +214,7 @@ class Classement extends PagePersonnel
         $this->ajuste = null;
         $this->scoreDe = null;
         $this->dialogue = null;
+        $this->reset('notes');
         $this->resetValidation();
     }
 

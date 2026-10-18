@@ -31,6 +31,7 @@ final class Permissions
             'demandes.consulter' => 'Consulter les dossiers de préinscription',
             'demandes.instruire' => 'Instruire les dossiers : pièces, complet, rectification, rejet',
             'admissions.consulter' => 'Voir les scores, le classement, la liste principale et la liste d\'attente',
+            'admissions.noter' => 'Rectifier manuellement les notes de classement après la clôture',
             'admissions.deliberer' => 'Délibérer et valider la liste des admis',
             'admissions.promouvoir' => 'Appeler un candidat de la liste d\'attente',
             'admissions.annuler_validation' => 'Annuler la validation d\'une candidature et la renvoyer au gestionnaire',
@@ -70,8 +71,9 @@ final class Permissions
             ],
             RoleCode::ChefPole->value => [
                 'campagnes.consulter', 'campagnes.gerer',
-                // Il consulte les candidatures validées et peut annuler une validation, mais ne délibère plus.
-                'inscriptions.verifier', 'demandes.consulter', 'admissions.consulter', 'admissions.annuler_validation',
+                // Il consulte les candidatures validées, rectifie les notes après clôture et peut annuler une
+                // validation, mais ne délibère plus.
+                'inscriptions.verifier', 'demandes.consulter', 'admissions.consulter', 'admissions.noter', 'admissions.annuler_validation',
                 'paiements.consulter', 'paiements.autoriser',
                 'referentiel.consulter', 'hebergement.consulter', 'restauration.consulter',
                 'documents.gerer', 'reclamations.traiter', 'pilotage.consulter', 'exports.creer',
@@ -81,8 +83,9 @@ final class Permissions
             ],
             RoleCode::Directeur->value => [
                 'campagnes.consulter', 'referentiel.consulter',
-                // La délibération lui est réservée (dans son périmètre) ; il peut aussi annuler une validation.
-                'demandes.consulter', 'admissions.consulter', 'admissions.deliberer', 'admissions.annuler_validation',
+                // La délibération lui est réservée (dans son périmètre) ; il peut aussi rectifier les notes
+                // après clôture et annuler une validation.
+                'demandes.consulter', 'admissions.consulter', 'admissions.noter', 'admissions.deliberer', 'admissions.annuler_validation',
                 'pilotage.consulter', 'exports.creer',
             ],
             RoleCode::DirRegionale->value => [

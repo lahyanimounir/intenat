@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\DeclencheurCritere;
 use App\Enums\ListeAdmission;
 use App\Enums\StatutCampagne;
 use App\Enums\StatutDemande;
@@ -10,6 +11,7 @@ use App\Livewire\Personnel\ListeAttente;
 use App\Models\Campagne;
 use App\Models\DecisionAdmission;
 use App\Models\Demande;
+use App\Models\NoteManuelle;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\Concerns\MondeInternat;
@@ -131,6 +133,65 @@ class EcransAdmissionsTest extends TestCase
 
         // Sans la permission de consultation des admissions (gestionnaire), la liste est refusée.
         $this->connecter($this->gestionnaireFilles)->get(route('admissions.classement.impression', $campagne))->assertForbidden();
+    }
+
+    public function test_le_chef_de_pole_rectifie_une_note_apres_cloture_et_le_classement_est_recalcule(): void
+    {
+        [$campagne, [$premier, $deuxieme, $troisieme]] = $this->campagneAClasser();
+        $eloigne = $campagne->criteres->firstWhere('declencheur', DeclencheurCritere::EloigneOuRural);
+
+        // Départ : premier 35, deuxième 25 (admis), troisième 10 (liste d'attente).
+        $this->assertSame(ListeAdmission::Attente, $troisieme->fresh()->liste);
+        $this->assertSame(10, $troisieme->fresh()->score);
+
+        // Le chef de pôle ouvre le détail du score puis rectifie à la main la note « éloigné » du troisième.
+        $ecran = Livewire::actingAs($this->chefDePole)->test(Classement::class, ['campagne' => (string) $campagne->id])
+            ->call('voirScore', $troisieme->id)
+            ->assertSet('dialogue', 'score');
+
+        // Une note au-delà du maximum du critère est refusée.
+        $ecran->set("notes.{$eloigne->id}", 99)->call('enregistrerNote', $eloigne->id)->assertHasErrors("notes.{$eloigne->id}");
+
+        // Une note valide est enregistrée : score recalculé, classement réordonné, override persisté.
+        $ecran->set("notes.{$eloigne->id}", 20)->call('enregistrerNote', $eloigne->id)->assertHasNoErrors();
+
+        $this->assertSame(30, $troisieme->fresh()->score);
+        $this->assertSame(ListeAdmission::Principale, $troisieme->fresh()->liste);
+        $this->assertSame(2, $troisieme->fresh()->rang);
+        // Le troisième dépasse l'ancien deuxième (25), qui bascule en liste d'attente.
+        $this->assertSame(ListeAdmission::Attente, $deuxieme->fresh()->liste);
+        $this->assertSame(ListeAdmission::Principale, $premier->fresh()->liste);
+
+        $note = NoteManuelle::where('demande_id', $troisieme->id)->where('critere_id', $eloigne->id)->sole();
+        $this->assertSame(20, $note->points);
+        $this->assertSame($this->chefDePole->id, $note->ajuste_par);
+
+        // Rétablir la note automatique (0 pour un critère non déclaré) ramène le troisième en liste d'attente.
+        $ecran->call('retablirNote', $eloigne->id)->assertHasNoErrors();
+        $this->assertSame(10, $troisieme->fresh()->score);
+        $this->assertSame(ListeAdmission::Attente, $troisieme->fresh()->liste);
+        $this->assertDatabaseMissing('demande_note_manuelle', ['demande_id' => $troisieme->id, 'critere_id' => $eloigne->id]);
+    }
+
+    public function test_la_rectification_des_notes_est_fermee_aux_autres_roles_et_hors_cloture(): void
+    {
+        $campagne = $this->creerCampagne($this->filles, ['nombre_places' => 2]);
+        $dossier = $this->rendreComplet($this->creerDossierRecu($campagne, ['eloigne_ou_rural' => true]));
+        $eloigne = $campagne->criteres->firstWhere('declencheur', DeclencheurCritere::EloigneOuRural);
+
+        // Campagne encore ouverte : même le chef de pôle ne peut pas rectifier (règle métier refusée).
+        app(\App\Domain\Admissions\Classement::class)->recalculer($campagne);
+        Livewire::actingAs($this->chefDePole)->test(Classement::class, ['campagne' => (string) $campagne->id])
+            ->call('voirScore', $dossier->id)
+            ->set("notes.{$eloigne->id}", 5)
+            ->call('enregistrerNote', $eloigne->id)
+            ->assertDispatched('message', ton: 'danger');
+        $this->assertDatabaseCount('demande_note_manuelle', 0);
+
+        // Après clôture, le gestionnaire n'a pas la permission : l'action est interdite.
+        $campagne->forceFill(['statut' => StatutCampagne::Cloturee, 'date_cloture' => now()->subDay()->toDateString()])->save();
+        Livewire::actingAs($this->gestionnaireFilles)->test(Classement::class, ['campagne' => (string) $campagne->id])
+            ->assertForbidden();
     }
 
     public function test_le_gestionnaire_appelle_un_candidat_de_la_liste_d_attente_et_motive_un_choix_hors_ordre(): void
