@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\FichierController;
+use App\Http\Controllers\ImpressionClassementController;
 use App\Http\Controllers\SessionController;
 use App\Livewire\Administration;
 use App\Livewire\Auth;
@@ -113,6 +114,9 @@ Route::middleware(['auth:web', 'auth.session', 'personnel'])->group(function () 
     Route::prefix('admissions')->name('admissions.')->group(function () {
         // Classement et délibération : réservés aux rôles qui consultent les admissions.
         Route::get('classement', Personnel\Classement::class)->middleware('permission:admissions.consulter')->name('classement');
+        // Liste imprimable des candidats en vue de la délibération (lecture seule).
+        Route::get('classement/{campagne}/impression', [ImpressionClassementController::class, 'imprimer'])
+            ->middleware('permission:admissions.consulter')->name('classement.impression')->whereNumber('campagne');
         // Liste d'attente : consultée par le chef de pôle et le directeur, et utilisée par le gestionnaire pour appeler.
         Route::get('liste-attente', Personnel\ListeAttente::class)->middleware('permission:admissions.consulter|admissions.promouvoir')->name('liste-attente');
     });

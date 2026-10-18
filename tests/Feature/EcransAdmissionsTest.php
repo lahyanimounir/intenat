@@ -114,6 +114,25 @@ class EcransAdmissionsTest extends TestCase
         $this->assertFalse($campagne->fresh()->estDeliberee());
     }
 
+    public function test_le_chef_de_pole_consulte_et_imprime_la_liste_des_candidats(): void
+    {
+        [$campagne, [$premier]] = $this->campagneAClasser();
+
+        // Le chef de pôle (consultation seule) ouvre la liste imprimable avec tout ce qu'il faut pour délibérer.
+        $this->connecter($this->chefDePole)->get(route('admissions.classement.impression', $campagne))
+            ->assertOk()
+            ->assertSee('Liste des candidats')
+            ->assertSee('Imprimer')
+            ->assertSee($premier->stagiaire->cef)
+            ->assertSee($premier->stagiaire->nom_filiere)
+            ->assertSee($campagne->internat->etablissement->nom_efp)
+            ->assertSee($premier->numero_dossier)
+            ->assertSee($premier->score.' / '.config('internat.score.bareme_maximum'));
+
+        // Sans la permission de consultation des admissions (gestionnaire), la liste est refusée.
+        $this->connecter($this->gestionnaireFilles)->get(route('admissions.classement.impression', $campagne))->assertForbidden();
+    }
+
     public function test_le_gestionnaire_appelle_un_candidat_de_la_liste_d_attente_et_motive_un_choix_hors_ordre(): void
     {
         [$campagne, [$premier, $deuxieme, $troisieme]] = $this->campagneAClasser();

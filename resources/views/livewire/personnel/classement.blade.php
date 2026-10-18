@@ -7,11 +7,14 @@
 @endphp
 <div>
     <x-page.entete titre="Classement et délibération"
-        description="Le classement propose la liste principale et la liste d’attente d’un internat. Le chef de pôle scolarité valide les admissions ; tout écart à la proposition est motivé.">
-        @if ($choisie && $peutDeliberer)
+        description="Le classement propose la liste principale et la liste d’attente d’un internat. Le directeur du complexe / CMC valide les admissions ; tout écart à la proposition est motivé. Le chef de pôle consulte et imprime la liste des candidats, sans délibérer.">
+        @if ($choisie)
             <x-slot:actions>
-                <x-bouton icone="refresh-cw" wire:click="recalculer" cible="recalculer">Recalculer le classement</x-bouton>
-                <x-bouton variante="primaire" icone="gavel" :disabled="count($apercu['blocages']) > 0" wire:click="ouvrirDialogue('deliberation')">Valider les admissions</x-bouton>
+                <x-bouton icone="printer" :href="route('admissions.classement.impression', $choisie)" :navigation="false" target="_blank" rel="noopener">Imprimer la liste des candidats</x-bouton>
+                @if ($peutDeliberer)
+                    <x-bouton icone="refresh-cw" wire:click="recalculer" cible="recalculer">Recalculer le classement</x-bouton>
+                    <x-bouton variante="primaire" icone="gavel" :disabled="count($apercu['blocages']) > 0" wire:click="ouvrirDialogue('deliberation')">Valider les admissions</x-bouton>
+                @endif
             </x-slot:actions>
         @endif
     </x-page.entete>
