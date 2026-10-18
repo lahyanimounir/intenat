@@ -129,6 +129,12 @@ class DossierFiche extends PagePersonnel
         $this->ouvrirDialogue('piece');
     }
 
+    /** Aperçu du justificatif d'inscription / de scolarité, comme n'importe quelle pièce. */
+    public function voirJustificatif(): void
+    {
+        $this->ouvrirDialogue('justificatif');
+    }
+
     public function fermerDialogue(): void
     {
         $this->apercu = null;

@@ -63,7 +63,7 @@ class NavigationParRoleTest extends TestCase
     {
         $tous = collect($this->comptes())->flatMap(fn (Utilisateur $compte) => $this->chemins($compte))->unique()->values();
         // Les écrans du personnel sont tous atteints par au moins un rôle.
-        $this->assertGreaterThanOrEqual(26, $tous->count());
+        $this->assertGreaterThanOrEqual(25, $tous->count());
 
         foreach ($this->comptes() as $role => $compte) {
             $permis = $this->chemins($compte);

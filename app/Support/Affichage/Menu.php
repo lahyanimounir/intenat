@@ -20,7 +20,6 @@ final class Menu
         ['entrees' => [['Tableau de bord', '/', 'layout-dashboard']]],
         ['titre' => 'Admissions', 'entrees' => [
             ['Campagnes', '/campagnes', 'calendar-range', ['campagnes.consulter']],
-            ['Inscriptions à vérifier', '/inscriptions', 'graduation-cap', ['inscriptions.verifier']],
             ['Dossiers', '/dossiers', 'folder-open', ['demandes.consulter']],
             ['Classement', '/admissions/classement', 'list-ordered', ['admissions.consulter']],
             ['Liste d’attente', '/admissions/liste-attente', 'clipboard-list', ['admissions.consulter', 'admissions.promouvoir']],

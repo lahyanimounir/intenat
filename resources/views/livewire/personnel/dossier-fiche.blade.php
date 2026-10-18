@@ -1,6 +1,5 @@
 @php
     use App\Enums\StatutDemande;
-    use App\Enums\StatutInscription;
     use App\Enums\StatutPiece;
     use App\Support\Affichage\Format;
 
@@ -37,16 +36,6 @@
         </x-alerte>
     @endif
 
-    @if ($demande->statut === StatutDemande::Recu && $inscription !== StatutInscription::Verifiee)
-        <x-alerte ton="alerte" class="mb-5" titre="Inscription en formation non vérifiée">
-            L’inscription de ce stagiaire est « {{ mb_strtolower($inscription->libelle()) }} ». Le dossier ne peut pas être déclaré complet — ni participer à la
-            sélection — tant qu’elle n’a pas été vérifiée.
-            @can('inscriptions.verifier')
-                <x-slot:action><x-bouton taille="sm" :href="route('inscriptions.fiche', $stagiaire)">Vérifier l’inscription</x-bouton></x-slot:action>
-            @endcan
-        </x-alerte>
-    @endif
-
     @if ($demande->statut === StatutDemande::RetourRectification && $demande->motif_rectification)
         <x-alerte ton="alerte" titre="Renvoyé au stagiaire pour rectification" class="mb-5">{{ $demande->motif_rectification }}</x-alerte>
     @elseif ($demande->statut === StatutDemande::Rejete && $demande->motif_rejet)
@@ -67,6 +56,7 @@
                         <x-definition terme="Genre">{{ $stagiaire->genre?->libelle() }}</x-definition>
                         <x-definition terme="Filière">{{ $stagiaire->nom_filiere }}</x-definition>
                         <x-definition terme="Niveau de formation">{{ $stagiaire->niveau_formation?->libelle() }}</x-definition>
+                        <x-definition terme="Année de formation">{{ $stagiaire->annee_formation?->libelle() }}</x-definition>
                         <x-definition terme="Établissement">{{ $stagiaire->etablissement ? $stagiaire->etablissement->nom_efp.' ('.$stagiaire->etablissement->code_efp.')' : '' }}</x-definition>
                         <x-definition terme="Téléphone"><span class="chiffres">{{ $stagiaire->tel }}</span></x-definition>
                         <x-definition terme="E-mail">{{ $stagiaire->email }}</x-definition>
@@ -86,22 +76,6 @@
                         <x-definition terme="Besoins spécifiques"><x-oui-non :valeur="$demande->besoins_specifiques" oui="Déclaré" non="Non déclaré" /></x-definition>
                         @if ($demande->precisions_besoins)<x-definition terme="Précisions sur les besoins">{{ $demande->precisions_besoins }}</x-definition>@endif
                     </x-definitions>
-                </x-carte.corps>
-            </x-carte>
-
-            <x-carte>
-                <x-carte.entete titre="Justificatif de scolarité" description="Joint à la candidature : il fait partie de la revue avant de déclarer le dossier complet." />
-                <x-carte.corps>
-                    @if ($justificatifScolarite)
-                        <x-ligne-fichier :nom="$justificatifScolarite->nom_original"
-                            :detail="Format::taille($justificatifScolarite->taille).' · soumis le '.Format::dateHeure($justificatifScolarite->soumise_le)">
-                            <x-slot:actions>
-                                <x-bouton taille="sm" variante="discret" icone="eye" :href="route('inscriptions.justificatif', $justificatifScolarite)" :navigation="false" target="_blank" rel="noopener">Voir</x-bouton>
-                            </x-slot:actions>
-                        </x-ligne-fichier>
-                    @else
-                        <p class="text-sm text-discret">Aucun justificatif de scolarité n’a été joint.</p>
-                    @endif
                 </x-carte.corps>
             </x-carte>
 
@@ -155,6 +129,28 @@
                     @endif
                 </x-carte.entete>
                 <ul>
+                    {{-- Justificatif d'inscription / de scolarité : revu avec les autres pièces de la candidature. --}}
+                    <li class="border-b border-bord-doux px-5 py-3.5" wire:key="justificatif-inscription">
+                        <div class="flex flex-wrap items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <p class="text-base font-medium text-encre">Justificatif d’inscription ou de scolarité</p>
+                                <p class="text-sm text-discret">
+                                    Exigé de tous : atteste l’inscription en formation déclarée
+                                    @if ($justificatifScolarite) · {{ Format::taille($justificatifScolarite->taille) }} · soumis le {{ Format::date($justificatifScolarite->soumise_le) }}@endif
+                                </p>
+                            </div>
+                            @if ($justificatifScolarite)
+                                <x-badge ton="info">Fourni</x-badge>
+                            @else
+                                <x-badge ton="danger">Manquant</x-badge>
+                            @endif
+                        </div>
+                        @if ($justificatifScolarite)
+                            <div class="mt-2.5 flex flex-wrap gap-2">
+                                <x-bouton taille="sm" icone="eye" wire:click="voirJustificatif">Consulter</x-bouton>
+                            </div>
+                        @endif
+                    </li>
                     @foreach ($pieces as $ligne)
                         @php
                             $type = $ligne['type'];
@@ -263,5 +259,9 @@
 
     @if ($dialogue === 'piece' && $pieceAffichee)
         <x-apercu :chemin="route('dossiers.piece', $pieceAffichee)" :titre="$pieceAffichee->typePiece->libelle" :nom="$pieceAffichee->nom_original" />
+    @endif
+
+    @if ($dialogue === 'justificatif' && $justificatifScolarite)
+        <x-apercu :chemin="route('inscriptions.justificatif', $justificatifScolarite)" titre="Justificatif d’inscription ou de scolarité" :nom="$justificatifScolarite->nom_original" />
     @endif
 </div>
