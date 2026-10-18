@@ -64,7 +64,12 @@ class Organisation extends PagePersonnel
         return $classe::findOrFail($id);
     }
 
-    public function ajouter(string $niveau): void
+    /**
+     * Ajoute un élément, créé depuis son parent : `$parent` est l'identifiant de
+     * l'élément de niveau supérieur (région pour une province, province pour un
+     * complexe, etc.), fixé par le bouton « + » de sa carte.
+     */
+    public function ajouter(string $niveau, ?int $parent = null): void
     {
         $this->exiger(self::PERMISSION);
         abort_unless(isset(self::CHAMPS[$niveau]), 404);
@@ -73,12 +78,12 @@ class Organisation extends PagePersonnel
         $this->ligne = null;
         $this->saisie = array_fill_keys(self::CHAMPS[$niveau], '');
 
-        // Valeurs proposées : premier parent de la hiérarchie, les filles pour l'internat.
+        // Le parent est celui de la carte d'où part l'ajout ; à défaut, le premier de la liste.
         match ($niveau) {
-            'provinces' => $this->saisie['region_id'] = (string) (Region::orderBy('nom')->value('id') ?? ''),
-            'complexes' => $this->saisie['province_id'] = (string) (Province::orderBy('nom')->value('id') ?? ''),
-            'etablissements' => $this->saisie['complexe_id'] = (string) (Complexe::orderBy('nom')->value('id') ?? ''),
-            'internats' => [$this->saisie['etablissement_id'], $this->saisie['genre']] = [(string) (Etablissement::orderBy('nom_efp')->value('id') ?? ''), Genre::Fille->value],
+            'provinces' => $this->saisie['region_id'] = (string) ($parent ?? Region::orderBy('nom')->value('id') ?? ''),
+            'complexes' => $this->saisie['province_id'] = (string) ($parent ?? Province::orderBy('nom')->value('id') ?? ''),
+            'etablissements' => $this->saisie['complexe_id'] = (string) ($parent ?? Complexe::orderBy('nom')->value('id') ?? ''),
+            'internats' => [$this->saisie['etablissement_id'], $this->saisie['genre']] = [(string) ($parent ?? Etablissement::orderBy('nom_efp')->value('id') ?? ''), Genre::Fille->value],
             default => null,
         };
 

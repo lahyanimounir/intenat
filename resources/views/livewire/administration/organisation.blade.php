@@ -8,11 +8,8 @@
     <x-page.entete titre="Organisation"
         description="Direction centrale → directions régionales → provinces → complexes / CMC → établissements (EFP) → internats. La hiérarchie est stricte : chaque niveau se rattache au niveau supérieur. La liste des établissements est aussi le référentiel dans lequel chaque stagiaire choisit son établissement à l’inscription.">
         <x-slot:actions>
-            <x-bouton icone="plus" wire:click="ajouter('regions')">Région</x-bouton>
-            <x-bouton icone="plus" wire:click="ajouter('provinces')">Province</x-bouton>
-            <x-bouton icone="plus" wire:click="ajouter('complexes')">Complexe</x-bouton>
-            <x-bouton icone="plus" wire:click="ajouter('etablissements')">Établissement</x-bouton>
-            <x-bouton variante="primaire" icone="plus" wire:click="ajouter('internats')">Internat</x-bouton>
+            {{-- Chaque niveau se crée depuis son parent : seul « Région » (sommet de la hiérarchie) reste ici. --}}
+            <x-bouton variante="primaire" icone="plus" wire:click="ajouter('regions')">Région</x-bouton>
         </x-slot:actions>
     </x-page.entete>
 
@@ -25,7 +22,8 @@
                 <x-carte wire:key="region-{{ $region->id }}">
                     <x-carte.entete :titre="$region->nom" :description="'Code '.$region->code.' · '.$desProvinces->count().' province(s)'">
                         <x-slot:actions>
-                            <span class="flex shrink-0 gap-0.5">
+                            <span class="flex shrink-0 flex-wrap items-center justify-end gap-1">
+                                <x-bouton taille="sm" variante="discret" icone="plus" wire:click="ajouter('provinces', {{ $region->id }})">Province</x-bouton>
                                 <x-bouton variante="discret" taille="icone" icone="pencil" aria-label="Modifier {{ $region->nom }}" wire:click="modifier('regions', {{ $region->id }})" />
                                 <x-bouton variante="discret" taille="icone" icone="trash" aria-label="Supprimer {{ $region->nom }}" x-on:click="{{ $suppression('regions', $region->id, $region->nom) }}" />
                             </span>
@@ -43,7 +41,8 @@
                                         <div class="min-w-0 flex-1">
                                             <p class="text-base font-semibold">{{ $province->nom }} <span class="text-sm font-normal text-discret">· {{ $province->code }} · {{ $desComplexes->count() }} complexe(s)</span></p>
                                         </div>
-                                        <span class="flex shrink-0 gap-0.5">
+                                        <span class="flex shrink-0 flex-wrap items-center justify-end gap-1">
+                                            <x-bouton taille="sm" variante="discret" icone="plus" wire:click="ajouter('complexes', {{ $province->id }})">Complexe</x-bouton>
                                             <x-bouton variante="discret" taille="icone" icone="pencil" aria-label="Modifier {{ $province->nom }}" wire:click="modifier('provinces', {{ $province->id }})" />
                                             <x-bouton variante="discret" taille="icone" icone="trash" aria-label="Supprimer {{ $province->nom }}" x-on:click="{{ $suppression('provinces', $province->id, $province->nom) }}" />
                                         </span>
@@ -59,7 +58,8 @@
                                                     <div class="flex flex-wrap items-center gap-2">
                                                         <span class="font-medium">{{ $complexe->nom }}</span>
                                                         <span class="text-sm text-discret">· {{ $complexe->code }} · {{ $desEtablissements->count() }} établissement(s)</span>
-                                                        <span class="flex shrink-0 gap-0.5">
+                                                        <span class="flex shrink-0 flex-wrap items-center justify-end gap-1">
+                                                            <x-bouton taille="sm" variante="discret" icone="plus" wire:click="ajouter('etablissements', {{ $complexe->id }})">Établissement</x-bouton>
                                                             <x-bouton variante="discret" taille="icone" icone="pencil" aria-label="Modifier {{ $complexe->nom }}" wire:click="modifier('complexes', {{ $complexe->id }})" />
                                                             <x-bouton variante="discret" taille="icone" icone="trash" aria-label="Supprimer {{ $complexe->nom }}" x-on:click="{{ $suppression('complexes', $complexe->id, $complexe->nom) }}" />
                                                         </span>
@@ -76,7 +76,8 @@
                                                                         <div class="min-w-0 flex-1">
                                                                             <p class="font-medium">{{ $etablissement->nom_efp }} <code class="ml-1 rounded-sm bg-neutre-fond px-1.5 py-0.5 text-xs font-normal">{{ $etablissement->code_efp }}</code></p>
                                                                         </div>
-                                                                        <span class="flex shrink-0 gap-0.5">
+                                                                        <span class="flex shrink-0 flex-wrap items-center justify-end gap-1">
+                                                                            <x-bouton taille="sm" variante="discret" icone="plus" wire:click="ajouter('internats', {{ $etablissement->id }})">Internat</x-bouton>
                                                                             <x-bouton variante="discret" taille="icone" icone="pencil" aria-label="Modifier {{ $etablissement->nom_efp }}" wire:click="modifier('etablissements', {{ $etablissement->id }})" />
                                                                             <x-bouton variante="discret" taille="icone" icone="trash" aria-label="Supprimer {{ $etablissement->nom_efp }}" x-on:click="{{ $suppression('etablissements', $etablissement->id, $etablissement->nom_efp) }}" />
                                                                         </span>
