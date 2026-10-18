@@ -9,9 +9,20 @@
 
     <x-tableau legende="Comptes du personnel" :lignes="$comptes" :tri="$tri" :sens="$sens" vide="Aucun compte ne correspond aux filtres">
         <x-slot:barre>
+            {{-- Hiérarchie administrative : un niveau ne s'ouvre qu'une fois son parent choisi. --}}
+            <x-filtre libelle="Région" wire:model.live="region" :options="$filtre['regions']" tous="toutes" :actif="$region !== ''" />
+            <x-filtre libelle="Province" wire:model.live="province" :options="$filtre['provinces']" tous="toutes" :actif="$province !== ''"
+                :disabled="$region === ''" wire:key="filtre-province-{{ $region }}" />
+            <x-filtre libelle="Complexe / CMC" wire:model.live="complexe" :options="$filtre['complexes']" :actif="$complexe !== ''"
+                :disabled="$province === ''" wire:key="filtre-complexe-{{ $province }}" />
+            <x-filtre libelle="Établissement" wire:model.live="etablissement" :options="$filtre['etablissements']" :actif="$etablissement !== ''"
+                :disabled="$complexe === ''" wire:key="filtre-etablissement-{{ $complexe }}" />
             <x-recherche placeholder="Nom ou adresse e-mail" libelle="Rechercher un compte" />
             <x-filtre libelle="Rôle" wire:model.live="role" :options="$roles" :actif="$role !== ''" />
             <x-filtre libelle="État" wire:model.live="actif" :options="['1' => 'Actifs', '0' => 'Désactivés']" :actif="$actif !== ''" />
+            @if ($filtresActifs)
+                <x-bouton taille="sm" variante="discret" icone="x" wire:click="effacerFiltres">Effacer les filtres</x-bouton>
+            @endif
         </x-slot:barre>
 
         <x-slot:entete>

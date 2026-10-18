@@ -94,6 +94,54 @@ class EcransAdministrationTest extends TestCase
             ->set('role', '')->set('recherche', 'bennani')->assertSee($compte->email)->assertDontSee($this->chefDePole->email);
     }
 
+    public function test_les_comptes_se_filtrent_niveau_par_niveau_de_la_hierarchie(): void
+    {
+        $complexe = $this->etablissement->complexe;
+        $province = $complexe->province;
+        $directeurDuComplexe = Utilisateur::factory()->directeur($this->etablissement->id)->create();
+        $directeurDuComplexe->forceFill(['etablissement_id' => null, 'complexe_id' => $complexe->id])->save();
+        $autreRegion = $this->ailleurs->etablissement->complexe->province->region;
+
+        $ecran = Livewire::actingAs($this->admin)->test(Utilisateurs::class)
+            ->assertViewHas('filtre', fn (array $f) => $f['regions']->has($this->region->id) && $f['provinces']->isEmpty());
+
+        // Région : sa direction régionale et tout ce qui en dépend, ni les autres régions ni les comptes nationaux.
+        $ecran->set('region', (string) $this->region->id)
+            ->assertViewHas('filtre', fn (array $f) => $f['provinces']->keys()->all() === [$province->id])
+            ->assertSee($this->directionRegionale->email)->assertSee($directeurDuComplexe->email)
+            ->assertSee($this->chefDePole->email)->assertSee($this->gestionnaireFilles->email)
+            ->assertDontSee($this->gestionnaireAilleurs->email)->assertDontSee($this->directionCentrale->email);
+
+        // Province puis complexe : la direction régionale, plus large, sort de la liste.
+        $ecran->set('province', (string) $province->id)
+            ->assertDontSee($this->directionRegionale->email)->assertSee($directeurDuComplexe->email)
+            ->set('complexe', (string) $complexe->id)
+            ->assertViewHas('filtre', fn (array $f) => $f['etablissements']->has($this->etablissement->id))
+            ->assertSee($directeurDuComplexe->email)->assertSee($this->gestionnaireGarcons->email);
+
+        // Établissement : ses chefs de pôle, responsables restauration et gestionnaires d'internat.
+        $ecran->set('etablissement', (string) $this->etablissement->id)
+            ->assertDontSee($directeurDuComplexe->email)
+            ->assertSee($this->chefDePole->email)->assertSee($this->restauration->email)->assertSee($this->gestionnaireFilles->email);
+
+        // Les filtres existants s'ajoutent à la hiérarchie.
+        $ecran->set('role', RoleCode::Gestionnaire->value)
+            ->assertSee($this->gestionnaireFilles->email)->assertDontSee($this->chefDePole->email)
+            ->set('recherche', $this->gestionnaireGarcons->email)
+            ->assertSee($this->gestionnaireGarcons->email)->assertDontSee($this->gestionnaireFilles->email);
+
+        // Changer un parent efface les niveaux en dessous.
+        $ecran->set('complexe', '')->assertSet('etablissement', '')
+            ->set('region', (string) $autreRegion->id)
+            ->assertSet('province', '')->assertSet('complexe', '')->assertSet('etablissement', '');
+
+        // Un niveau qui n'appartient pas à son parent (adresse modifiée à la main) est ignoré.
+        Livewire::actingAs($this->admin)->withQueryParams(['region' => (string) $autreRegion->id, 'province' => (string) $province->id])
+            ->test(Utilisateurs::class)->assertSet('province', '')->assertSee($this->gestionnaireAilleurs->email);
+
+        $ecran->call('effacerFiltres')->assertSet('region', '')->assertSet('role', '')->assertSee($this->directionCentrale->email);
+    }
+
     public function test_nul_ne_se_desactive_et_un_administrateur_actif_subsiste(): void
     {
         $ecran = Livewire::actingAs($this->admin)->test(Utilisateurs::class);
