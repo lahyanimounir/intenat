@@ -22,6 +22,7 @@ use App\Models\VerificationInscription;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * Vérification administrative de l'inscription en formation.
@@ -77,17 +78,20 @@ class ControleInscription
             throw new RegleMetierException('Confirmez d\'abord votre adresse e-mail : un lien vous a été envoyé.', 'adresse_non_verifiee');
         }
 
-        if ($justificatif === null && $this->justificatifObligatoire()) {
-            throw new RegleMetierException(
-                'Joignez un justificatif d\'inscription : attestation d\'inscription ou reçu des frais de scolarité.',
-                'justificatif_manquant',
-            );
-        }
+        if ($justificatif !== null) {
+            $regles = $this->documents->regles(self::FORMATS);
+            $stocke = $this->documents->enregistrer($justificatif, "inscriptions/{$stagiaire->id}", $regles['extensions'], $regles['taille_max_ko']);
+        } else {
+            // Nouvelle soumission sans nouveau fichier (candidature retirée puis modifiée) : on reprend le précédent.
+            $stocke = $this->reprendreDernierJustificatif($stagiaire);
 
-        $regles = $this->documents->regles(self::FORMATS);
-        $stocke = $justificatif !== null
-            ? $this->documents->enregistrer($justificatif, "inscriptions/{$stagiaire->id}", $regles['extensions'], $regles['taille_max_ko'])
-            : null;
+            if ($stocke === null && $this->justificatifObligatoire()) {
+                throw new RegleMetierException(
+                    'Joignez un justificatif d\'inscription : attestation d\'inscription ou reçu des frais de scolarité.',
+                    'justificatif_manquant',
+                );
+            }
+        }
 
         try {
             $verification = DB::transaction(function () use ($stagiaire, $stocke) {
@@ -127,6 +131,39 @@ class ControleInscription
         $this->prevenirLesAgents($stagiaire, $verification);
 
         return $verification;
+    }
+
+    /**
+     * Reprend le justificatif de la dernière soumission (candidature retirée puis
+     * re-soumise sans nouveau fichier) : le fichier est copié pour rester autonome.
+     *
+     * @return array{chemin: string, nom_original: string|null, mime: string|null, taille: int|null}|null
+     */
+    private function reprendreDernierJustificatif(Stagiaire $stagiaire): ?array
+    {
+        $precedente = VerificationInscription::where('stagiaire_id', $stagiaire->id)
+            ->whereNotNull('fichier')->latest('id')->first();
+
+        if ($precedente === null) {
+            return null;
+        }
+
+        $disque = $this->documents->disque();
+
+        if (! $disque->exists($precedente->fichier)) {
+            return null;
+        }
+
+        $extension = pathinfo((string) $precedente->fichier, PATHINFO_EXTENSION);
+        $chemin = "inscriptions/{$stagiaire->id}/".Str::uuid()->toString().($extension !== '' ? '.'.$extension : '');
+        $disque->copy($precedente->fichier, $chemin);
+
+        return [
+            'chemin' => $chemin,
+            'nom_original' => $precedente->nom_original,
+            'mime' => $precedente->mime,
+            'taille' => $precedente->taille,
+        ];
     }
 
     /** Le stagiaire retire sa demande en attente pour corriger ce qu'il a déclaré. */

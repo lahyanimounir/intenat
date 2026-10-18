@@ -409,6 +409,38 @@ class InscriptionStagiaireTest extends TestCase
         $this->actingAs($stagiaire, 'stagiaire')->get(route('stagiaire.accueil'))->assertRedirect(route('stagiaire.inscription'));
     }
 
+    public function test_une_candidature_retiree_peut_etre_modifiee_et_resoumise_sans_doublon(): void
+    {
+        $campagne = $this->creerCampagne($this->filles);
+        $demande = $this->soumettreCandidature($campagne);
+        $stagiaire = $demande->stagiaire;
+        $numero = $demande->numero_dossier;
+
+        $this->assertSame(StatutInscription::Soumise, $stagiaire->fresh()->statut_inscription);
+        $this->assertSame(StatutDemande::Recu, $demande->fresh()->statut);
+
+        $ecran = Livewire::actingAs($stagiaire->fresh(), 'stagiaire')->test(MonInscription::class);
+
+        // Retrait : l'inscription et le dossier redeviennent modifiables, sur la même candidature.
+        $ecran->call('retirer')->assertHasNoErrors();
+        $stagiaire->refresh();
+        $this->assertSame(StatutInscription::Declaree, $stagiaire->statut_inscription);
+        $this->assertSame(StatutDemande::Brouillon, $demande->fresh()->statut);
+
+        // Remplacement d'une pièce, puis nouvelle soumission sans re-joindre le justificatif de scolarité.
+        $cin = $campagne->typesPieces->firstWhere('obligatoire', true);
+        $ecran->set("fichiers.{$cin->id}", $this->fichier('cin-v2.pdf'))->call('soumettre')->assertHasNoErrors();
+
+        $stagiaire->refresh();
+        $this->assertSame(StatutInscription::Soumise, $stagiaire->statut_inscription);
+        $this->assertSame(StatutDemande::Recu, $demande->fresh()->statut);
+        // Même candidature, même numéro : aucun doublon.
+        $this->assertSame($numero, $demande->fresh()->numero_dossier);
+        $this->assertSame(1, Demande::where('stagiaire_id', $stagiaire->id)->count());
+        // Le justificatif de scolarité a été repris automatiquement.
+        $this->assertNotNull($stagiaire->verificationsInscription()->enAttente()->latest('id')->first()?->fichier);
+    }
+
     public function test_un_profil_incomplet_n_ouvre_que_l_ecran_d_inscription(): void
     {
         $stagiaire = Stagiaire::factory()->nouveau()->create();

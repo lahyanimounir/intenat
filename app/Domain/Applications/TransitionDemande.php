@@ -21,7 +21,8 @@ class TransitionDemande
     /** @var array<string, list<StatutDemande>> */
     private const TRANSITIONS = [
         'brouillon' => [StatutDemande::Recu],
-        'recu' => [StatutDemande::Complet, StatutDemande::RetourRectification, StatutDemande::Rejete],
+        // Recu → Brouillon : le stagiaire retire sa candidature (non encore instruite) pour la modifier.
+        'recu' => [StatutDemande::Complet, StatutDemande::RetourRectification, StatutDemande::Rejete, StatutDemande::Brouillon],
         'retour_rectification' => [StatutDemande::Recu, StatutDemande::Rejete],
         'complet' => [StatutDemande::Admis, StatutDemande::EnAttente, StatutDemande::Refuse],
         'admis' => [StatutDemande::Confirme, StatutDemande::Desiste, StatutDemande::DelaiDepasse],

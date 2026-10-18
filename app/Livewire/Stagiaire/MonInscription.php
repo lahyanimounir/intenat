@@ -11,6 +11,7 @@ use App\Enums\AnneeFormation;
 use App\Enums\Genre;
 use App\Enums\NiveauFormation;
 use App\Enums\StatutCampagne;
+use App\Enums\StatutDemande;
 use App\Enums\StatutPiece;
 use App\Livewire\PageStagiaire;
 use App\Models\Campagne;
@@ -414,8 +415,11 @@ class MonInscription extends PageStagiaire
      */
     public function soumettre(ControleInscription $controle, DossierStagiaire $dossiers): void
     {
+        // Après un retrait, le justificatif de scolarité déjà fourni est repris s'il n'est pas remplacé.
+        $aDejaUnJustificatif = $this->stagiaire()->verificationsInscription()->whereNotNull('fichier')->exists();
+
         $this->validate([
-            'justificatif' => [$controle->justificatifObligatoire() ? 'required' : 'nullable', 'file', 'max:'.config('internat.documents.taille_max_ko')],
+            'justificatif' => [($controle->justificatifObligatoire() && ! $aDejaUnJustificatif) ? 'required' : 'nullable', 'file', 'max:'.config('internat.documents.taille_max_ko')],
         ], [
             'justificatif.required' => 'Joignez un justificatif de scolarité : attestation d\'inscription ou reçu des frais de scolarité.',
             'justificatif.max' => 'Fichier trop volumineux (maximum '.round(config('internat.documents.taille_max_ko') / 1024, 1).' Mo).',
@@ -462,9 +466,24 @@ class MonInscription extends PageStagiaire
         }
     }
 
-    public function retirer(ControleInscription $controle): void
+    public function retirer(ControleInscription $controle, DossierStagiaire $dossiers): void
     {
-        $this->executer(fn () => $controle->retirer($this->stagiaire()), 'Votre demande est retirée : vous pouvez corriger votre déclaration.');
+        // Retirer la candidature remet l'inscription ET le dossier en état modifiable,
+        // sur la même candidature (pas de doublon) : le stagiaire peut corriger puis re-soumettre.
+        $this->executer(function () use ($controle, $dossiers) {
+            DB::transaction(function () use ($controle, $dossiers) {
+                $stagiaire = $this->stagiaire()->refresh();
+                $controle->retirer($stagiaire);
+
+                $demande = $stagiaire->demandeCourante();
+
+                if ($demande !== null && $demande->statut === StatutDemande::Recu) {
+                    $dossiers->retirer($demande);
+                }
+            });
+        }, 'Votre candidature est retirée : vous pouvez la modifier puis la soumettre de nouveau.');
+
+        $this->etape = 'pieces';
     }
 
     /** Changer de région réinitialise toute la descente et la campagne. */

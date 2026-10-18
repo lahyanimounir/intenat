@@ -212,7 +212,23 @@ class DossierStagiaire
         ])->values();
     }
 
-    /** Soumission initiale ou nouvelle soumission après rectification. */
+    /**
+     * Le stagiaire retire sa candidature reçue pour la modifier : elle repasse en
+     * brouillon, modifiable, sans changer de numéro de dossier (pas de doublon).
+     */
+    public function retirer(Demande $demande): Demande
+    {
+        if ($demande->statut !== StatutDemande::Recu) {
+            throw new RegleMetierException(
+                'Seule une candidature reçue et non encore instruite peut être retirée.',
+                'retrait_impossible',
+            );
+        }
+
+        return $this->transition->appliquer($demande, StatutDemande::Brouillon, 'Retrait par le stagiaire pour modification');
+    }
+
+    /** Soumission initiale ou nouvelle soumission après rectification ou retrait. */
     public function soumettre(Demande $demande): Demande
     {
         $this->exigerModifiable($demande);
@@ -221,6 +237,8 @@ class DossierStagiaire
             $campagne = Campagne::lockForUpdate()->findOrFail($demande->campagne_id);
             $demande = Demande::lockForUpdate()->findOrFail($demande->id);
             $premiere = $demande->statut === StatutDemande::Brouillon;
+            // Un brouillon déjà numéroté est une candidature retirée puis re-soumise : on réutilise son numéro.
+            $toutePremiere = $premiere && $demande->numero_dossier === null;
 
             if ($premiere && ! $campagne->accepteLesDepots()) {
                 throw new RegleMetierException(
@@ -258,16 +276,19 @@ class DossierStagiaire
 
             $attributs = ['motif_rectification' => null];
 
-            if ($premiere) {
+            if ($toutePremiere) {
                 $campagne->increment('compteur_dossiers');
                 $attributs['numero_dossier'] = $this->numeroDossier($campagne);
+            }
+
+            if ($premiere) {
                 $attributs['date_soumission'] = now();
             }
 
             $this->transition->appliquer(
                 $demande,
                 StatutDemande::Recu,
-                $premiere ? 'Dépôt du dossier' : 'Nouvelle soumission après rectification',
+                $toutePremiere ? 'Dépôt du dossier' : 'Nouvelle soumission',
                 $attributs,
             );
 
@@ -276,8 +297,8 @@ class DossierStagiaire
             $this->notifieur->versStagiaire(
                 $stagiaire,
                 TypeNotification::ChangementStatut,
-                $premiere ? 'Dossier reçu' : 'Dossier soumis de nouveau',
-                $premiere
+                $toutePremiere ? 'Dossier reçu' : 'Dossier soumis de nouveau',
+                $toutePremiere
                     ? "Votre dossier n° {$demande->numero_dossier} a bien été reçu. L'accusé de réception est disponible dans votre espace."
                     : "Votre dossier n° {$demande->numero_dossier} a été soumis de nouveau pour instruction.",
                 '/stagiaire/dossier',
@@ -287,7 +308,7 @@ class DossierStagiaire
                 RoleCode::Gestionnaire,
                 $campagne->internat_id,
                 TypeNotification::ChangementStatut,
-                $premiere ? 'Nouveau dossier à instruire' : 'Dossier rectifié à instruire',
+                $toutePremiere ? 'Nouveau dossier à instruire' : 'Dossier mis à jour à instruire',
                 "Dossier n° {$demande->numero_dossier} — {$stagiaire->nomComplet()}.",
                 "/dossiers/{$demande->id}",
                 email: false,
