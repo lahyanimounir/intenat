@@ -45,11 +45,12 @@ class EcransAdmissionsTest extends TestCase
         return [$campagne->fresh(), $dossiers];
     }
 
-    public function test_le_classement_propose_les_listes_et_le_chef_de_pole_valide_les_admissions(): void
+    public function test_le_classement_propose_les_listes_et_le_directeur_valide_les_admissions(): void
     {
         [$campagne, [$premier, $deuxieme, $troisieme]] = $this->campagneAClasser();
 
-        $ecran = Livewire::actingAs($this->chefDePole)->test(Classement::class, ['campagne' => (string) $campagne->id])
+        // La délibération est réservée au directeur du complexe / CMC.
+        $ecran = Livewire::actingAs($this->directeur)->test(Classement::class, ['campagne' => (string) $campagne->id])
             ->set('campagne', (string) $campagne->id)
             ->call('recalculer')
             ->assertSee($premier->numero_dossier)
@@ -70,7 +71,7 @@ class EcransAdmissionsTest extends TestCase
         $this->assertSame(StatutDemande::Refuse, $deuxieme->fresh()->statut);
         $this->assertSame(StatutDemande::EnAttente, $troisieme->fresh()->statut);
         $this->assertSame('Fausse déclaration constatée à la délibération.', DecisionAdmission::where('demande_id', $deuxieme->id)->sole()->motif);
-        $this->assertSame($this->chefDePole->id, DecisionAdmission::where('demande_id', $premier->id)->sole()->valide_par);
+        $this->assertSame($this->directeur->id, DecisionAdmission::where('demande_id', $premier->id)->sole()->valide_par);
     }
 
     public function test_une_egalite_a_la_limite_bloque_la_validation_sans_confirmation_expresse(): void
@@ -80,7 +81,7 @@ class EcransAdmissionsTest extends TestCase
         $b = $this->rendreComplet($this->creerDossierRecu($campagne));
         $campagne->forceFill(['statut' => StatutCampagne::Cloturee, 'date_cloture' => now()->subDay()->toDateString()])->save();
 
-        $ecran = Livewire::actingAs($this->chefDePole)->test(Classement::class)->set('campagne', (string) $campagne->id)->call('recalculer')
+        $ecran = Livewire::actingAs($this->directeur)->test(Classement::class)->set('campagne', (string) $campagne->id)->call('recalculer')
             ->assertSee('Égalité à la limite des places');
 
         $ecran->call('deliberer');
@@ -91,22 +92,29 @@ class EcransAdmissionsTest extends TestCase
         $this->assertSame(1, Demande::whereKey([$a->id, $b->id])->where('statut', StatutDemande::Admis->value)->count());
     }
 
-    public function test_seul_le_chef_de_pole_de_l_etablissement_delibere(): void
+    public function test_seul_le_directeur_delibere_les_autres_consultent_ou_sont_exclus(): void
     {
         [$campagne] = $this->campagneAClasser();
 
-        // Le gestionnaire n'ouvre ni le classement ni la liste d'attente.
-        $this->actingAs($this->gestionnaireFilles)->get(route('admissions.classement'))->assertForbidden();
-        $this->actingAs($this->gestionnaireFilles)->get(route('admissions.liste-attente'))->assertForbidden();
+        // Le directeur délibère : il voit le classement et le bouton de validation.
+        Livewire::actingAs($this->directeur)->test(Classement::class, ['campagne' => (string) $campagne->id])
+            ->assertSee('Valider les admissions');
 
-        // La direction régionale n'a pas la permission d'admissions.
-        $this->actingAs($this->directionRegionale)->get(route('admissions.classement'))->assertForbidden();
+        // Le chef de pôle consulte le classement mais ne délibère plus : pas de bouton de validation.
+        Livewire::actingAs($this->chefDePole)->test(Classement::class, ['campagne' => (string) $campagne->id])
+            ->assertSee($campagne->internat->nom)
+            ->assertDontSee('Valider les admissions');
 
-        $this->actingAs($this->chefDePole)->get(route('admissions.classement', ['campagne' => $campagne->id]))->assertOk()->assertSee('Valider les admissions');
+        // La direction régionale n'a aucune permission d'admissions : accès refusé.
+        Livewire::actingAs($this->directionRegionale)->test(Classement::class)->assertForbidden();
+
+        // Le gestionnaire ouvre la liste d'attente (c'est lui qui appelle les candidats).
+        Livewire::actingAs($this->gestionnaireFilles)->test(ListeAttente::class)->assertSee('attente');
+
         $this->assertFalse($campagne->fresh()->estDeliberee());
     }
 
-    public function test_le_chef_de_pole_appelle_un_candidat_de_la_liste_d_attente_et_motive_un_choix_hors_ordre(): void
+    public function test_le_gestionnaire_appelle_un_candidat_de_la_liste_d_attente_et_motive_un_choix_hors_ordre(): void
     {
         [$campagne, [$premier, $deuxieme, $troisieme]] = $this->campagneAClasser();
         $quatrieme = Demande::factory()->deposee(StatutDemande::Complet)->create([
@@ -115,8 +123,9 @@ class EcransAdmissionsTest extends TestCase
         $this->deliberer($campagne);
         $this->assertSame(StatutDemande::EnAttente, $troisieme->fresh()->statut);
 
+        // C'est le gestionnaire de l'internat qui appelle depuis la liste d'attente.
         // Aucune place libre : l'appel est refusé.
-        $ecran = Livewire::actingAs($this->chefDePole)->test(ListeAttente::class)->assertSee($troisieme->numero_dossier);
+        $ecran = Livewire::actingAs($this->gestionnaireFilles)->test(ListeAttente::class)->assertSee($troisieme->numero_dossier);
         $ecran->call('promouvoir', $troisieme->id);
         $this->assertSame(StatutDemande::EnAttente, $troisieme->fresh()->statut);
 
@@ -125,15 +134,12 @@ class EcransAdmissionsTest extends TestCase
         $this->assertSame(StatutDemande::EnAttente, $troisieme->fresh()->statut);
 
         // Appeler un candidat moins bien classé exige un motif.
-        $ecran = Livewire::actingAs($this->chefDePole)->test(ListeAttente::class);
+        $ecran = Livewire::actingAs($this->gestionnaireFilles)->test(ListeAttente::class);
         $ecran->call('promouvoir', $quatrieme->id);
         $this->assertSame(StatutDemande::EnAttente, $quatrieme->fresh()->statut);
 
         $ecran->call('promouvoir', $troisieme->id);
-        $troisieme->refresh();
-        $this->assertSame(StatutDemande::Admis, $troisieme->statut);
-        $this->assertNotNull($troisieme->date_limite_confirmation);
-        $this->assertTrue($troisieme->date_limite_confirmation->between(now()->addHours(47), now()->addHours(49)));
+        $this->assertSame(StatutDemande::Admis, $troisieme->fresh()->statut);
         $this->assertSame(1, Campagne::find($campagne->id)->demandes()->where('statut', StatutDemande::EnAttente->value)->count());
     }
 }

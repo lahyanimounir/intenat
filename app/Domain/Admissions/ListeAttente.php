@@ -50,7 +50,8 @@ class ListeAttente
         $campagne->loadMissing('internat');
 
         $this->notifieur->versRole(
-            RoleCode::ChefPole,
+            // C'est le gestionnaire de l'internat qui appelle les candidats de la liste d'attente.
+            RoleCode::Gestionnaire,
             $campagne->internat_id,
             TypeNotification::PlaceLibre,
             'Place libre à l\'internat',

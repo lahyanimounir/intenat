@@ -8,6 +8,7 @@ use App\Enums\Genre;
 use App\Enums\NiveauFormation;
 use App\Enums\StatutCampagne;
 use App\Enums\StatutDemande;
+use App\Enums\StatutInscription;
 use App\Enums\StatutPiece;
 use App\Livewire\Personnel\DossierFiche;
 use App\Livewire\Personnel\Dossiers;
@@ -21,6 +22,7 @@ use App\Models\TypePiece;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Livewire\Livewire;
 use Tests\Concerns\MondeInternat;
 use Tests\TestCase;
 
@@ -277,5 +279,36 @@ class PreinscriptionEtInstructionTest extends TestCase
         $this->ecran($this->gestionnaireFilles, Dossiers::class)->assertSee('Aucun dossier déposé')->assertDontSee($this->stagiaire->cef);
         $this->connecter($this->gestionnaireFilles)->get(route('dossiers.fiche', $brouillon))->assertNotFound();
         $this->assertSame(StatutCampagne::Ouverte, $campagne->fresh()->statut);
+    }
+
+    public function test_le_chef_de_pole_annule_une_validation_qui_retourne_au_gestionnaire(): void
+    {
+        $campagne = $this->creerCampagne($this->filles);
+        $demande = $this->rendreComplet($this->creerDossierRecu($campagne, ['eloigne_ou_rural' => true]));
+        $stagiaire = $demande->stagiaire;
+
+        $this->assertSame(StatutDemande::Complet, $demande->fresh()->statut);
+        $this->assertTrue($stagiaire->fresh()->inscriptionVerifiee());
+
+        // Même après la clôture de la campagne, le chef de pôle peut annuler la validation.
+        $campagne->forceFill(['statut' => StatutCampagne::Cloturee, 'date_cloture' => now()->subDay()->toDateString()])->save();
+
+        // Le gestionnaire n'a pas ce droit ; le chef de pôle, oui.
+        Livewire::actingAs($this->gestionnaireFilles)->test(DossierFiche::class, ['demande' => $demande])
+            ->call('annulerValidation', 'Motif suffisamment long.')->assertForbidden();
+
+        Livewire::actingAs($this->chefDePole)->test(DossierFiche::class, ['demande' => $demande])
+            ->call('annulerValidation', 'Incohérence relevée après la clôture de la campagne.')->assertHasNoErrors();
+
+        // Le dossier retourne en instruction chez le gestionnaire ; l'inscription repasse « en attente » (séjour refermé).
+        $this->assertSame(StatutDemande::Recu, $demande->fresh()->statut);
+        $stagiaire->refresh();
+        $this->assertSame(StatutInscription::Soumise, $stagiaire->statut_inscription);
+        $this->assertFalse($stagiaire->inscriptionVerifiee());
+
+        // Le gestionnaire peut alors renvoyer au stagiaire pour correction, même campagne clôturée.
+        app(Instruction::class)->renvoyerPourRectification($demande->fresh(), 'Merci de corriger votre attestation.', $this->gestionnaireFilles);
+        $this->assertSame(StatutInscription::ACorriger, $stagiaire->fresh()->statut_inscription);
+        $this->assertSame(StatutDemande::RetourRectification, $demande->fresh()->statut);
     }
 }

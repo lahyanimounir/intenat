@@ -227,6 +227,18 @@
                 </x-carte>
             @endif
 
+            @if ($annulerPossible)
+                <x-carte>
+                    <x-carte.entete titre="Candidature validée" description="Vous pouvez annuler cette validation, même après la clôture de la campagne : le dossier repart en instruction chez le gestionnaire." />
+                    <x-carte.corps>
+                        <x-bouton variante="danger-discret" icone="rotate-ccw"
+                            x-on:click="$motif({ titre: 'Annuler la validation de cette candidature', description: 'Le dossier sera renvoyé au gestionnaire de l’internat pour un nouvel examen, et l’accès du stagiaire sera suspendu jusqu’à une nouvelle validation.', libelle: 'Motif de l’annulation', libelleAction: 'Annuler la validation', minimum: 10, destructif: true }).then((motif) => $wire.annulerValidation(motif))">
+                            Annuler la validation
+                        </x-bouton>
+                    </x-carte.corps>
+                </x-carte>
+            @endif
+
             @if ($demande->paiements->isNotEmpty() || $demande->affectationActive || $admis)
                 <x-carte>
                     <x-carte.entete titre="Suites de l’admission" />

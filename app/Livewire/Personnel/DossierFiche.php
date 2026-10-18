@@ -96,6 +96,15 @@ class DossierFiche extends PagePersonnel
         $this->executer(fn () => $instruction->rejeter($demande, $motif, $this->utilisateur()), 'Dossier rejeté. Le motif est communiqué au stagiaire.');
     }
 
+    public function annulerValidation(Instruction $instruction, ?string $motif = null): void
+    {
+        $demande = $this->demande();
+        $this->autoriser($demande, 'admissions.annuler_validation');
+        $motif = $this->motifExige($motif, 10, 1000, 'Indiquez pourquoi vous annulez cette validation (10 caractères au moins).');
+
+        $this->executer(fn () => $instruction->annulerValidation($demande, $motif, $this->utilisateur()), 'Validation annulée : le dossier est renvoyé au gestionnaire.');
+    }
+
     public function recevoirDossierPhysique(Instruction $instruction): void
     {
         $demande = $this->demande();
@@ -146,6 +155,8 @@ class DossierFiche extends PagePersonnel
             'justificatifScolarite' => $demande->stagiaire->verificationsInscription()->whereNotNull('fichier')->latest('id')->first(),
             // Un dossier renvoyé pour rectification peut encore être rejeté.
             'rejetPossible' => $utilisateur->can('demandes.instruire') && in_array($demande->statut, [StatutDemande::Recu, StatutDemande::RetourRectification], true),
+            // Le chef de pôle ou le directeur peut annuler la validation d'une candidature complète.
+            'annulerPossible' => $utilisateur->can('admissions.annuler_validation') && $demande->statut === StatutDemande::Complet,
             'gererHebergement' => $utilisateur->can('hebergement.gerer'),
             // Le score et le rang sont masqués au gestionnaire pendant l'instruction, sauf réglage contraire.
             'voirClassement' => $utilisateur->can('admissions.consulter')

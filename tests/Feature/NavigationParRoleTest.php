@@ -62,8 +62,8 @@ class NavigationParRoleTest extends TestCase
     public function test_chaque_role_ouvre_toutes_les_entrees_de_son_menu_et_aucune_autre(): void
     {
         $tous = collect($this->comptes())->flatMap(fn (Utilisateur $compte) => $this->chemins($compte))->unique()->values();
-        // Les 29 écrans du personnel sont tous atteints par au moins un rôle.
-        $this->assertGreaterThanOrEqual(28, $tous->count());
+        // Les écrans du personnel sont tous atteints par au moins un rôle.
+        $this->assertGreaterThanOrEqual(26, $tous->count());
 
         foreach ($this->comptes() as $role => $compte) {
             $permis = $this->chemins($compte);

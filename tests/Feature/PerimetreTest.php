@@ -137,10 +137,12 @@ class PerimetreTest extends TestCase
         $campagne = $this->creerCampagne($this->filles);
         $dossier = $this->creerDossierRecu($campagne);
 
-        // Le directeur consulte son tableau de bord, pas les dossiers ni les listes.
+        // Le directeur consulte son tableau de bord, les dossiers et le classement (il délibère),
+        // mais il n'instruit pas et ne touche pas à l'hébergement.
         $this->connecter($this->directeur)->get('/')->assertOk()->assertSee('Tableau de bord du complexe');
-        $this->get('/dossiers')->assertForbidden();
-        $this->get('/admissions/classement')->assertForbidden();
+        $this->get('/dossiers')->assertOk();
+        $this->get('/admissions/classement')->assertOk();
+        $this->get('/hebergement/residents')->assertForbidden();
 
         // Le responsable restauration ne touche pas aux dossiers ; le gestionnaire ne gère pas les comptes.
         $this->connecter($this->restauration)->get(route('dossiers.fiche', $dossier))->assertForbidden();
@@ -190,7 +192,8 @@ class PerimetreTest extends TestCase
 
         $this->assertContains('liste_admis', $types($this->chefDePole));
         $this->assertNotContains('liste_admis', $types($this->gestionnaireFilles));
-        $this->assertNotContains('dossiers', $types($this->directeur));
+        // Le directeur consulte désormais les dossiers (il délibère) : l'export correspondant lui est ouvert.
+        $this->assertContains('dossiers', $types($this->directeur));
         $this->assertSame(['effectifs_repas'], $types($this->restauration));
     }
 

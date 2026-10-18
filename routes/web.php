@@ -109,10 +109,12 @@ Route::middleware(['auth:web', 'auth.session', 'personnel'])->group(function () 
         Route::get('{import}/rapport', [FichierController::class, 'rapportImport'])->name('.rapport')->whereNumber('import');
     });
 
-    // --------------------------------------------------------- Admissions (chef de pôle)
-    Route::middleware('permission:admissions.consulter')->prefix('admissions')->name('admissions.')->group(function () {
-        Route::get('classement', Personnel\Classement::class)->name('classement');
-        Route::get('liste-attente', Personnel\ListeAttente::class)->name('liste-attente');
+    // ----------------------------------------------- Admissions (directeur, chef de pôle, gestionnaire)
+    Route::prefix('admissions')->name('admissions.')->group(function () {
+        // Classement et délibération : réservés aux rôles qui consultent les admissions.
+        Route::get('classement', Personnel\Classement::class)->middleware('permission:admissions.consulter')->name('classement');
+        // Liste d'attente : consultée par le chef de pôle et le directeur, et utilisée par le gestionnaire pour appeler.
+        Route::get('liste-attente', Personnel\ListeAttente::class)->middleware('permission:admissions.consulter|admissions.promouvoir')->name('liste-attente');
     });
 
     // ---------------------------------------------------------------------- Campagnes

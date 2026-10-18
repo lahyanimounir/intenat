@@ -23,7 +23,7 @@ final class Menu
             ['Inscriptions à vérifier', '/inscriptions', 'graduation-cap', ['inscriptions.verifier']],
             ['Dossiers', '/dossiers', 'folder-open', ['demandes.consulter']],
             ['Classement', '/admissions/classement', 'list-ordered', ['admissions.consulter']],
-            ['Liste d’attente', '/admissions/liste-attente', 'clipboard-list', ['admissions.consulter']],
+            ['Liste d’attente', '/admissions/liste-attente', 'clipboard-list', ['admissions.consulter', 'admissions.promouvoir']],
             ['Grille de référence', '/grille-reference', 'sliders-horizontal', ['grille_reference.gerer']],
         ]],
         ['titre' => 'Hébergement', 'entrees' => [

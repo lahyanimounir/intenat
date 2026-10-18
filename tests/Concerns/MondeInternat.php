@@ -203,9 +203,10 @@ trait MondeInternat
     protected function deliberer(Campagne $campagne): Campagne
     {
         $campagne->forceFill(['statut' => StatutCampagne::Cloturee, 'date_cloture' => now()->subDay()->toDateString()])->save();
-        $this->agirEnTantQue($this->chefDePole);
+        // La délibération est réservée au directeur du complexe / CMC.
+        $this->agirEnTantQue($this->directeur);
 
-        return app(Deliberation::class)->valider($campagne->fresh(), $this->chefDePole, [], true);
+        return app(Deliberation::class)->valider($campagne->fresh(), $this->directeur, [], true);
     }
 
     /** Admis confirmé, paiement autorisé, occupation autorisée : prêt à recevoir un lit. */

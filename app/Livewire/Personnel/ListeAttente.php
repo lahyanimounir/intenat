@@ -27,7 +27,7 @@ class ListeAttente extends PagePersonnel
 
     public function mount(): void
     {
-        $this->exiger('admissions.consulter');
+        $this->exiger('admissions.consulter', 'admissions.promouvoir');
     }
 
     public function promouvoir(AppelDeLaListeAttente $listeAttente, int $demande, ?string $motif = null): void
@@ -50,7 +50,7 @@ class ListeAttente extends PagePersonnel
 
     public function render()
     {
-        $this->exiger('admissions.consulter');
+        $this->exiger('admissions.consulter', 'admissions.promouvoir');
         $utilisateur = $this->utilisateur();
 
         $listes = Campagne::visiblesPar($utilisateur)

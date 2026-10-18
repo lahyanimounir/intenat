@@ -186,6 +186,37 @@ class ControleInscription
         });
     }
 
+    /**
+     * Remet une inscription vérifiée « en attente de validation » : une nouvelle vérification
+     * est ouverte et le séjour se referme. Sert quand le chef de pôle ou le directeur annule la
+     * validation d'une candidature : le gestionnaire devra l'examiner de nouveau. L'autorisation
+     * est contrôlée par l'appelant (permission `admissions.annuler_validation`).
+     */
+    public function remettreEnAttente(Stagiaire $stagiaire, string $motif, Utilisateur $agent): VerificationInscription
+    {
+        return DB::transaction(function () use ($stagiaire, $motif, $agent) {
+            $stagiaire = Stagiaire::lockForUpdate()->findOrFail($stagiaire->id);
+
+            if (! $stagiaire->inscriptionVerifiee()) {
+                throw new RegleMetierException('Seule une inscription vérifiée peut être remise en attente de validation.', 'non_verifiee');
+            }
+
+            $verification = VerificationInscription::create([
+                'stagiaire_id' => $stagiaire->id,
+                'origine' => OrigineVerificationInscription::Administration,
+                'statut' => StatutVerificationInscription::Soumise,
+                'soumise_le' => now(),
+                'motif' => mb_substr(trim($motif), 0, 500) ?: null,
+            ] + $this->declaration($stagiaire));
+
+            $stagiaire->forceFill(['statut_inscription' => StatutInscription::Soumise, 'inscription_verifiee_le' => null])->save();
+
+            $this->journal->consigner('inscription.remise_en_attente', $verification, details: ['motif' => $motif], acteur: $agent);
+
+            return $verification;
+        });
+    }
+
     /** Décision d'un agent sur une demande soumise : vérifiée, à corriger ou rejetée. */
     public function decider(VerificationInscription $verification, StatutVerificationInscription $decision, ?string $motif, Utilisateur $agent): VerificationInscription
     {

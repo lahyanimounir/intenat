@@ -33,6 +33,7 @@ final class Permissions
             'admissions.consulter' => 'Voir les scores, le classement, la liste principale et la liste d\'attente',
             'admissions.deliberer' => 'Délibérer et valider la liste des admis',
             'admissions.promouvoir' => 'Appeler un candidat de la liste d\'attente',
+            'admissions.annuler_validation' => 'Annuler la validation d\'une candidature et la renvoyer au gestionnaire',
             'paiements.consulter' => 'Consulter le suivi des paiements',
             'paiements.autoriser' => 'Délivrer les autorisations de paiement',
             'paiements.controler' => 'Valider ou refuser les reçus de paiement',
@@ -60,13 +61,17 @@ final class Permissions
             ],
             RoleCode::Gestionnaire->value => [
                 'campagnes.consulter', 'inscriptions.verifier', 'demandes.consulter', 'demandes.instruire',
+                // Il appelle les candidats depuis la liste d'attente (sans accès au classement complet ;
+                // la délibération, elle, revient au directeur).
+                'admissions.promouvoir',
                 'paiements.consulter', 'paiements.controler',
                 'referentiel.consulter', 'referentiel.gerer', 'hebergement.consulter', 'hebergement.gerer',
                 'vie_internat.gerer', 'documents.gerer', 'reclamations.traiter', 'exports.creer',
             ],
             RoleCode::ChefPole->value => [
                 'campagnes.consulter', 'campagnes.gerer',
-                'inscriptions.verifier', 'demandes.consulter', 'admissions.consulter', 'admissions.deliberer', 'admissions.promouvoir',
+                // Il consulte les candidatures validées et peut annuler une validation, mais ne délibère plus.
+                'inscriptions.verifier', 'demandes.consulter', 'admissions.consulter', 'admissions.annuler_validation',
                 'paiements.consulter', 'paiements.autoriser',
                 'referentiel.consulter', 'hebergement.consulter', 'restauration.consulter',
                 'documents.gerer', 'reclamations.traiter', 'pilotage.consulter', 'exports.creer',
@@ -76,6 +81,8 @@ final class Permissions
             ],
             RoleCode::Directeur->value => [
                 'campagnes.consulter', 'referentiel.consulter',
+                // La délibération lui est réservée (dans son périmètre) ; il peut aussi annuler une validation.
+                'demandes.consulter', 'admissions.consulter', 'admissions.deliberer', 'admissions.annuler_validation',
                 'pilotage.consulter', 'exports.creer',
             ],
             RoleCode::DirRegionale->value => [

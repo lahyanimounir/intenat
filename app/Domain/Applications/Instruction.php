@@ -7,6 +7,7 @@ use App\Domain\Audit\Journal;
 use App\Domain\Identity\ControleInscription;
 use App\Domain\Notifications\Notifieur;
 use App\Domain\Shared\RegleMetierException;
+use App\Enums\RoleCode;
 use App\Enums\StatutDemande;
 use App\Enums\StatutPiece;
 use App\Enums\StatutVerificationInscription;
@@ -185,6 +186,49 @@ class Instruction
                 "Votre candidature n° {$demande->numero_dossier} a été rejetée. Motif : {$motif}",
                 '/stagiaire/inscription',
             );
+
+            return $demande;
+        });
+    }
+
+    /**
+     * Le chef de pôle ou le directeur annule la validation d'une candidature (même après la
+     * clôture de la campagne) : le dossier retourne en instruction chez le gestionnaire et
+     * l'inscription repasse « en attente ». Le gestionnaire pourra ensuite la renvoyer au
+     * stagiaire pour correction. Un dossier « complet » n'existant qu'avant la délibération,
+     * l'opération ne concerne jamais un candidat déjà admis.
+     */
+    public function annulerValidation(Demande $demande, string $motif, Utilisateur $auteur): Demande
+    {
+        return DB::transaction(function () use ($demande, $motif, $auteur) {
+            $demande = Demande::lockForUpdate()->findOrFail($demande->id);
+
+            if ($demande->statut !== StatutDemande::Complet) {
+                throw new RegleMetierException(
+                    'Seule une candidature validée peut être renvoyée au gestionnaire (statut : '.$demande->statut->libelle().').',
+                    'non_valide',
+                );
+            }
+
+            $stagiaire = $demande->stagiaire;
+
+            // L'inscription repasse « en attente de validation » : le séjour se referme en attendant le nouvel examen.
+            $this->controle->remettreEnAttente($stagiaire, $motif, $auteur);
+
+            // Le dossier retourne en instruction (score, rang et liste réinitialisés).
+            $this->transition->rouvrirInstruction($demande, 'Validation annulée : '.$motif);
+
+            $this->notifieur->versRole(
+                RoleCode::Gestionnaire,
+                $demande->campagne->internat_id,
+                TypeNotification::ChangementStatut,
+                'Validation annulée',
+                "Le dossier n° {$demande->numero_dossier} — {$stagiaire->nomComplet()} — vous est renvoyé pour un nouvel examen : {$motif}",
+                "/dossiers/{$demande->id}",
+                email: false,
+            );
+
+            RecalculerClassement::dispatch($demande->campagne_id)->afterCommit();
 
             return $demande;
         });
