@@ -31,13 +31,21 @@ class Restauration
         private readonly Journal $journal,
     ) {}
 
-    public function validerMenu(Menu $menu, Utilisateur $responsable): Menu
+    /**
+     * Validation d'un menu par le chef de pôle (voir ValidationDesMenus) : il doit
+     * lui avoir été transmis par le responsable restauration.
+     */
+    public function validerMenu(Menu $menu, Utilisateur $responsable, bool $journaliser = true): Menu
     {
-        return DB::transaction(function () use ($menu, $responsable) {
+        return DB::transaction(function () use ($menu, $responsable, $journaliser) {
             $menu = Menu::lockForUpdate()->findOrFail($menu->id);
 
             if ($menu->statut === StatutMenu::Valide) {
                 throw RegleMetierException::conflit('Ce menu est déjà validé.', 'deja_valide');
+            }
+
+            if ($menu->transmis_le === null) {
+                throw new RegleMetierException('Ce menu n\'a pas encore été transmis au chef de pôle par le responsable restauration.', 'menu_non_transmis');
             }
 
             $menu->forceFill([
@@ -48,9 +56,11 @@ class Restauration
 
             ServiceRepas::firstOrCreate(['menu_id' => $menu->id], ['date_service' => $menu->date_repas]);
 
-            $this->journal->consigner('menu.validation', $menu, details: [
-                'date' => $menu->date_repas->toDateString(), 'repas' => $menu->type_repas->value,
-            ]);
+            if ($journaliser) {
+                $this->journal->consigner('menu.validation', $menu, details: [
+                    'date' => $menu->date_repas->toDateString(), 'repas' => $menu->type_repas->value,
+                ], acteur: $responsable);
+            }
 
             return $menu;
         });
@@ -94,9 +104,15 @@ class Restauration
         return null;
     }
 
-    public function reserver(Stagiaire $stagiaire, Menu $menu): ReservationRepas
+    /**
+     * Réserve un repas. L'allergie ou la restriction propre à ce repas, facultative, est
+     * signalée au responsable restauration ; elle reste modifiable jusqu'à l'heure limite.
+     */
+    public function reserver(Stagiaire $stagiaire, Menu $menu, ?string $allergie = null): ReservationRepas
     {
-        return DB::transaction(function () use ($stagiaire, $menu) {
+        $allergie = filled($allergie) ? mb_substr(trim($allergie), 0, 255) : null;
+
+        return DB::transaction(function () use ($stagiaire, $menu, $allergie) {
             $menu = Menu::with('service')->lockForUpdate()->findOrFail($menu->id);
             $motif = $this->motifIneligibilite($stagiaire, $menu);
 
@@ -107,14 +123,40 @@ class Restauration
             $reservation = ReservationRepas::firstOrNew(['menu_id' => $menu->id, 'stagiaire_id' => $stagiaire->id]);
 
             if ($reservation->exists && $reservation->statut === StatutReservation::Reserve) {
+                if ($allergie !== null && $reservation->allergie !== $allergie) {
+                    $reservation->forceFill(['allergie' => $allergie])->save();
+                }
+
                 return $reservation;
             }
 
             $reservation->fill([
                 'statut' => StatutReservation::Reserve,
+                'allergie' => $allergie,
                 'date_reservation' => now(),
                 'date_annulation' => null,
             ])->save();
+
+            return $reservation;
+        });
+    }
+
+    /** Modifie l'allergie signalée pour un repas réservé, jusqu'à l'heure limite. */
+    public function modifierAllergie(ReservationRepas $reservation, ?string $allergie): ReservationRepas
+    {
+        return DB::transaction(function () use ($reservation, $allergie) {
+            $menu = Menu::with('service')->lockForUpdate()->findOrFail($reservation->menu_id);
+            $reservation = ReservationRepas::lockForUpdate()->findOrFail($reservation->id);
+
+            if ($reservation->statut !== StatutReservation::Reserve) {
+                throw new RegleMetierException('Cette réservation n\'est plus active.', 'modification_impossible');
+            }
+
+            if ($menu->service?->effectif_confirme !== null || now()->greaterThan($this->limiteDeReservation($menu))) {
+                throw new RegleMetierException('Le délai de modification de ce repas est dépassé.', 'modification_impossible');
+            }
+
+            $reservation->forceFill(['allergie' => filled($allergie) ? mb_substr(trim($allergie), 0, 255) : null])->save();
 
             return $reservation;
         });

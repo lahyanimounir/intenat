@@ -13,8 +13,8 @@ use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Tenue de la carte : un menu est proposé, corrigé au besoin, puis validé
- * (voir Restauration::validerMenu). Seul un menu validé est diffusé aux
+ * Tenue de la carte : un menu est proposé, corrigé au besoin, transmis au chef
+ * de pôle avec sa semaine, puis validé par celui-ci (voir ValidationDesMenus). Seul un menu validé est diffusé aux
  * stagiaires ; une fois validé, il ne se modifie ni ne se supprime plus.
  */
 class CarteDesMenus
@@ -71,8 +71,12 @@ class CarteDesMenus
             throw new RegleMetierException('Un menu validé est diffusé aux stagiaires : il ne se modifie plus.', 'menu_valide');
         }
 
-        $menu->fill(['description' => $description])->save();
-        $this->journal->consigner('menu.modification', $menu, details: ['date' => $menu->date_repas->toDateString(), 'repas' => $menu->type_repas->value]);
+        // Un menu modifié après sa transmission doit être retransmis : le chef de pôle valide ce qu'il a vérifié.
+        $etaitTransmis = $menu->transmis_le !== null;
+        $menu->fill(['description' => $description, 'transmis_le' => null, 'transmis_par' => null])->save();
+        $this->journal->consigner('menu.modification', $menu, details: [
+            'date' => $menu->date_repas->toDateString(), 'repas' => $menu->type_repas->value, 'transmission_annulee' => $etaitTransmis,
+        ]);
 
         return $menu;
     }

@@ -43,6 +43,7 @@ final class Menu
         ['titre' => 'Restauration', 'entrees' => [
             ['Menus', '/restauration/menus', 'soup', ['restauration.consulter']],
             ['Service et effectifs', '/restauration/service', 'utensils-crossed', ['restauration.consulter']],
+            ['Liste J+1', '/restauration/liste-j1', 'clipboard-list', ['restauration.consulter']],
             ['Statistiques', '/restauration/statistiques', 'gauge', ['restauration.consulter']],
         ]],
         ['titre' => 'Pilotage', 'entrees' => [

@@ -175,11 +175,12 @@ class EcransPaiementsEtRestaurationTest extends TestCase
         $menu = Menu::create([
             'internat_id' => $this->filles->id, 'date_repas' => $jour, 'type_repas' => $repas, 'description' => 'Tajine de légumes',
             'statut' => StatutMenu::Propose, 'cree_par' => $this->restauration->id,
+            'transmis_le' => now(), 'transmis_par' => $this->restauration->id,
         ]);
 
         if ($valide) {
             $this->agirEnTantQue($this->restauration);
-            app(Restauration::class)->validerMenu($menu, $this->restauration);
+            app(Restauration::class)->validerMenu($menu, $this->chefDePole);
         }
 
         return $menu->fresh();

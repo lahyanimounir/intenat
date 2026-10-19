@@ -9,7 +9,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Repas réservé par un stagiaire.
+ * Repas réservé par un stagiaire, avec l'allergie ou la restriction qu'il signale
+ * pour ce repas précis.
  */
 class ReservationRepas extends Model
 {
@@ -20,7 +21,7 @@ class ReservationRepas extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'menu_id', 'stagiaire_id', 'statut', 'date_reservation', 'date_annulation',
+        'menu_id', 'stagiaire_id', 'statut', 'allergie', 'date_reservation', 'date_annulation',
     ];
 
     protected function casts(): array

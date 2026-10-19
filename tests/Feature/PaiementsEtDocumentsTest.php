@@ -176,9 +176,10 @@ class PaiementsEtDocumentsTest extends TestCase
         $menu = Menu::create([
             'internat_id' => $this->filles->id, 'date_repas' => $le5->toDateString(), 'type_repas' => TypeRepas::Dejeuner,
             'description' => 'Menu de test', 'statut' => StatutMenu::Propose, 'cree_par' => $this->restauration->id,
+            'transmis_le' => now(), 'transmis_par' => $this->restauration->id,
         ]);
         $this->agirEnTantQue($this->restauration);
-        app(Restauration::class)->validerMenu($menu, $this->restauration);
+        app(Restauration::class)->validerMenu($menu, $this->chefDePole);
 
         $this->agirEnTantQue($demande->stagiaire);
         $this->assertRegle('reservation_impossible', fn () => app(Restauration::class)->reserver($demande->stagiaire, $menu->fresh()));

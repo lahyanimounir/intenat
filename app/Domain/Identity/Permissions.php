@@ -46,6 +46,7 @@ final class Permissions
             'reclamations.traiter' => 'Traiter les réclamations de son domaine',
             'restauration.consulter' => 'Consulter menus, effectifs et statistiques de restauration',
             'restauration.gerer' => 'Gérer les menus, confirmer les effectifs et suivre le service',
+            'restauration.valider_menus' => 'Vérifier et valider les menus de la semaine transmis par la restauration',
             'pilotage.consulter' => 'Consulter les indicateurs consolidés et les rapports',
             'exports.creer' => 'Produire des exports dans son périmètre',
         ];
@@ -75,7 +76,9 @@ final class Permissions
                 'inscriptions.verifier', 'demandes.consulter', 'admissions.consulter', 'admissions.noter', 'admissions.annuler_validation',
                 // Il consulte et suit les paiements, sans les autoriser : le stagiaire paie directement.
             'paiements.consulter',
-                'referentiel.consulter', 'hebergement.consulter', 'restauration.consulter',
+                'referentiel.consulter', 'hebergement.consulter',
+                // Il valide les menus de la semaine transmis par le responsable restauration.
+                'restauration.consulter', 'restauration.valider_menus',
                 'documents.gerer', 'reclamations.traiter', 'pilotage.consulter', 'exports.creer',
             ],
             RoleCode::Restauration->value => [

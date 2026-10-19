@@ -14,6 +14,8 @@ enum TypeRegime: string
     case Allergie = 'allergie';
     case RestrictionMedicale = 'restriction_medicale';
     case RestrictionReligieuse = 'restriction_religieuse';
+    case Vegetarien = 'vegetarien';
+    case Autre = 'autre';
 
     public function libelle(): string
     {
@@ -21,6 +23,14 @@ enum TypeRegime: string
             self::Allergie => 'Allergie',
             self::RestrictionMedicale => 'Restriction médicale',
             self::RestrictionReligieuse => 'Restriction religieuse',
+            self::Vegetarien => 'Végétarien',
+            self::Autre => 'Autre restriction alimentaire',
         };
+    }
+
+    /** Une allergie ou une restriction médicale se justifie par un document médical. */
+    public function exigeJustificatif(): bool
+    {
+        return in_array($this, [self::Allergie, self::RestrictionMedicale], true);
     }
 }

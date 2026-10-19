@@ -68,7 +68,13 @@ class RestaurationEtVieInternatTest extends TestCase
         $this->agirEnTantQue($this->restauration);
         $menu = app(CarteDesMenus::class)->proposer([$this->filles->id], now()->parse($date), $repas, 'Tajine de légumes', $this->restauration)[0];
 
-        return $valide ? app(Restauration::class)->validerMenu($menu, $this->restauration) : $menu;
+        if (! $valide) {
+            return $menu;
+        }
+
+        $menu->forceFill(['transmis_le' => now(), 'transmis_par' => $this->restauration->id])->save();
+
+        return app(Restauration::class)->validerMenu($menu, $this->chefDePole);
     }
 
     private function reserver(Stagiaire $stagiaire, Menu $menu): ReservationRepas
@@ -247,13 +253,19 @@ class RestaurationEtVieInternatTest extends TestCase
 
         $this->assertSame(3, Reclamation::count());
 
-        // Chaque responsable ne voit que les réclamations de son domaine, dans son périmètre.
-        foreach ([[$this->gestionnaireFilles, 'hebergement'], [$this->restauration, 'restauration'], [$this->chefDePole, 'selection']] as [$compte, $sien]) {
+        // Gestionnaire et responsable restauration ne voient que les réclamations de leur domaine, dans leur périmètre.
+        foreach ([[$this->gestionnaireFilles, 'hebergement'], [$this->restauration, 'restauration']] as [$compte, $sien]) {
             $ecran = $this->ecran($compte, Reclamations::class);
 
             foreach ($textes as $domaine => $texte) {
                 $domaine === $sien ? $ecran->assertSee($texte) : $ecran->assertDontSee($texte);
             }
+        }
+
+        // Le chef de pôle suit tous les domaines de son périmètre (il ne traite que les recours).
+        $suivi = $this->ecran($this->chefDePole, Reclamations::class);
+        foreach ($textes as $texte) {
+            $suivi->assertSee($texte);
         }
 
         $this->ecran($this->gestionnaireGarcons, Reclamations::class)->assertDontSee($textes['hebergement']);

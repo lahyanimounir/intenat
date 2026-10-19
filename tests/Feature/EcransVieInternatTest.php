@@ -248,6 +248,48 @@ class EcransVieInternatTest extends TestCase
         $this->assertSame(0, Equipement::where('libelle', 'Badge')->count());
     }
 
+    public function test_le_chef_de_pole_suit_toutes_les_reclamations_meme_cloturees(): void
+    {
+        $salma = $this->creerStagiaire($this->filles, ['nom' => 'Alaoui', 'prenom' => 'Salma']);
+        $karim = $this->creerStagiaire($this->garcons, ['nom' => 'Bennani', 'prenom' => 'Karim']);
+        $ailleurs = $this->creerStagiaire($this->ailleurs);
+        $creer = fn ($stagiaire, $internat, DomaineReclamation $domaine, string $texte) => Reclamation::create([
+            'stagiaire_id' => $stagiaire->id, 'internat_id' => $internat->id, 'domaine' => $domaine,
+            'description' => $texte, 'statut' => StatutReclamation::Ouverte, 'date_creation' => now()->subDay(),
+        ]);
+        $chauffage = $creer($salma, $this->filles, DomaineReclamation::Hebergement, 'Le chauffage ne fonctionne pas.');
+        $creer($karim, $this->garcons, DomaineReclamation::Hebergement, 'La porte ferme mal.');
+        $creer($karim, $this->garcons, DomaineReclamation::Selection, 'Je conteste mon classement.');
+        $creer($ailleurs, $this->ailleurs, DomaineReclamation::Hebergement, 'Réclamation hors périmètre.');
+
+        // Le gestionnaire prend en charge puis clôt sa réclamation.
+        $gestion = Livewire::actingAs($this->gestionnaireFilles)->test(Reclamations::class);
+        $gestion->call('prendreEnCharge', $chauffage->id)->call('repondre', $chauffage->id)
+            ->set('reponse', 'Le technicien est passé, le chauffage fonctionne.')->call('clore')->assertHasNoErrors();
+
+        // Le chef de pôle voit tout son périmètre, clôturé compris, mais rien d'un autre établissement.
+        $ecran = Livewire::actingAs($this->chefDePole)->test(Reclamations::class)
+            ->assertSee('Le chauffage ne fonctionne pas.')->assertSee('Le technicien est passé, le chauffage fonctionne.')
+            ->assertSee('La porte ferme mal.')->assertSee('Je conteste mon classement.')->assertDontSee('Réclamation hors périmètre.');
+
+        // Filtres : statut, domaine, stagiaire.
+        $ecran->set('statut', StatutReclamation::Traitee->value)->assertSee('Le chauffage ne fonctionne pas.')->assertDontSee('La porte ferme mal.')
+            ->set('statut', StatutReclamation::Ouverte->value)->assertSee('La porte ferme mal.')->assertDontSee('Le chauffage ne fonctionne pas.')
+            ->set('statut', '')->set('domaine', DomaineReclamation::Selection->value)->assertSee('Je conteste mon classement.')->assertDontSee('La porte ferme mal.')
+            ->set('domaine', '')->set('stagiaire', 'Alaoui')->assertSee('Le chauffage ne fonctionne pas.')->assertDontSee('La porte ferme mal.')
+            ->call('effacerFiltres')->assertSee('La porte ferme mal.');
+
+        // Historique complet de la réclamation clôturée : dépôt, prise en charge, réponse.
+        $ecran->call('voirHistorique', $chauffage->id)->assertSee('Historique de la réclamation')
+            ->assertSee('Réclamation déposée')->assertSee('Passée à l’état « En cours »', false)
+            ->assertSee('Réponse envoyée, réclamation traitée et clôturée')->assertSee($this->gestionnaireFilles->nomComplet());
+
+        // Consultation seule hors de son domaine : il ne traite que les recours.
+        Livewire::actingAs($this->chefDePole)->test(Reclamations::class)->call('prendreEnCharge', $chauffage->id)->assertForbidden();
+        $this->assertSame(StatutReclamation::Traitee, $chauffage->fresh()->statut);
+        $this->assertNotNull(Reclamation::find($chauffage->id));
+    }
+
     public function test_chaque_responsable_traite_les_reclamations_de_son_domaine(): void
     {
         $stagiaire = $this->creerStagiaire($this->filles);
@@ -279,8 +321,11 @@ class EcransVieInternatTest extends TestCase
         $this->assertSame(StatutReclamation::Ouverte, $repas->fresh()->statut);
 
         Livewire::actingAs($this->restauration)->test(Reclamations::class)->assertSee('Le dîner est servi trop tôt.')->assertDontSee('Je conteste mon classement.');
-        Livewire::actingAs($this->chefDePole)->test(Reclamations::class)->assertSee('Je conteste mon classement.')->assertDontSee('Le dîner est servi trop tôt.')
-            ->set('statut', StatutReclamation::Traitee->value)->assertDontSee('Je conteste mon classement.');
+        // Le chef de pôle suit tous les domaines de son périmètre, y compris la réclamation clôturée par le gestionnaire.
+        Livewire::actingAs($this->chefDePole)->test(Reclamations::class)
+            ->assertSee('Je conteste mon classement.')->assertSee('Le dîner est servi trop tôt.')->assertSee('Le chauffage ne fonctionne pas.')
+            ->set('statut', StatutReclamation::Traitee->value)->assertDontSee('Je conteste mon classement.')
+            ->assertSee('Le chauffage ne fonctionne pas.')->assertSee('Le technicien passe demain matin.');
 
         // Un rôle sans domaine n'ouvre pas l'écran.
         $this->connecter($this->directeur)->get('/reclamations')->assertForbidden();

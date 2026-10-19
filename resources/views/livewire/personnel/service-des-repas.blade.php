@@ -71,13 +71,34 @@
     @endif
 
     @if ($dialogue === 'effectif' && $choisi)
-        <x-dialogue titre="Confirmer l’effectif prévisionnel"
+        <x-dialogue titre="Confirmer l’effectif prévisionnel" largeur="lg"
             :description="$choisi->type_repas->libelle().' du '.Format::dateLongue($choisi->date_repas).' — '.$choisi->internat->nom">
             <form wire:submit="confirmer" id="form-effectif" novalidate class="space-y-4">
                 <p class="text-base text-encre-2">
                     <strong class="chiffres text-encre">{{ $choisi->reserves }}</strong> stagiaire(s) ont réservé ce repas. L’effectif confirmé est celui que vous arrêtez pour la
                     préparation ; après confirmation, plus aucune réservation ni annulation n’est possible.
                 </p>
+                @if ($reservations->isNotEmpty())
+                    @php $aSurveiller = $reservations->filter(fn ($r) => $r->allergie || $r->stagiaire->regimes->isNotEmpty())->count(); @endphp
+                    <div>
+                        <p class="mb-1.5 text-sm font-medium">
+                            Stagiaires concernés
+                            @if ($aSurveiller > 0)<x-badge ton="alerte" class="ml-1">{{ $aSurveiller }} avec régime ou allergie</x-badge>@endif
+                        </p>
+                        <ul class="defilement-fin max-h-64 divide-y divide-bord-doux overflow-y-auto rounded-md border border-bord text-sm">
+                            @foreach ($reservations as $reservation)
+                                @php $attention = $reservation->allergie || $reservation->stagiaire->regimes->isNotEmpty(); @endphp
+                                <li @class(['px-3.5 py-2', 'bg-alerte-fond' => $attention]) wire:key="effectif-{{ $reservation->id }}">
+                                    <p class="font-medium">{{ $reservation->stagiaire->nom }} {{ $reservation->stagiaire->prenom }} <span class="font-normal text-discret">· {{ $reservation->stagiaire->cef }}</span></p>
+                                    <p class="text-xs text-discret">
+                                        {{ $reservation->stagiaire->regimes->isNotEmpty() ? $reservation->stagiaire->regimes->map(fn ($r) => $r->type->libelle().($r->precision_regime ? ' — '.$r->precision_regime : ''))->implode(' · ') : 'Aucun régime déclaré' }}
+                                    </p>
+                                    @if ($reservation->allergie)<p class="text-xs font-medium text-alerte">Allergie pour ce repas : {{ $reservation->allergie }}</p>@endif
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
                 <x-saisie libelle="Effectif confirmé" type="number" min="0" inputmode="numeric" wire:model="effectif" requis autofocus class="w-32" />
             </form>
             <x-slot:pied>
@@ -128,6 +149,9 @@
                                         {{ $nom }}
                                         @if ($reservation->stagiaire->regimes->isNotEmpty())
                                             <x-badge ton="info" class="ml-2">{{ $reservation->stagiaire->regimes->map(fn ($r) => $r->type->libelle().($r->precision_regime ? ' — '.$r->precision_regime : ''))->implode(' · ') }}</x-badge>
+                                        @endif
+                                        @if ($reservation->allergie)
+                                            <x-badge ton="alerte" class="ml-1">Allergie : {{ $reservation->allergie }}</x-badge>
                                         @endif
                                     </span>
                                     <div role="radiogroup" aria-label="Présence de {{ $nom }}" class="flex overflow-hidden rounded-md border border-bord text-sm">

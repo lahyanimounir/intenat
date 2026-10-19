@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\FichierController;
 use App\Http\Controllers\ImpressionClassementController;
+use App\Http\Controllers\ListeDesRepasController;
 use App\Http\Controllers\SessionController;
 use App\Livewire\Administration;
 use App\Livewire\Auth;
@@ -177,6 +178,8 @@ Route::middleware(['auth:web', 'auth.session', 'personnel'])->group(function () 
     Route::middleware('permission:restauration.consulter')->prefix('restauration')->name('restauration.')->group(function () {
         Route::get('menus', Personnel\Menus::class)->name('menus');
         Route::get('service', Personnel\ServiceDesRepas::class)->name('service');
+        Route::get('liste-j1', Personnel\ListeRepasJ1::class)->name('liste-j1');
+        Route::get('liste-j1/imprimer', ListeDesRepasController::class)->name('liste-j1.imprimer');
         Route::get('statistiques', Personnel\StatistiquesRepas::class)->name('statistiques');
         Route::get('regimes/{regime}/justificatif', [FichierController::class, 'justificatifDuRegime'])
             ->middleware('permission:restauration.gerer')->name('regimes.justificatif')->whereNumber('regime');

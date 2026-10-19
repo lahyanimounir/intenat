@@ -289,11 +289,14 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('statistiques', [RestaurationController::class, 'statistiques']);
         });
 
+        Route::middleware('permission:restauration.valider_menus')->prefix('restauration')->group(function () {
+            Route::post('menus/{menu}/validation', [RestaurationController::class, 'validerMenu']);
+        });
+
         Route::middleware('permission:restauration.gerer')->prefix('restauration')->group(function () {
             Route::post('menus', [RestaurationController::class, 'creerMenu']);
             Route::put('menus/{menu}', [RestaurationController::class, 'modifierMenu']);
             Route::delete('menus/{menu}', [RestaurationController::class, 'supprimerMenu']);
-            Route::post('menus/{menu}/validation', [RestaurationController::class, 'validerMenu']);
             Route::post('menus/{menu}/effectif', [RestaurationController::class, 'confirmerEffectif']);
             Route::post('menus/{menu}/service', [RestaurationController::class, 'cloturerService']);
             Route::get('regimes', [RestaurationController::class, 'regimes']);

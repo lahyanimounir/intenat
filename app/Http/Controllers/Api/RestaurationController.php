@@ -120,7 +120,7 @@ class RestaurationController extends Controller
 
     public function validerMenu(Menu $menu): JsonResponse
     {
-        $this->autoriser($menu, 'restauration.gerer');
+        $this->autoriser($menu, 'restauration.valider_menus');
 
         return response()->json(self::menu($this->restauration->validerMenu($menu, $this->personnel())->load('internat:id,nom,genre', 'service')));
     }

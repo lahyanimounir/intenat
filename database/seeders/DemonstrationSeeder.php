@@ -576,11 +576,18 @@ class DemonstrationSeeder extends Seeder
             }
         }
 
-        // Menus validés jusqu'à J+3 ; les suivants restent à valider.
-        $this->agir($responsable, $this->j->subDays(5)->addHours(11));
+        // Menus transmis au chef de pôle jusqu'à J+5 et validés par lui jusqu'à J+3 ; J+4 et J+5 attendent
+        // sa validation, J+6 et J+7 sont encore en préparation.
+        foreach (range(-3, 5) as $decalage) {
+            foreach ($menus[$decalage] as $menu) {
+                $menu->forceFill(['transmis_le' => $this->j->subDays(6)->addHours(16), 'transmis_par' => $responsable->id])->save();
+            }
+        }
+        $chef = $this->comptes['chef_pole'];
+        $this->agir($chef, $this->j->subDays(5)->addHours(11));
         foreach (range(-3, 3) as $decalage) {
             foreach ($menus[$decalage] as $menu) {
-                $this->restauration->validerMenu($menu, $responsable);
+                $this->restauration->validerMenu($menu, $chef);
             }
         }
 

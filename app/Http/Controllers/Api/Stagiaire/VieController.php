@@ -199,9 +199,10 @@ class VieController extends Controller
         ]);
     }
 
-    public function reserver(Menu $menu, Restauration $restauration): JsonResponse
+    public function reserver(Request $request, Menu $menu, Restauration $restauration): JsonResponse
     {
-        $reservation = $restauration->reserver($this->stagiaire(), $menu);
+        $allergie = $request->validate(['allergie' => ['nullable', 'string', 'max:255']])['allergie'] ?? null;
+        $reservation = $restauration->reserver($this->stagiaire(), $menu, $allergie);
 
         return response()->json(['id' => $reservation->id, 'statut' => self::enum($reservation->statut)], 201);
     }
@@ -233,10 +234,10 @@ class VieController extends Controller
         $donnees = $request->validate([
             'type' => ['required', Rule::enum(TypeRegime::class), Rule::unique('regime_alimentaire', 'type')->where('stagiaire_id', $stagiaire->id)],
             'precision' => ['nullable', 'string', 'max:255'],
-            'justificatif' => ['required_unless:type,restriction_religieuse', 'nullable', 'file'],
+            'justificatif' => ['required_if:type,'.collect(TypeRegime::cases())->filter->exigeJustificatif()->map->value->implode(','), 'nullable', 'file'],
         ], [
             'type.unique' => 'Ce régime est déjà déclaré.',
-            'justificatif.required_unless' => 'Un justificatif est requis pour une allergie ou une restriction médicale.',
+            'justificatif.required_if' => 'Un justificatif est requis pour une allergie ou une restriction médicale.',
         ]);
 
         $chemin = $request->hasFile('justificatif')

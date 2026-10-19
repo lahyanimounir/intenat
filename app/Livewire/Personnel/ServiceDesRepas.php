@@ -168,7 +168,7 @@ class ServiceDesRepas extends PagePersonnel
             'internats' => $this->internatsDuPerimetre(),
             'gerer' => $this->peut(self::GERER),
             'choisi' => $choisi,
-            'reservations' => $choisi && $this->dialogue === 'cloture' ? $this->aPointer($choisi) : collect(),
+            'reservations' => $choisi && in_array($this->dialogue, ['cloture', 'effectif'], true) ? $this->aPointer($choisi) : collect(),
         ]);
     }
 }
