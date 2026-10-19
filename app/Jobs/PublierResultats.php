@@ -32,7 +32,7 @@ class PublierResultats implements ShouldQueue
                     [$titre, $message] = match ($dossier->statut) {
                         StatutDemande::Admis => [
                             'Résultat : admis',
-                            'Vous êtes admis à l\'internat. Confirmez votre place pour la conserver.',
+                            'Vous êtes admis à l\'internat. Le gestionnaire de l\'internat confirmera votre place ; aucune démarche n\'est attendue de votre part.',
                         ],
                         StatutDemande::EnAttente => [
                             'Résultat : liste d\'attente',

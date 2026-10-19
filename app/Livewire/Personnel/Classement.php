@@ -6,6 +6,7 @@ use App\Domain\Admissions\CalculScore;
 use App\Domain\Admissions\Classement as CalculDuClassement;
 use App\Domain\Admissions\Deliberation;
 use App\Domain\Admissions\NotationManuelle;
+use App\Domain\Shared\Parametres;
 use App\Enums\ListeAdmission;
 use App\Enums\StatutDemande;
 use App\Enums\TypeDecision;
@@ -60,12 +61,9 @@ class Classement extends PagePersonnel
 
     public string $motif = '';
 
-    /** Saisie des notes par critère dans le détail du score : id de critère => points. */
-    public array $notes = [];
-
     public function mount(): void
     {
-        $this->exiger('admissions.consulter');
+        $this->exiger('admissions.consulter', 'admissions.promouvoir');
 
         if ($this->dossier !== '' && ctype_digit($this->dossier)) {
             $this->voirScore((int) $this->dossier);
@@ -84,63 +82,31 @@ class Classement extends PagePersonnel
         $this->resetPage();
     }
 
-    /** Amorce les champs de saisie avec les points actuels de chaque critère. */
-    protected function primerNotes(Demande $demande): void
+    /**
+     * Campagnes présentées au classement. Le gestionnaire, qui instruit les dossiers, ne voit les scores
+     * qu'une fois l'instruction terminée (campagne délibérée) tant que la règle « score masqué au
+     * gestionnaire » est en vigueur.
+     */
+    private function campagnesConsultables(): Builder
     {
-        $this->notes = collect(app(CalculScore::class)->evaluer($demande)['lignes'])
-            ->mapWithKeys(fn (array $ligne) => [$ligne['critere']->id => $ligne['points']])
-            ->all();
-    }
+        $utilisateur = $this->utilisateur();
 
-    /** Rectifie la note d'un critère pour le dossier dont le détail est ouvert. */
-    public function enregistrerNote(int $critere, NotationManuelle $notation): void
-    {
-        if ($this->scoreDe === null) {
-            return;
-        }
-
-        $demande = Demande::with('campagne')->findOrFail($this->scoreDe);
-        $this->autoriser($demande, 'admissions.noter');
-        $modeleCritere = Critere::where('campagne_id', $demande->campagne_id)->findOrFail($critere);
-
-        $valide = $this->validate([
-            "notes.$critere" => ['required', 'integer', 'min:0', 'max:'.(int) $modeleCritere->points],
-        ], [], ["notes.$critere" => 'note']);
-
-        $this->executer(function () use ($notation, $demande, $modeleCritere, $valide, $critere) {
-            $notation->fixer($demande, $modeleCritere, (int) $valide['notes'][$critere], null, $this->utilisateur());
-            $this->message('Note mise à jour : le score et le classement ont été recalculés.');
-        });
-    }
-
-    /** Rétablit la note automatique d'un critère. */
-    public function retablirNote(int $critere, NotationManuelle $notation): void
-    {
-        if ($this->scoreDe === null) {
-            return;
-        }
-
-        $demande = Demande::with('campagne')->findOrFail($this->scoreDe);
-        $this->autoriser($demande, 'admissions.noter');
-        $modeleCritere = Critere::where('campagne_id', $demande->campagne_id)->findOrFail($critere);
-
-        $this->executer(function () use ($notation, $demande, $modeleCritere) {
-            $demande = $notation->retablir($demande, $modeleCritere);
-            $this->primerNotes($demande->load('campagne.criteres.typePiece', 'pieces', 'stagiaire', 'notesManuelles'));
-            $this->message('Note automatique rétablie : le score et le classement ont été recalculés.');
-        });
+        return Campagne::visiblesPar($utilisateur)->whereNull('archivee_le')->whereIn('statut', ['ouverte', 'cloturee'])
+            ->when(! $utilisateur->can('admissions.consulter') && app(Parametres::class)->vrai('instruction.masquer_score_gestionnaire'),
+                fn (Builder $q) => $q->whereNotNull('date_deliberation'));
     }
 
     private function campagneChoisie(): ?Campagne
     {
-        $campagnes = Campagne::visiblesPar($this->utilisateur())->whereNull('archivee_le')->whereIn('statut', ['ouverte', 'cloturee']);
+        $campagnes = $this->campagnesConsultables();
 
         $campagne = $this->campagne !== ''
             ? (clone $campagnes)->find((int) $this->campagne)
             : (clone $campagnes)->orderByDesc('annee')->orderBy('internat_id')->orderByDesc('date_ouverture')->first();
 
         if ($campagne !== null) {
-            $this->autoriser($campagne, 'admissions.consulter');
+            // Le gestionnaire consulte en lecture seule : l'internat de la campagne doit être le sien.
+            $this->autoriser($campagne, $this->utilisateur()->can('admissions.consulter') ? 'admissions.consulter' : 'admissions.promouvoir');
         }
 
         return $campagne;
@@ -227,11 +193,11 @@ class Classement extends PagePersonnel
 
     public function render()
     {
-        $this->exiger('admissions.consulter');
+        $this->exiger('admissions.consulter', 'admissions.promouvoir');
         $utilisateur = $this->utilisateur();
         $campagne = $this->campagneChoisie()?->load('internat.etablissement');
 
-        $campagnes = Campagne::visiblesPar($utilisateur)->whereNull('archivee_le')->whereIn('statut', ['ouverte', 'cloturee'])
+        $campagnes = $this->campagnesConsultables()
             ->with('internat:id,nom')->orderByDesc('annee')->orderBy('internat_id')->orderByDesc('date_ouverture')->get()
             ->mapWithKeys(fn (Campagne $c) => [$c->id => $c->libellePeriode().' — '.$c->internat->nom]);
 

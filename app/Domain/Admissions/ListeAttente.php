@@ -21,8 +21,9 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Liste d'attente. Elle n'est jamais promue automatiquement : quand une place
- * se libère, l'application alerte le chef de pôle, qui choisit et valide un
- * candidat. Celui-ci dispose alors de 48 heures pour confirmer.
+ * se libère, l'application alerte le gestionnaire de l'internat, qui choisit un
+ * candidat et le fait passer directement en liste principale. Le candidat n'a rien
+ * à confirmer : aucun délai, aucune expiration, aucun rappel.
  */
 class ListeAttente
 {
@@ -61,7 +62,7 @@ class ListeAttente
         );
     }
 
-    /** Le chef de pôle appelle un candidat de la liste d'attente sur une place libre. */
+    /** Le gestionnaire fait passer un candidat de la liste d'attente à la liste principale, sur une place libre. */
     public function promouvoir(Demande $demande, Utilisateur $chefDePole, ?string $motif): Demande
     {
         return DB::transaction(function () use ($demande, $chefDePole, $motif) {
@@ -115,8 +116,8 @@ class ListeAttente
             $this->notifieur->versStagiaire(
                 $demande->stagiaire,
                 TypeNotification::Resultat,
-                'Une place vous est proposée',
-                'Une place s\'est libérée à l\'internat. Confirmez-la pour la conserver.',
+                'Vous passez en liste principale',
+                'Une place s\'est libérée à l\'internat : vous passez de la liste d\'attente à la liste principale. Aucune démarche n\'est attendue de votre part.',
                 '/stagiaire/dossier',
                 "promotion:{$demande->id}",
             );

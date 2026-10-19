@@ -38,7 +38,7 @@ class ListeAttente extends PagePersonnel
 
         $this->executer(
             fn () => $listeAttente->promouvoir($ligne, $this->utilisateur(), $motif === '' ? null : mb_substr($motif, 0, 1000)),
-            'Candidat appelé : il dispose de 48 heures pour confirmer sa place.',
+            'Candidat passé en liste principale : il en est informé.',
         );
     }
 

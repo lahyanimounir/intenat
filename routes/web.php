@@ -128,11 +128,12 @@ Route::middleware(['auth:web', 'auth.session', 'personnel'])->group(function () 
 
     // ----------------------------------------------- Admissions (directeur, chef de pôle, gestionnaire)
     Route::prefix('admissions')->name('admissions.')->group(function () {
-        // Classement et délibération : réservés aux rôles qui consultent les admissions.
-        Route::get('classement', Personnel\Classement::class)->middleware('permission:admissions.consulter')->name('classement');
+        // Classement : consulté par les rôles des admissions et, en lecture seule, par le gestionnaire ;
+        // la délibération reste réservée au directeur (contrôlée à chaque action).
+        Route::get('classement', Personnel\Classement::class)->middleware('permission:admissions.consulter|admissions.promouvoir')->name('classement');
         // Liste imprimable des candidats en vue de la délibération (lecture seule).
         Route::get('classement/{campagne}/impression', [ImpressionClassementController::class, 'imprimer'])
-            ->middleware('permission:admissions.consulter')->name('classement.impression')->whereNumber('campagne');
+            ->middleware('permission:admissions.consulter|admissions.promouvoir')->name('classement.impression')->whereNumber('campagne');
         // Liste d'attente : consultée par le chef de pôle et le directeur, et utilisée par le gestionnaire pour appeler.
         Route::get('liste-attente', Personnel\ListeAttente::class)->middleware('permission:admissions.consulter|admissions.promouvoir')->name('liste-attente');
     });

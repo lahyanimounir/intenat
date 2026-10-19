@@ -10,6 +10,7 @@ use App\Livewire\Personnel\Campagnes;
 use App\Models\Campagne;
 use App\Models\Demande;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use Tests\Concerns\MondeInternat;
 use Tests\TestCase;
 
@@ -63,6 +64,48 @@ class CampagnesMultiplesTest extends TestCase
             ->set('nouvelle.annee', '2026-2027')->set('nouvelle.date_ouverture', '2026-12-01')->set('nouvelle.date_cloture', '2026-12-15')
             ->set('nouvelle.frais', '100')->set('places', [$this->garcons->id => '2'])->call('creer')->assertHasNoErrors();
         $this->assertSame(4, Campagne::where('internat_id', $this->garcons->id)->where('annee', '2026-2027')->count());
+    }
+
+    public function test_les_campagnes_se_filtrent_par_la_hierarchie_avec_les_filtres_existants(): void
+    {
+        $filles = $this->creerCampagne($this->filles);
+        $garcons = $this->creerCampagne($this->garcons, ['statut' => StatutCampagne::Preparee]);
+        $ailleurs = $this->creerCampagne($this->ailleurs);
+        $complexe = $this->etablissement->complexe;
+        $autreRegion = $this->ailleurs->etablissement->complexe->province->region;
+        $memes = fn (array $ids) => fn ($liste) => collect($liste)->sort()->values()->all() === collect($ids)->sort()->values()->all();
+        $listees = fn (array $campagnes) => fn ($page) => $memes(array_map(fn ($c) => $c->id, $campagnes))(collect($page->items())->pluck('id'));
+        $proposes = fn (array $ids) => fn ($liste) => $memes($ids)($liste->keys());
+
+        // Sans niveau choisi : toutes les campagnes, et le filtre « Internat » propose tout le périmètre, comme avant.
+        $ecran = Livewire::actingAs($this->admin)->test(Campagnes::class)
+            ->assertViewHas('campagnes', $listees([$filles, $garcons, $ailleurs]))
+            ->assertViewHas('internats', $proposes([$this->filles->id, $this->garcons->id, $this->ailleurs->id]));
+
+        // Région, puis établissement : les campagnes et les internats proposés se resserrent.
+        $ecran->set('region', (string) $this->region->id)
+            ->assertViewHas('campagnes', $listees([$filles, $garcons]))
+            ->assertViewHas('internats', $proposes([$this->filles->id, $this->garcons->id]))
+            ->set('province', (string) $complexe->province_id)->set('complexe', (string) $complexe->id)
+            ->set('etablissement', (string) $this->etablissement->id)
+            ->assertViewHas('internats', $proposes([$this->filles->id, $this->garcons->id]))
+            ->set('internat', (string) $this->garcons->id)->assertViewHas('campagnes', $listees([$garcons]));
+
+        // Les filtres existants s'y ajoutent : statut, campagnes archivées.
+        $ecran->set('internat', '')->set('statut', StatutCampagne::Ouverte->value)->assertViewHas('campagnes', $listees([$filles]));
+        $filles->forceFill(['date_deliberation' => now(), 'archivee_le' => now()])->save();
+        $ecran->set('statut', '')->assertViewHas('campagnes', $listees([$garcons]))
+            ->set('archives', true)->assertViewHas('campagnes', $listees([$filles, $garcons]));
+
+        // Changer un niveau efface ceux d'en dessous, internat compris.
+        $ecran->set('internat', (string) $this->filles->id)->set('region', (string) $autreRegion->id)
+            ->assertSet('province', '')->assertSet('etablissement', '')->assertSet('internat', '')
+            ->assertViewHas('campagnes', $listees([$ailleurs]));
+
+        // Un internat donné seul dans l'adresse remplit la hiérarchie au-dessus de lui.
+        Livewire::actingAs($this->admin)->withQueryParams(['internat' => (string) $this->garcons->id])->test(Campagnes::class)
+            ->assertSet('region', (string) $this->region->id)->assertSet('etablissement', (string) $this->etablissement->id)
+            ->assertViewHas('campagnes', $listees([$garcons]));
     }
 
     public function test_les_numeros_de_dossier_se_suivent_d_une_campagne_a_l_autre_et_une_seule_candidature_est_en_cours(): void

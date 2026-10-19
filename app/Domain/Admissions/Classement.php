@@ -43,6 +43,39 @@ class Classement
         }
     }
 
+    /**
+     * Après la délibération, une note rectifiée change le score d'un dossier déjà décidé : les rangs
+     * de la campagne sont réordonnés selon les scores, sans toucher aux statuts, aux listes, aux
+     * décisions de délibération (qui gardent le score et le rang retenus) ni aux affectations.
+     */
+    public function actualiserLesRangs(Campagne $campagne): void
+    {
+        $departageParDate = $this->parametres->texte('classement.departage') === 'date_soumission';
+
+        DB::transaction(function () use ($campagne, $departageParDate) {
+            $dossiers = Demande::query()
+                ->where('campagne_id', $campagne->id)
+                ->whereNotNull('rang')
+                ->orderByDesc('score')->orderBy('date_soumission')->orderBy('id')
+                ->lockForUpdate()
+                ->get(['id', 'score', 'rang']);
+
+            $rang = 0;
+            $scorePrecedent = null;
+
+            foreach ($dossiers as $position => $dossier) {
+                if ($departageParDate || $dossier->score !== $scorePrecedent) {
+                    $rang = $position + 1;
+                }
+                $scorePrecedent = $dossier->score;
+
+                if ($dossier->rang !== $rang) {
+                    Demande::whereKey($dossier->id)->update(['rang' => $rang]);
+                }
+            }
+        });
+    }
+
     /** Un dossier complet attend encore son rang : le classement n'est plus à jour (rattrapage). */
     public function enRetard(Campagne $campagne): bool
     {

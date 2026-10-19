@@ -262,14 +262,11 @@
                         @break
                     @case(StatutDemande::EnAttente)
                         <x-alerte ton="alerte" titre="Vous êtes en liste d’attente">
-                            Si une place se libère, le chef de pôle peut vous appeler : vous serez notifié et disposerez alors de 48 heures pour confirmer.
+                            Si une place se libère, le gestionnaire de l’internat peut vous faire passer en liste principale : vous en serez informé, sans démarche à accomplir.
                         </x-alerte>
                         @break
                     @case(StatutDemande::Refuse)
                         <x-alerte ton="danger" titre="Demande non retenue">Votre demande de place n’a pas été retenue. Vous pouvez déposer un recours depuis « Réclamations ».</x-alerte>
-                        @break
-                    @case(StatutDemande::DelaiDepasse)
-                        <x-alerte ton="neutre" titre="Délai de confirmation dépassé">Vous n’avez pas confirmé votre place dans le délai : elle a été remise à disposition.</x-alerte>
                         @break
                     @case(StatutDemande::Desiste)
                         <x-alerte ton="neutre" titre="Vous avez renoncé à votre place" />

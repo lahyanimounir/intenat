@@ -22,7 +22,7 @@ class ImpressionClassementController extends Controller
     public function imprimer(Campagne $campagne, CalculScore $calcul, Classement $classement): View
     {
         $utilisateur = auth('web')->user();
-        abort_unless($utilisateur?->can('admissions.consulter'), 403);
+        abort_unless($utilisateur?->canAny(['admissions.consulter', 'admissions.promouvoir']), 403);
         // Périmètre : la campagne doit relever de l'utilisateur.
         abort_unless(Campagne::visiblesPar($utilisateur)->whereKey($campagne->id)->exists(), 404);
 

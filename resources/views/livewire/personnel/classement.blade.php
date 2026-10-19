@@ -7,7 +7,7 @@
 @endphp
 <div>
     <x-page.entete titre="Classement et délibération"
-        description="Le classement propose la liste principale et la liste d’attente d’un internat. Le directeur du complexe / CMC valide les admissions ; tout écart à la proposition est motivé. Le chef de pôle consulte et imprime la liste des candidats, sans délibérer.">
+        description="Le classement propose la liste principale et la liste d’attente d’un internat. Le directeur du complexe / CMC valide les admissions ; tout écart à la proposition est motivé. Le chef de pôle consulte et imprime la liste des candidats, sans délibérer ; le gestionnaire de l’internat la consulte en lecture seule.">
         @if ($choisie)
             <x-slot:actions>
                 <x-bouton icone="printer" :href="route('admissions.classement.impression', $choisie)" :navigation="false" target="_blank" rel="noopener">Imprimer la liste des candidats</x-bouton>
@@ -132,7 +132,7 @@
                     </x-definitions>
 
                     <x-alerte ton="alerte" titre="Décision définitive">
-                        Les résultats seront publiés et chaque candidat notifié. Les admis disposeront du délai de confirmation ; la liste d’attente ne sera jamais promue automatiquement.
+                        Les résultats seront publiés et chaque candidat notifié. Aucune confirmation n’est demandée aux candidats ; la liste d’attente ne sera jamais promue automatiquement.
                     </x-alerte>
 
                     <x-zone-texte libelle="Message aux candidats (facultatif)" wire:model="messageDeliberation" rows="4"

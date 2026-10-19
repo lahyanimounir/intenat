@@ -216,7 +216,10 @@ class PreinscriptionEtInstructionTest extends TestCase
         // Le gestionnaire instruit sans voir ce que vaut le dossier ; le chef de pôle le voit.
         $this->connecter($this->gestionnaireFilles)->get(route('dossiers.fiche', $demande))->assertOk()
             ->assertDontSee('Détail du score')->assertDontSee('35 / 80');
-        $this->connecter($this->gestionnaireFilles)->get('/admissions/classement')->assertForbidden();
+        // Le classement ne lui montre une campagne qu'une fois délibérée (instruction terminée).
+        $this->connecter($this->gestionnaireFilles)->get('/admissions/classement')->assertOk()
+            ->assertDontSee($demande->numero_dossier)->assertDontSee('35 / 80');
+        Livewire::actingAs($this->gestionnaireFilles)->test(\App\Livewire\Personnel\Classement::class)->call('voirScore', $demande->id)->assertForbidden();
         $this->connecter($this->chefDePole)->get(route('dossiers.fiche', $demande))->assertOk()->assertSee('Détail du score')->assertSee('35 / 80');
     }
 

@@ -25,7 +25,8 @@ class TransitionDemande
         'recu' => [StatutDemande::Complet, StatutDemande::RetourRectification, StatutDemande::Rejete, StatutDemande::Brouillon],
         'retour_rectification' => [StatutDemande::Recu, StatutDemande::Rejete],
         'complet' => [StatutDemande::Admis, StatutDemande::EnAttente, StatutDemande::Refuse],
-        'admis' => [StatutDemande::Confirme, StatutDemande::Desiste, StatutDemande::DelaiDepasse],
+        // Plus de délai de confirmation : un admis n'est jamais déchu faute de réponse.
+        'admis' => [StatutDemande::Confirme, StatutDemande::Desiste],
         'en_attente' => [StatutDemande::Admis, StatutDemande::Refuse, StatutDemande::Desiste],
         'confirme' => [StatutDemande::Desiste, StatutDemande::SejourTermine],
         'rejete' => [],

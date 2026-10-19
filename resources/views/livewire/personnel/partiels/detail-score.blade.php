@@ -20,10 +20,19 @@
                 <x-alerte ton="alerte">Recalculé aujourd’hui, ce dossier obtiendrait {{ $score['recalcule'] }} point(s) : une pièce ou un critère a changé depuis le calcul.</x-alerte>
             @endif
 
+            @if ($score['lectureSeule'])
+                <x-alerte ton="neutre">Consultation seule : les notes sont rectifiées par le chef de pôle scolarité ou le directeur du complexe / CMC.</x-alerte>
+            @endif
+
             @if ($score['ajustable'])
                 <x-alerte ton="info">
-                    Campagne clôturée : vous pouvez rectifier la note de chaque critère. Le score total et le classement sont recalculés
-                    automatiquement à l’enregistrement, et les notes rectifiées sont conservées.
+                    @if ($score['deliberee'])
+                        Vous pouvez rectifier la note de chaque critère. Le score total et le rang sont recalculés à l’enregistrement ;
+                        l’admission, la décision de délibération et l’affectation à un lit ne sont pas modifiées.
+                    @else
+                        Vous pouvez rectifier la note de chaque critère. Le score total et le classement sont recalculés
+                        automatiquement à l’enregistrement, et les notes rectifiées sont conservées.
+                    @endif
                 </x-alerte>
             @endif
 

@@ -21,7 +21,7 @@ final class Menu
         ['titre' => 'Admissions', 'entrees' => [
             ['Campagnes', '/campagnes', 'calendar-range', ['campagnes.consulter']],
             ['Dossiers', '/dossiers', 'folder-open', ['demandes.consulter']],
-            ['Classement', '/admissions/classement', 'list-ordered', ['admissions.consulter']],
+            ['Classement', '/admissions/classement', 'list-ordered', ['admissions.consulter', 'admissions.promouvoir']],
             ['Liste d’attente', '/admissions/liste-attente', 'clipboard-list', ['admissions.consulter', 'admissions.promouvoir']],
             ['Grille de référence', '/grille-reference', 'sliders-horizontal', ['grille_reference.gerer']],
         ]],

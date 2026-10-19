@@ -10,8 +10,10 @@
         :vide-description="$gerer ? 'Créez la première campagne de l’année pour ouvrir le dépôt des demandes.' : 'Les campagnes sont créées par le chef de pôle scolarité.'">
         <x-slot:barre>
             <x-filtre libelle="Statut" wire:model.live="statut" :options="$statuts" :actif="$statut !== ''" />
-            @if ($internats->count() > 1)
-                <x-filtre libelle="Internat" wire:model.live="internat" :options="$internats" :actif="$internat !== ''" />
+            @if ($plusieursInternats)
+                {{-- Hiérarchie administrative jusqu'à l'internat ; sans niveau choisi, tous les internats restent proposés. --}}
+                <x-filtres-hierarchiques :filtre="$filtre" :region="$region" :province="$province" :complexe="$complexe" :etablissement="$etablissement" />
+                <x-filtre libelle="Internat" wire:model.live="internat" :options="$internats" :actif="$internat !== ''" wire:key="filtre-internat-{{ $etablissement }}-{{ $region }}" />
             @endif
             <x-case wire:model.live="archives" libelle="Afficher les campagnes archivées" />
         </x-slot:barre>

@@ -124,8 +124,8 @@ class AdmissionsTest extends TestCase
         $this->ecran($this->chefDePole, EcranClassement::class)->call('voirScore', $demande->id)
             ->assertSee('Détail du score')->assertSee('Milieu rural ou éloigné')->assertSee('Niveau Technicien Spécialisé');
 
-        // Le score et le rang restent fermés au gestionnaire, et au chef de pôle d'un autre établissement.
-        $this->ecran($this->gestionnaireFilles, EcranClassement::class)->assertForbidden();
+        // Pendant l'instruction, le score reste masqué au gestionnaire ; le chef de pôle d'un autre établissement n'y a pas accès.
+        $this->ecran($this->gestionnaireFilles, EcranClassement::class)->call('voirScore', $demande->id)->assertForbidden();
         $this->ecran(Utilisateur::factory()->chefDePole($this->ailleurs->etablissement_id)->create(), EcranClassement::class)
             ->call('voirScore', $demande->id)->assertForbidden();
     }
@@ -209,10 +209,13 @@ class AdmissionsTest extends TestCase
         $this->complet(true, true);
         $this->campagne->forceFill(['statut' => StatutCampagne::Cloturee])->save();
 
-        // Ni le gestionnaire, ni le chef de pôle, ni les autres rôles ne délibèrent : l'écran reste fermé.
-        foreach ([$this->gestionnaireFilles, $this->directionRegionale, $this->restauration, $this->admin] as $compte) {
+        // Les rôles étrangers aux admissions n'ouvrent pas l'écran ; le gestionnaire le consulte sans délibérer.
+        foreach ([$this->directionRegionale, $this->restauration, $this->admin] as $compte) {
             $this->ecran($compte, EcranClassement::class)->assertForbidden();
         }
+        // Le gestionnaire ouvre l'écran, mais aucune campagne non délibérée ne lui est présentée : rien à délibérer.
+        $this->ecran($this->gestionnaireFilles, EcranClassement::class)->assertOk()->call('deliberer')->assertNotFound();
+        $this->assertNull($this->campagne->fresh()->date_deliberation);
 
         // Le chef de pôle consulte le classement mais ne peut pas le délibérer.
         $this->ecran($this->chefDePole, EcranClassement::class)->set('campagne', (string) $this->campagne->id)->call('deliberer')->assertForbidden();
@@ -326,37 +329,6 @@ class AdmissionsTest extends TestCase
         $this->assertDatabaseMissing('paiement', ['demande_id' => $a->id]);
     }
 
-    public function test_la_tache_planifiee_libere_les_places_non_confirmees_sans_doublon(): void
-    {
-        $a = $this->complet(true, true, true);
-        $b = $this->complet(true, true);
-        $c = $this->complet(true, false);
-        $this->deliberer($this->campagne);
-        $confirmation = app(ConfirmationAdmission::class);
-
-        // Avant l'échéance : un rappel, envoyé une seule fois même si la tâche repasse.
-        $this->travelTo(now()->addDays(8));
-        $this->assertSame(2, $confirmation->rappelerEcheances());
-        $this->assertSame(0, $confirmation->rappelerEcheances());
-        $this->assertSame(0, $confirmation->expirerEcheances());
-
-        $this->agirEnTantQue($a->stagiaire);
-        $confirmation->confirmer($a->fresh());
-
-        // Après l'échéance : la place de B est remise à disposition, une seule fois.
-        $this->travelTo(now()->addDays(3));
-        $this->assertSame(1, $confirmation->expirerEcheances());
-        $this->assertSame(0, $confirmation->expirerEcheances());
-
-        $this->assertSame(StatutDemande::DelaiDepasse, $b->fresh()->statut);
-        $this->assertSame(StatutDemande::Confirme, $a->fresh()->statut);
-        $this->assertSame(1, NotificationInterne::where('stagiaire_id', $b->stagiaire_id)->where('titre', 'Délai de confirmation dépassé')->count());
-
-        // Aucune promotion automatique : le candidat en attente le reste, le chef de pôle est alerté.
-        $this->assertSame(StatutDemande::EnAttente, $c->fresh()->statut);
-        $this->assertSame(1, NotificationInterne::where('utilisateur_id', $this->chefDePole->id)->where('type', 'place_libre')->count());
-    }
-
     // --------------------------------------------------------- Liste d'attente
 
     public function test_la_liste_d_attente_n_est_promue_que_par_decision_du_gestionnaire(): void
@@ -395,26 +367,10 @@ class AdmissionsTest extends TestCase
 
         // Décision tracée, candidat notifié.
         $this->assertDatabaseHas('decision_admission', ['demande_id' => $c->id, 'origine' => 'liste_attente', 'decision' => 'admis', 'valide_par' => $this->gestionnaireFilles->id]);
-        $this->assertDatabaseHas('notification', ['stagiaire_id' => $c->stagiaire_id, 'titre' => 'Une place vous est proposée']);
+        $this->assertDatabaseHas('notification', ['stagiaire_id' => $c->stagiaire_id, 'titre' => 'Vous passez en liste principale']);
 
         // La place est de nouveau tenue : plus de promotion possible.
         $this->assertRegle('aucune_place', fn () => $this->appeler($d, 'Second appel'));
     }
 
-    public function test_un_candidat_appele_de_la_liste_d_attente_dispose_de_48_heures(): void
-    {
-        $a = $this->complet(true, true, true);
-        $this->complet(true, true);
-        $c = $this->complet(true, false);
-        $this->deliberer($this->campagne);
-
-        $this->agirEnTantQue($a->stagiaire);
-        app(ConfirmationAdmission::class)->desister($a->fresh(), RaisonDesistement::Autre, 'Changement de projet de formation.');
-        $this->appeler($c);
-
-        $this->travelTo(now()->addHours(49));
-        $this->assertSame(1, app(ConfirmationAdmission::class)->expirerEcheances());
-        $this->assertSame(StatutDemande::DelaiDepasse, $c->fresh()->statut);
-        $this->assertSame(1, $this->campagne->fresh()->placesLibres());
-    }
 }

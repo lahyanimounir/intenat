@@ -112,7 +112,7 @@ class ReglesPuresTest extends TestCase
         $this->assertTrue($transitions->estPermise(StatutDemande::Brouillon, StatutDemande::Recu));
         $this->assertTrue($transitions->estPermise(StatutDemande::Recu, StatutDemande::Complet));
         $this->assertTrue($transitions->estPermise(StatutDemande::EnAttente, StatutDemande::Admis));
-        $this->assertTrue($transitions->estPermise(StatutDemande::Admis, StatutDemande::DelaiDepasse));
+        $this->assertFalse($transitions->estPermise(StatutDemande::Admis, StatutDemande::DelaiDepasse));
 
         // Pas d'admission sans passer par « Complet », pas de retour arrière, états finaux figés.
         $this->assertFalse($transitions->estPermise(StatutDemande::Recu, StatutDemande::Admis));

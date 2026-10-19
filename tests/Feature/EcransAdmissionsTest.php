@@ -152,8 +152,9 @@ class EcransAdmissionsTest extends TestCase
             ->assertSee($premier->numero_dossier)
             ->assertSee($premier->score.' / '.config('internat.score.bareme_maximum'));
 
-        // Sans la permission de consultation des admissions (gestionnaire), la liste est refusée.
-        $this->connecter($this->gestionnaireFilles)->get(route('admissions.classement.impression', $campagne))->assertForbidden();
+        // Le gestionnaire de l'internat consulte et imprime la liste ; un rôle étranger aux admissions, non.
+        $this->connecter($this->gestionnaireFilles)->get(route('admissions.classement.impression', $campagne))->assertOk()->assertSee($premier->numero_dossier);
+        $this->connecter($this->restauration)->get(route('admissions.classement.impression', $campagne))->assertForbidden();
     }
 
     public function test_le_chef_de_pole_rectifie_une_note_apres_cloture_et_le_classement_est_recalcule(): void
@@ -194,25 +195,108 @@ class EcransAdmissionsTest extends TestCase
         $this->assertDatabaseMissing('demande_note_manuelle', ['demande_id' => $troisieme->id, 'critere_id' => $eloigne->id]);
     }
 
-    public function test_la_rectification_des_notes_est_fermee_aux_autres_roles_et_hors_cloture(): void
+    public function test_la_rectification_vaut_pour_tout_dossier_note_et_reste_fermee_aux_autres_roles(): void
     {
         $campagne = $this->creerCampagne($this->filles, ['nombre_places' => 2]);
         $dossier = $this->rendreComplet($this->creerDossierRecu($campagne, ['eloigne_ou_rural' => true]));
+        $recu = $this->creerDossierRecu($campagne);
         $eloigne = $campagne->criteres->firstWhere('declencheur', DeclencheurCritere::EloigneOuRural);
 
-        // Campagne encore ouverte : même le chef de pôle ne peut pas rectifier (règle métier refusée).
-        app(\App\Domain\Admissions\Classement::class)->recalculer($campagne);
-        Livewire::actingAs($this->chefDePole)->test(Classement::class, ['campagne' => (string) $campagne->id])
-            ->call('voirScore', $dossier->id)
-            ->set("notes.{$eloigne->id}", 5)
-            ->call('enregistrerNote', $eloigne->id)
+        // Campagne encore ouverte : le chef de pôle rectifie la note d'un dossier déjà noté.
+        $ecran = Livewire::actingAs($this->chefDePole)->test(Classement::class, ['campagne' => (string) $campagne->id])
+            ->call('voirScore', $dossier->id)->set("notes.{$eloigne->id}", 5)->call('enregistrerNote', $eloigne->id)->assertHasNoErrors();
+        $this->assertSame(15, $dossier->fresh()->score);
+
+        // Un dossier encore en instruction n'a pas de score : rien à rectifier.
+        $ecran->call('voirScore', $recu->id)->set("notes.{$eloigne->id}", 5)->call('enregistrerNote', $eloigne->id)
             ->assertDispatched('message', ton: 'danger');
+        $this->assertDatabaseMissing('demande_note_manuelle', ['demande_id' => $recu->id]);
+
+        // Le gestionnaire ne rectifie aucune note (et, pendant l'instruction, n'en voit même pas le détail).
+        Livewire::actingAs($this->gestionnaireFilles)->test(Classement::class, ['campagne' => (string) $campagne->id])
+            ->call('voirScore', $dossier->id)->assertForbidden();
+        Livewire::actingAs($this->gestionnaireFilles)->test(Classement::class, ['campagne' => (string) $campagne->id])
+            ->set("notes.{$eloigne->id}", 9)->call('enregistrerNote', $eloigne->id)->assertSet('scoreDe', null);
+        $this->assertSame(15, $dossier->fresh()->score);
+    }
+
+    public function test_apres_deliberation_la_note_change_le_score_et_le_rang_sans_toucher_a_l_admission_ni_au_lit(): void
+    {
+        [$campagne, [$premier, $deuxieme, $troisieme]] = $this->campagneAClasser();
+        $eloigne = $campagne->criteres->firstWhere('declencheur', DeclencheurCritere::EloigneOuRural);
+        $this->deliberer($campagne);
+
+        // Le deuxième, admis, voit sa place confirmée et reçoit un lit.
+        $gestionnaire = $this->gestionnaireFilles;
+        $this->agirEnTantQue($gestionnaire);
+        app(\App\Domain\Admissions\ConfirmationAdmission::class)->confirmer($deuxieme->fresh(), $gestionnaire);
+        app(\App\Domain\Accommodation\AffectationLits::class)->autoriserOccupation($deuxieme->fresh(), $gestionnaire);
+        $affectation = app(\App\Domain\Accommodation\AffectationLits::class)->affecter($deuxieme->fresh(), $this->creerLits($this->filles)->first(), now(), $gestionnaire);
+        $decisions = DecisionAdmission::orderBy('id')->get(['id', 'demande_id', 'decision', 'score_retenu', 'rang_retenu'])->toArray();
+        $this->assertSame([1, 2, 3], [$premier->fresh()->rang, $deuxieme->fresh()->rang, $troisieme->fresh()->rang]);
+
+        // Le chef de pôle relève la note du troisième (en liste d'attente) : il passe deuxième au rang, mais reste en attente.
+        $ecran = Livewire::actingAs($this->chefDePole)->test(Classement::class, ['campagne' => (string) $campagne->id])
+            ->call('voirScore', $troisieme->id)->assertSee('l’affectation à un lit ne sont pas modifiées', false)
+            ->set("notes.{$eloigne->id}", 20)->call('enregistrerNote', $eloigne->id)->assertHasNoErrors()
+            ->assertDispatched('message', ton: 'succes');
+
+        $this->assertSame([30, 2], [$troisieme->fresh()->score, $troisieme->fresh()->rang]);
+        $this->assertSame([StatutDemande::EnAttente, ListeAdmission::Attente], [$troisieme->fresh()->statut, $troisieme->fresh()->liste]);
+
+        // Le deuxième, logé, recule au rang 3 sans perdre ni son admission, ni sa place confirmée, ni son lit.
+        $this->assertSame([25, 3], [$deuxieme->fresh()->score, $deuxieme->fresh()->rang]);
+        $this->assertSame([StatutDemande::Confirme, ListeAdmission::Principale], [$deuxieme->fresh()->statut, $deuxieme->fresh()->liste]);
+        $this->assertTrue($affectation->fresh()->estActive());
+
+        // Le score d'un candidat logé se rectifie aussi ; les décisions de délibération restent celles du jour.
+        $ecran->call('voirScore', $deuxieme->id)->set("notes.{$eloigne->id}", 0)->call('enregistrerNote', $eloigne->id)->assertHasNoErrors();
+        $this->assertSame([0, StatutDemande::Confirme], [$deuxieme->fresh()->score, $deuxieme->fresh()->statut]);
+        $this->assertTrue($affectation->fresh()->estActive());
+        $this->assertSame($decisions, DecisionAdmission::orderBy('id')->get(['id', 'demande_id', 'decision', 'score_retenu', 'rang_retenu'])->toArray());
+        $this->assertTrue(\App\Models\JournalAudit::where('action', 'admission.note_manuelle')->where('entite_id', $deuxieme->id)->exists());
+
+        // La fenêtre « Détail du score » de la liste d'attente permet la même rectification.
+        Livewire::actingAs($this->chefDePole)->test(ListeAttente::class)
+            ->call('voirScore', $troisieme->id)->call('retablirNote', $eloigne->id)->assertHasNoErrors();
+        $this->assertSame(10, $troisieme->fresh()->score);
+    }
+
+    public function test_le_gestionnaire_consulte_le_detail_du_score_en_lecture_seule(): void
+    {
+        [$campagne, [$premier, $deuxieme, $troisieme]] = $this->campagneAClasser();
+        $eloigne = $campagne->criteres->firstWhere('declencheur', DeclencheurCritere::EloigneOuRural);
+        $this->deliberer($campagne);
+
+        // Le gestionnaire ouvre le détail depuis la liste d'attente : score, rang, liste, critères, pièces, décisions.
+        $ecran = Livewire::actingAs($this->gestionnaireFilles)->test(ListeAttente::class)
+            ->call('voirScore', $troisieme->id)->assertHasNoErrors()->assertSet('dialogue', 'score')
+            ->assertSee('Détail du score')->assertSee($troisieme->score.' / '.config('internat.score.bareme_maximum'))
+            ->assertSee('Liste d’attente', false)->assertSee($eloigne->condition_texte)->assertSee('Décisions d’admission', false)
+            ->assertSee('Consultation seule')->assertDontSee('Enregistrer')->assertDontSee('Rétablir');
+
+        // Lecture seule : aucune note ne se rectifie, même en appelant l'action directement.
+        $ecran->set("notes.{$eloigne->id}", 20)->call('enregistrerNote', $eloigne->id)->assertForbidden();
+        Livewire::actingAs($this->gestionnaireFilles)->test(ListeAttente::class)
+            ->call('voirScore', $troisieme->id)->call('retablirNote', $eloigne->id)->assertForbidden();
+        $this->assertSame(10, $troisieme->fresh()->score);
         $this->assertDatabaseCount('demande_note_manuelle', 0);
 
-        // Après clôture, le gestionnaire n'a pas la permission : l'action est interdite.
-        $campagne->forceFill(['statut' => StatutCampagne::Cloturee, 'date_cloture' => now()->subDay()->toDateString()])->save();
-        Livewire::actingAs($this->gestionnaireFilles)->test(Classement::class, ['campagne' => (string) $campagne->id])
-            ->assertForbidden();
+        // Le classement s'ouvre en lecture seule : ni recalcul, ni ajustement, ni délibération, ni note.
+        $classement = Livewire::actingAs($this->gestionnaireFilles)->withQueryParams(['campagne' => (string) $campagne->id, 'dossier' => (string) $troisieme->id])
+            ->test(Classement::class)->assertOk()->assertSet('dialogue', 'score')->assertSee($troisieme->numero_dossier)
+            ->assertSee('Consultation seule')->assertDontSee('Recalculer le classement')->assertDontSee('Valider les admissions');
+        $classement->call('recalculer')->assertForbidden();
+        Livewire::actingAs($this->gestionnaireFilles)->test(Classement::class, ['campagne' => (string) $campagne->id])->call('preparerAjustement', $troisieme->id)->assertForbidden();
+        Livewire::actingAs($this->gestionnaireFilles)->test(Classement::class, ['campagne' => (string) $campagne->id])->call('deliberer')->assertForbidden();
+        $this->connecter($this->gestionnaireFilles)->get(route('admissions.classement', ['campagne' => $campagne->id]))->assertOk();
+
+        // La campagne d'un autre internat reste hors de son périmètre.
+        $this->connecter($this->gestionnaireGarcons)->get(route('admissions.classement', ['campagne' => $campagne->id]))
+            ->assertOk()->assertDontSee($troisieme->numero_dossier)->assertDontSee($premier->numero_dossier);
+
+        // Un dossier d'un autre internat reste hors de son périmètre.
+        Livewire::actingAs($this->gestionnaireGarcons)->test(ListeAttente::class)->call('voirScore', $troisieme->id)->assertForbidden();
     }
 
     public function test_le_gestionnaire_appelle_un_candidat_de_la_liste_d_attente_et_motive_un_choix_hors_ordre(): void

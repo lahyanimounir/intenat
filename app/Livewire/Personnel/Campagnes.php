@@ -5,6 +5,8 @@ namespace App\Livewire\Personnel;
 use App\Domain\Campaigns\GestionCampagne;
 use App\Enums\StatutCampagne;
 use App\Enums\StatutDemande;
+use App\Domain\Identity\ComptesPersonnel;
+use App\Livewire\Concerns\AvecHierarchie;
 use App\Livewire\Concerns\AvecTableau;
 use App\Livewire\PagePersonnel;
 use App\Models\Campagne;
@@ -19,11 +21,12 @@ use Livewire\Attributes\Url;
 #[Title('Campagnes')]
 class Campagnes extends PagePersonnel
 {
-    use AvecTableau;
+    use AvecHierarchie, AvecTableau;
 
     #[Url(except: '')]
     public string $statut = '';
 
+    /** Dernier niveau de la hiérarchie : sans niveau choisi au-dessus, tous les internats du périmètre restent proposés. */
     #[Url(except: '')]
     public string $internat = '';
 
@@ -43,7 +46,44 @@ class Campagnes extends PagePersonnel
 
     protected function filtres(): array
     {
-        return ['statut', 'internat', 'archives'];
+        return [...$this->filtresHierarchiques(), 'statut', 'internat', 'archives'];
+    }
+
+    /* ------------------------------------------- Hiérarchie : changer un niveau efface ceux d'en dessous */
+
+    public function updatedRegion(): void
+    {
+        $this->reset('province', 'complexe', 'etablissement', 'internat');
+    }
+
+    public function updatedProvince(): void
+    {
+        $this->reset('complexe', 'etablissement', 'internat');
+    }
+
+    public function updatedComplexe(): void
+    {
+        $this->reset('etablissement', 'internat');
+    }
+
+    public function updatedEtablissement(): void
+    {
+        $this->reset('internat');
+    }
+
+    /**
+     * Internats proposés au dernier niveau : ceux des établissements couverts par la hiérarchie choisie,
+     * ou, sans choix, tous ceux du périmètre (comportement d'origine du filtre « Internat »).
+     *
+     * @return \Illuminate\Support\Collection<int, string>
+     */
+    private function internatsFiltres(): \Illuminate\Support\Collection
+    {
+        $etablissements = $this->etablissementsFiltres();
+
+        return Internat::visiblesPar($this->utilisateur())
+            ->when($etablissements !== null, fn (Builder $q) => $q->whereIn('etablissement_id', $etablissements))
+            ->orderBy('nom')->pluck('nom', 'id');
     }
 
     public function preparer(): void
@@ -111,11 +151,30 @@ class Campagnes extends PagePersonnel
         $this->exiger('campagnes.consulter');
         $utilisateur = $this->utilisateur();
 
+        // Un internat donné seul (adresse, ancien lien) fixe les niveaux au-dessus de lui.
+        if ($this->internat !== '' && $this->region === '' && $this->internatsDuPerimetre()->has((int) $this->internat)) {
+            $chaine = ComptesPersonnel::ascendance('internat_id', (int) $this->internat);
+            [$this->region, $this->province, $this->complexe, $this->etablissement] = array_map(
+                fn ($id) => (string) ($id ?? ''),
+                [$chaine['region_id'], $chaine['province_id'], $chaine['complexe_id'], $chaine['etablissement_id']],
+            );
+        }
+
+        $filtre = $this->listesDesFiltres();
+        $internats = $this->internatsFiltres();
+
+        if ($this->internat !== '' && ! $internats->has((int) $this->internat)) {
+            $this->reset('internat');
+        }
+
+        $etablissements = $this->etablissementsFiltres();
+
         $requete = Campagne::visiblesPar($utilisateur)
             ->with('internat.etablissement:id,nom_efp,code_efp', 'createur:id,nom,prenom')
             ->withCount(['demandes' => fn (Builder $q) => $q->where('statut', '!=', StatutDemande::Brouillon->value)])
             ->when($this->statut !== '', fn (Builder $q) => $q->where('statut', $this->statut))
             ->when($this->internat !== '', fn (Builder $q) => $q->where('internat_id', (int) $this->internat))
+            ->when($this->internat === '' && $etablissements !== null, fn (Builder $q) => $q->whereIn('internat_id', Internat::whereIn('etablissement_id', $etablissements)->select('id')))
             ->when(! $this->archives, fn (Builder $q) => $q->whereNull('archivee_le'))
             ->orderByDesc('annee')->orderBy('internat_id')->orderByDesc('date_ouverture');
 
@@ -124,7 +183,9 @@ class Campagnes extends PagePersonnel
         return view('livewire.personnel.campagnes', [
             'campagnes' => $this->paginer($requete),
             'statuts' => StatutCampagne::options(),
-            'internats' => $this->internatsDuPerimetre(),
+            'internats' => $internats,
+            'plusieursInternats' => $this->internatsDuPerimetre()->count() > 1,
+            'filtre' => $filtre,
             'gerer' => $gerer,
             // Internats proposés à la création, avec le nombre de lits que leur référentiel permet d'offrir.
             'internatsCreation' => $gerer && $this->dialogue === 'creation'

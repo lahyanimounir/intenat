@@ -1,7 +1,7 @@
 @php use Illuminate\Support\Js; @endphp
 <div>
     <x-page.entete titre="Liste d’attente"
-        description="Quand un désistement, un délai dépassé ou un départ libère une place, vous êtes alerté. La liste d’attente n’est jamais promue automatiquement : vous choisissez et validez le candidat appelé." />
+        description="Quand un désistement ou un départ libère une place, vous êtes alerté. La liste d’attente n’est jamais promue automatiquement : vous choisissez le candidat et le faites passer directement en liste principale, sans confirmation de sa part." />
 
     @if ($listes->isEmpty())
         <x-carte><x-vide titre="Aucune campagne délibérée" icone="clipboard-list">La liste d’attente s’ouvre après la validation des admissions d’une campagne.</x-vide></x-carte>
@@ -36,10 +36,10 @@
                                     @if ($peutAppeler)
                                         <x-bouton taille="sm" variante="primaire" icone="phone-call" :disabled="$liste->placesLibres < 1"
                                             x-on:click="$motif({
-                                                titre: 'Appeler ce candidat sur la place libre',
-                                                description: {{ Js::from($nom.' — rang '.$candidat->rang.'. Il sera notifié et disposera de 48 heures pour confirmer ; passé ce délai, la place sera de nouveau disponible.'.($horsOrdre ? ' Ce candidat n’est pas le mieux classé de la liste d’attente : votre choix doit être motivé.' : '')) }},
+                                                titre: 'Passer le candidat à la liste principale',
+                                                description: {{ Js::from($nom.' — rang '.$candidat->rang.'.'.($horsOrdre ? ' Ce candidat n’est pas le mieux classé de la liste d’attente : votre choix doit être motivé.' : '')) }},
                                                 libelle: {{ Js::from($horsOrdre ? 'Motif de votre choix' : 'Observation (facultative)') }},
-                                                libelleAction: 'Valider l’admission',
+                                                libelleAction: 'Confirmer le transfert',
                                                 minimum: {{ $horsOrdre ? 5 : 0 }},
                                             }).then((motif) => $wire.promouvoir({{ $candidat->id }}, motif))">
                                             Appeler ce candidat
