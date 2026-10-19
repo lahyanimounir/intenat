@@ -10,6 +10,7 @@ use App\Enums\StatutReservation;
 use App\Enums\TypeRepas;
 use App\Livewire\PagePersonnel;
 use App\Models\Menu;
+use App\Support\Affichage\Format;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
@@ -20,8 +21,9 @@ use Livewire\Attributes\Url;
 /**
  * Carte de la semaine (petit-déjeuner, déjeuner, dîner). Le responsable
  * restauration compose la semaine puis la transmet au chef de pôle, qui la
- * vérifie et la valide — ou la renvoie pour correction. Seul un menu validé
- * est diffusé aux stagiaires, qui réservent sur cette base.
+ * vérifie et la valide — ou renvoie pour correction un repas, une journée ou la
+ * semaine, avec un commentaire. Seul un menu validé est diffusé aux stagiaires,
+ * qui réservent sur cette base.
  */
 #[Title('Menus')]
 class Menus extends PagePersonnel
@@ -42,6 +44,18 @@ class Menus extends PagePersonnel
     /** Menu en cours de modification ; nul pour une proposition. */
     #[Locked]
     public ?int $ligne = null;
+
+    /** Retour pour correction : « menu », « journee » ou « semaine », et sa cible (menu ou jour). */
+    #[Locked]
+    public string $renvoiPortee = '';
+
+    #[Locked]
+    public string $renvoiCible = '';
+
+    /** Internat concerné par le renvoi d'une journée, quand plusieurs sont affichés. */
+    public string $renvoiInternat = '';
+
+    public string $commentaire = '';
 
     /** @var array<string, mixed> */
     public array $saisie = ['jour' => '', 'repas' => '', 'description' => '', 'internats' => []];
@@ -189,6 +203,81 @@ class Menus extends PagePersonnel
         });
     }
 
+    /** Ouvre la fenêtre de retour pour correction d'un repas, d'une journée ou de la semaine. */
+    public function preparerRenvoi(string $portee, ?string $cible = null): void
+    {
+        $this->exiger(self::VALIDER);
+        abort_unless(in_array($portee, ['menu', 'journee', 'semaine'], true), 404);
+
+        if ($portee === 'menu') {
+            $this->autoriser(Menu::findOrFail((int) $cible), self::VALIDER);
+        }
+
+        if ($portee === 'journee') {
+            $cible = rescue(fn () => Carbon::parse((string) $cible)->toDateString(), null, false);
+            abort_if($cible === null, 404);
+        }
+
+        $this->renvoiPortee = $portee;
+        $this->renvoiCible = (string) $cible;
+        $this->renvoiInternat = $this->internat;
+        $this->commentaire = '';
+        $this->ouvrirDialogue('renvoi');
+    }
+
+    /** @return list<int> internats dont des menus transmis sont en attente ce jour-là */
+    private function internatsEnAttenteLe(string $jour): array
+    {
+        return Menu::visiblesPar($this->utilisateur())->whereDate('date_repas', $jour)
+            ->where('statut', StatutMenu::Propose->value)->whereNotNull('transmis_le')
+            ->when($this->internatFiltre() !== null, fn (Builder $q) => $q->where('internat_id', $this->internatFiltre()))
+            ->distinct()->pluck('internat_id')->map(fn ($id) => (int) $id)->all();
+    }
+
+    public function confirmerRenvoi(ValidationDesMenus $validation): void
+    {
+        $this->exiger(self::VALIDER);
+        $plusieurs = $this->renvoiPortee === 'journee' && count($this->internatsEnAttenteLe($this->renvoiCible)) > 1;
+
+        $valides = $this->validate([
+            'commentaire' => ['required', 'string', 'min:5', 'max:1000'],
+            'renvoiInternat' => [$plusieurs ? 'required' : 'nullable', 'integer'],
+        ], [
+            'commentaire.required' => 'Précisez les modifications demandées.',
+            'renvoiInternat.required' => 'Précisez l’internat dont les menus sont à corriger.',
+        ], ['commentaire' => 'commentaire', 'renvoiInternat' => 'internat']);
+
+        $commentaire = trim($valides['commentaire']);
+        $chef = $this->utilisateur();
+
+        $reussi = match ($this->renvoiPortee) {
+            'menu' => $this->executer(function () use ($validation, $commentaire, $chef) {
+                $menu = Menu::findOrFail((int) $this->renvoiCible);
+                $this->autoriser($menu, self::VALIDER);
+                $validation->renvoyerMenu($menu, $commentaire, $chef);
+            }, 'Repas renvoyé au responsable restauration pour correction.'),
+            'journee' => $this->executer(function () use ($validation, $commentaire, $chef, $valides) {
+                $internat = filled($valides['renvoiInternat']) ? (int) $valides['renvoiInternat'] : $this->internatFiltre();
+
+                if ($internat !== null) {
+                    $this->perimetre()->exigerInternat($chef, $internat);
+                }
+
+                $nombre = $validation->renvoyerJournee(Carbon::parse($this->renvoiCible), $internat, $commentaire, $chef);
+                $this->message("{$nombre} menu(s) de la journée renvoyés au responsable restauration pour correction.");
+            }),
+            'semaine' => $this->executer(function () use ($validation, $commentaire, $chef) {
+                $nombre = $validation->renvoyerSemaine($this->lundi(), $this->internatFiltre(), $commentaire, $chef);
+                $this->message("{$nombre} menu(s) renvoyés au responsable restauration pour correction.");
+            }),
+            default => abort(404),
+        };
+
+        if ($reussi) {
+            $this->fermerDialogue();
+        }
+    }
+
     public function voirHistorique(): void
     {
         $this->exiger(self::CONSULTER);
@@ -206,7 +295,32 @@ class Menus extends PagePersonnel
     {
         $this->ligne = null;
         $this->dialogue = null;
+        $this->reset('renvoiPortee', 'renvoiCible', 'renvoiInternat', 'commentaire');
         $this->resetValidation();
+    }
+
+    /** @return array{titre: string, description: string, internats: \Illuminate\Support\Collection<int, string>} */
+    private function descriptionDuRenvoi(): array
+    {
+        $internats = collect();
+
+        if ($this->renvoiPortee === 'menu') {
+            $menu = Menu::with('internat:id,nom')->find((int) $this->renvoiCible);
+            $titre = 'Renvoyer ce repas pour correction';
+            $description = $menu ? $menu->type_repas->libelle().' du '.Format::dateLongue($menu->date_repas).' — '.$menu->internat->nom.'. Les autres menus gardent leur statut.' : '';
+        } elseif ($this->renvoiPortee === 'journee') {
+            $titre = 'Renvoyer la journée pour correction';
+            $description = 'Menus transmis du '.Format::dateLongue($this->renvoiCible).'. Les menus des autres jours et les menus déjà validés gardent leur statut.';
+            $ids = $this->internatsEnAttenteLe($this->renvoiCible);
+            $internats = count($ids) > 1 ? $this->internatsDuPerimetre()->only($ids) : collect();
+        } else {
+            $titre = 'Renvoyer la semaine pour correction';
+            $description = 'Menus transmis de la semaine du '.Format::dateLongue($this->lundi())
+                .($this->internatFiltre() !== null ? ' — '.$this->internatsDuPerimetre()->get($this->internatFiltre()) : ', tous internats affichés')
+                .'. Les menus déjà validés gardent leur validation.';
+        }
+
+        return ['titre' => $titre, 'description' => $description, 'internats' => $internats];
     }
 
     public function render()
@@ -223,7 +337,7 @@ class Menus extends PagePersonnel
         $menus = Menu::visiblesPar($this->utilisateur())
             ->whereBetween('date_repas', [$lundi->toDateString(), $jours->last()->toDateString()])
             ->when($this->internat !== '', fn (Builder $q) => $q->where('internat_id', (int) $this->internat))
-            ->with('internat:id,nom', 'validateur:id,nom,prenom')
+            ->with('internat:id,nom', 'validateur:id,nom,prenom', 'auteurCorrection:id,nom,prenom')
             ->withCount(['reservations as reserves' => fn (Builder $q) => $q->where('statut', '!=', StatutReservation::Annule->value)])
             ->orderBy('date_repas')->orderBy('internat_id')->get();
 
@@ -235,6 +349,10 @@ class Menus extends PagePersonnel
             'aTransmettre' => $aVenir->whereNull('transmis_le')->count(),
             'enAttente' => $menus->filter(fn (Menu $m) => $m->enAttenteDeValidation())->count(),
             'valides' => $menus->where('statut', StatutMenu::Valide)->count(),
+            'aCorriger' => $menus->filter(fn (Menu $m) => $m->aCorriger())->count(),
+            // Jours dont des menus attendent la validation : le chef de pôle peut les renvoyer d'un coup.
+            'joursEnAttente' => $menus->filter(fn (Menu $m) => $m->enAttenteDeValidation())->map(fn (Menu $m) => $m->date_repas->toDateString())->unique()->values()->all(),
+            'renvoi' => $this->dialogue === 'renvoi' ? $this->descriptionDuRenvoi() : null,
             'internats' => $this->internatsDuPerimetre(),
             'gerer' => $this->peut(self::GERER),
             'valider' => $this->peut(self::VALIDER),

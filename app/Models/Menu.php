@@ -23,6 +23,7 @@ class Menu extends Model
 
     protected $fillable = [
         'internat_id', 'date_repas', 'type_repas', 'description', 'statut', 'transmis_le', 'transmis_par',
+        'correction_motif', 'correction_le', 'correction_par',
         'date_validation', 'valide_par', 'cree_par',
     ];
 
@@ -33,6 +34,7 @@ class Menu extends Model
             'statut' => StatutMenu::class,
             'date_repas' => 'date',
             'transmis_le' => 'datetime',
+            'correction_le' => 'datetime',
             'date_validation' => 'datetime',
         ];
     }
@@ -51,6 +53,17 @@ class Menu extends Model
     public function enAttenteDeValidation(): bool
     {
         return $this->statut === StatutMenu::Propose && $this->transmis_le !== null;
+    }
+
+    /** Renvoyé pour correction par le chef de pôle et pas encore retransmis. */
+    public function aCorriger(): bool
+    {
+        return $this->statut === StatutMenu::Propose && $this->transmis_le === null && $this->correction_le !== null;
+    }
+
+    public function auteurCorrection(): BelongsTo
+    {
+        return $this->belongsTo(Utilisateur::class, 'correction_par');
     }
 
     public function validateur(): BelongsTo

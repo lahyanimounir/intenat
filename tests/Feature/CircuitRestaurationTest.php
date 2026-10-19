@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Domain\Catering\CarteDesMenus;
 use App\Domain\Catering\ListeDesRepas;
 use App\Domain\Catering\Restauration;
+use App\Domain\Catering\ValidationDesMenus;
 use App\Enums\StatutMenu;
 use App\Enums\StatutPaiement;
 use App\Enums\StatutReservation;
@@ -133,6 +134,68 @@ class CircuitRestaurationTest extends TestCase
         $this->ecran($this->chefDePole, Menus::class)->call('validerSemaine');
         $this->assertSame(StatutMenu::Propose, $menus[2]->fresh()->statut);
         $this->assertSame(StatutMenu::Valide, $menus[0]->fresh()->statut);
+    }
+
+    public function test_le_chef_de_pole_renvoie_un_repas_ou_une_journee_sans_toucher_aux_autres_menus(): void
+    {
+        $mardi = $this->proposerJour(1);
+        $mercredi = $this->proposerJour(2);
+        $this->ecran($this->restauration, Menus::class)->call('transmettreSemaine');
+
+        // Un seul repas : commentaire obligatoire, les deux autres repas du jour restent en attente puis sont validés.
+        $chef = $this->ecran($this->chefDePole, Menus::class)->call('preparerRenvoi', 'menu', (string) $mardi[1]->id)->assertSet('dialogue', 'renvoi');
+        $chef->call('confirmerRenvoi')->assertHasErrors('commentaire');
+        $chef->set('commentaire', 'Remplacer le poisson par du poulet.')->call('confirmerRenvoi')->assertHasNoErrors()->assertSet('dialogue', null);
+        $this->ecran($this->chefDePole, Menus::class)->call('valider', $mardi[0]->id)->call('valider', $mardi[2]->id);
+        $this->assertSame([StatutMenu::Valide, StatutMenu::Propose, StatutMenu::Valide], $mardi->map(fn ($m) => $m->fresh()->statut)->all());
+        $renvoye = $mardi[1]->fresh();
+        $this->assertTrue($renvoye->aCorriger());
+        $this->assertSame([$this->chefDePole->id, 'Remplacer le poisson par du poulet.'], [$renvoye->correction_par, $renvoye->correction_motif]);
+        $this->assertTrue($mercredi[0]->fresh()->enAttenteDeValidation());
+
+        // La restauration est prévenue et voit le commentaire ; un menu validé ne se renvoie pas.
+        $this->assertTrue(NotificationInterne::where('utilisateur_id', $this->restauration->id)->where('titre', 'Menus à corriger')->where('message', 'like', '%poulet%')->exists());
+        $this->ecran($this->restauration, Menus::class)->assertSee('À corriger · à retransmettre')->assertSee('Remplacer le poisson par du poulet.')->assertSee('1 à corriger');
+        $this->agirEnTantQue($this->chefDePole);
+        $this->assertRegle('menu_non_renvoyable', fn () => app(ValidationDesMenus::class)->renvoyerMenu($mardi[0]->fresh(), 'Trop salé ce jour', $this->chefDePole));
+
+        // Une journée : seuls les menus transmis de ce jour reviennent, les autres jours sont intacts.
+        $this->ecran($this->chefDePole, Menus::class)->call('preparerRenvoi', 'journee', $mercredi[0]->date_repas->toDateString())
+            ->set('commentaire', 'Journée trop chargée en féculents.')->call('confirmerRenvoi')->assertHasNoErrors();
+        $this->assertTrue($mercredi->every(fn ($m) => $m->fresh()->aCorriger()));
+        $this->assertSame(StatutMenu::Valide, $mardi[0]->fresh()->statut);
+
+        // La restauration corrige seulement le repas renvoyé et retransmet ; le chef de pôle le valide.
+        $this->ecran($this->restauration, Menus::class)->call('modifier', $renvoye->id)->set('saisie.description', 'Poulet rôti, riz')->call('enregistrer');
+        $this->ecran($this->restauration, Menus::class)->call('transmettreSemaine');
+        $this->assertNull($renvoye->fresh()->correction_motif);
+        $this->ecran($this->chefDePole, Menus::class)->call('valider', $renvoye->id);
+        $this->assertSame(StatutMenu::Valide, $renvoye->fresh()->statut);
+
+        // Les commentaires restent dans l'historique, avec leur auteur.
+        $this->ecran($this->restauration, Menus::class)->call('voirHistorique')
+            ->assertSee('Repas renvoyé pour correction')->assertSee('Remplacer le poisson par du poulet.')
+            ->assertSee('Journée renvoyée pour correction')->assertSee('Journée trop chargée en féculents.');
+    }
+
+    public function test_le_renvoi_d_une_journee_exige_l_internat_quand_plusieurs_sont_concernes(): void
+    {
+        $this->agirEnTantQue($this->restauration);
+        $jeudi = $this->lundi->copy()->addDays(3);
+        $menus = app(CarteDesMenus::class)->proposer([$this->filles->id, $this->garcons->id], $jeudi, TypeRepas::Dejeuner, 'Couscous', $this->restauration);
+        $this->ecran($this->restauration, Menus::class)->call('transmettreSemaine');
+
+        $chef = $this->ecran($this->chefDePole, Menus::class)->call('preparerRenvoi', 'journee', $jeudi->toDateString())
+            ->assertSee('Internat concerné')->set('commentaire', 'Prévoir un dessert.')->call('confirmerRenvoi')->assertHasErrors('renvoiInternat');
+        $chef->set('renvoiInternat', (string) $this->garcons->id)->call('confirmerRenvoi')->assertHasNoErrors();
+
+        $this->assertTrue(Menu::find($menus[1]->id)->aCorriger());
+        $this->assertTrue(Menu::find($menus[0]->id)->enAttenteDeValidation());
+
+        // Avec un internat choisi en filtre, la semaine ne renvoie que ses menus.
+        $this->ecran($this->chefDePole, Menus::class, ['internat' => (string) $this->filles->id])->call('preparerRenvoi', 'semaine')
+            ->set('commentaire', 'Revoir la semaine des filles.')->call('confirmerRenvoi')->assertHasNoErrors();
+        $this->assertTrue(Menu::find($menus[0]->id)->aCorriger());
     }
 
     public function test_le_stagiaire_reserve_demain_ou_la_semaine_avec_une_allergie_par_repas(): void

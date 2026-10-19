@@ -29,6 +29,7 @@
         <div class="flex flex-wrap items-center gap-2">
             @if ($valides > 0)<x-badge ton="succes">{{ $valides }} validé(s)</x-badge>@endif
             @if ($enAttente > 0)<x-badge ton="marine">{{ $enAttente }} en attente de validation</x-badge>@endif
+            @if ($aCorriger > 0)<x-badge ton="danger">{{ $aCorriger }} à corriger</x-badge>@endif
             @if ($aTransmettre > 0)<x-badge ton="alerte">{{ $aTransmettre }} à transmettre</x-badge>@endif
             @if ($gerer && $aTransmettre > 0)
                 <x-bouton taille="sm" variante="primaire" icone="send" cible="transmettreSemaine"
@@ -37,10 +38,7 @@
                 </x-bouton>
             @endif
             @if ($valider && $enAttente > 0)
-                <x-bouton taille="sm" icone="undo-2" cible="renvoyerSemaine"
-                    x-on:click="$motif({ titre: 'Renvoyer la semaine pour correction ?', description: 'Les menus transmis repassent en préparation chez le responsable restauration.', libelle: 'Ce qui est à corriger', libelleAction: 'Renvoyer', minimum: 5 }).then((motif) => $wire.renvoyerSemaine(motif))">
-                    Renvoyer pour correction
-                </x-bouton>
+                <x-bouton taille="sm" icone="undo-2" wire:click="preparerRenvoi('semaine')">Renvoyer pour correction</x-bouton>
                 <x-bouton taille="sm" variante="primaire" icone="check" cible="validerSemaine"
                     x-on:click="$confirmer({ titre: 'Valider la semaine ?', texte: 'Les {{ $enAttente }} menu(s) transmis seront diffusés aux stagiaires et ouverts à la réservation. Un menu validé ne se modifie plus.', libelle: 'Valider la semaine' }).then(() => $wire.validerSemaine())">
                     Valider la semaine
@@ -56,10 +54,15 @@
                 $passe = $jour->lessThan($aujourdhui);
             @endphp
             <section wire:key="jour-{{ $jour->toDateString() }}" @class(['rounded-lg border bg-surface shadow-xs', 'border-marine-200' => $estAujourdhui, 'border-bord' => ! $estAujourdhui])>
-                <h2 class="flex items-center gap-2 border-b border-bord-doux px-5 py-2.5 text-base font-semibold">
-                    {{ Format::jour($jour) }}
-                    @if ($estAujourdhui)<x-badge ton="marine">Aujourd’hui</x-badge>@endif
-                </h2>
+                <div class="flex flex-wrap items-center justify-between gap-2 border-b border-bord-doux px-5 py-2.5">
+                    <h2 class="flex items-center gap-2 text-base font-semibold">
+                        {{ Format::jour($jour) }}
+                        @if ($estAujourdhui)<x-badge ton="marine">Aujourd’hui</x-badge>@endif
+                    </h2>
+                    @if ($valider && ! $passe && in_array($jour->toDateString(), $joursEnAttente, true))
+                        <x-bouton taille="sm" variante="discret" icone="undo-2" wire:click="preparerRenvoi('journee', '{{ $jour->toDateString() }}')">Renvoyer la journée pour correction</x-bouton>
+                    @endif
+                </div>
                 <div class="grid divide-y divide-bord-doux md:grid-cols-3 md:divide-x md:divide-y-0">
                     @foreach (TypeRepas::cases() as $type)
                         @php $repas = $parRepas->get($jour->toDateString().'|'.$type->value, collect()); @endphp
@@ -81,6 +84,8 @@
                                                     <x-badge ton="succes">Validé</x-badge>
                                                 @elseif ($menu->transmis_le)
                                                     <x-badge ton="marine">Transmis · en attente de validation</x-badge>
+                                                @elseif ($menu->aCorriger())
+                                                    <x-badge ton="danger">À corriger · à retransmettre</x-badge>
                                                 @else
                                                     <x-badge ton="alerte">En préparation · non transmis</x-badge>
                                                 @endif
@@ -89,9 +94,16 @@
                                             @if ($menu->statut === StatutMenu::Valide && $menu->validateur)
                                                 <p class="mt-1 text-xs text-discret">Validé par {{ $menu->validateur->nomComplet() }} le {{ Format::dateHeure($menu->date_validation) }}</p>
                                             @endif
+                                            @if ($menu->aCorriger())
+                                                <div class="mt-2 rounded-md border border-danger-bord bg-danger-fond px-3 py-2 text-sm">
+                                                    <p class="text-xs text-discret">Correction demandée par {{ $menu->auteurCorrection?->nomComplet() ?? '—' }} le {{ Format::dateHeure($menu->correction_le) }}</p>
+                                                    <p class="mt-0.5 whitespace-pre-line text-encre">{{ $menu->correction_motif }}</p>
+                                                </div>
+                                            @endif
                                             @if ($valider && $menu->enAttenteDeValidation() && ! $passe)
-                                                <div class="mt-2">
+                                                <div class="mt-2 flex flex-wrap gap-1.5">
                                                     <x-bouton taille="sm" icone="check" wire:click="valider({{ $menu->id }})" cible="valider({{ $menu->id }})">Valider ce menu</x-bouton>
+                                                    <x-bouton taille="sm" variante="discret" icone="undo-2" wire:click="preparerRenvoi('menu', '{{ $menu->id }}')">Renvoyer pour correction</x-bouton>
                                                 </div>
                                             @endif
                                             @if ($gerer && $menu->statut === StatutMenu::Propose)
@@ -142,6 +154,23 @@
         </x-dialogue>
     @endif
 
+    @if ($dialogue === 'renvoi' && $renvoi)
+        <x-dialogue :titre="$renvoi['titre']" :description="$renvoi['description']">
+            <form wire:submit="confirmerRenvoi" id="form-renvoi" novalidate class="space-y-4">
+                @if ($renvoi['internats']->isNotEmpty())
+                    <x-liste libelle="Internat concerné" wire:model="renvoiInternat" :options="$renvoi['internats']" vide="Choisir l’internat…" requis
+                        aide="Plusieurs internats ont des menus en attente ce jour-là : seuls ceux de l’internat choisi sont renvoyés." />
+                @endif
+                <x-zone-texte libelle="Modifications demandées" wire:model="commentaire" rows="4" maxlength="1000" requis autofocus
+                    aide="Le responsable restauration est prévenu et voit ce commentaire sur les menus concernés. Il est conservé dans l’historique des validations." />
+            </form>
+            <x-slot:pied>
+                <x-bouton wire:click="fermerDialogue">Annuler</x-bouton>
+                <x-bouton type="submit" form="form-renvoi" variante="primaire" icone="undo-2" cible="confirmerRenvoi">Renvoyer pour correction</x-bouton>
+            </x-slot:pied>
+        </x-dialogue>
+    @endif
+
     @if ($dialogue === 'historique')
         <x-dialogue titre="Historique des validations" description="Transmissions par la restauration, validations et renvois par le chef de pôle, du plus récent au plus ancien.">
             @if ($historique->isEmpty())
@@ -156,13 +185,19 @@
                                 'menu.transmission_semaine' => 'Semaine transmise au chef de pôle',
                                 'menu.validation_semaine' => 'Semaine validée',
                                 'menu.renvoi_semaine' => 'Semaine renvoyée pour correction',
+                                'menu.renvoi_journee' => 'Journée renvoyée pour correction',
+                                'menu.renvoi' => 'Repas renvoyé pour correction',
                                 default => 'Menu validé',
                             };
+                            if (isset($details['jour'])) {
+                                $semaineDu = null;
+                            }
                         @endphp
                         <li wire:key="trace-{{ $trace->id }}">
                             <p class="text-sm font-medium text-encre">
                                 {{ $evenement }}
                                 @if ($semaineDu) — semaine du {{ $semaineDu }}@endif
+                                @if (isset($details['jour'])) — {{ Format::jour($details['jour']) }}@endif
                                 @if (isset($details['menus'])) · {{ $details['menus'] }} menu(s)@endif
                             </p>
                             <p class="text-xs text-discret">
