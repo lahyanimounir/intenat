@@ -2,6 +2,7 @@
     use App\Enums\StatutBatiment;
     use App\Enums\TypeChambre;
     use App\Support\Affichage\Format;
+    use Illuminate\Support\Js;
 
     // Un état de lit se reconnaît à sa couleur ET à son libellé (infobulle, légende, fenêtre du lit).
     $etats = [
@@ -75,17 +76,39 @@
                             <x-statut :etat="$ligneBatiment->statut" />
                             @if ($gerer)
                                 <x-bouton taille="sm" variante="discret" icone="pencil" wire:click="preparerBatiment({{ $ligneBatiment->id }})">Modifier</x-bouton>
+                                <x-bouton taille="sm" variante="danger-discret" icone="trash" aria-label="Supprimer le bâtiment {{ $ligneBatiment->code }}"
+                                    x-on:click="$confirmer({ titre: 'Supprimer le bâtiment {{ $ligneBatiment->code }} ?', texte: 'Ses étages, chambres et lits seront supprimés. Impossible si un lit a déjà été attribué ou si une chambre a un historique de maintenance.', libelle: 'Supprimer', destructif: true }).then(() => $wire.supprimerBatiment({{ $ligneBatiment->id }}))">Supprimer</x-bouton>
+                                <x-bouton taille="sm" icone="plus" wire:click="ajouterEtage({{ $ligneBatiment->id }})" cible="ajouterEtage({{ $ligneBatiment->id }})">Étage</x-bouton>
                                 <x-bouton taille="sm" icone="plus" wire:click="preparerChambre({{ $ligneBatiment->id }})">Chambre</x-bouton>
                             @endif
                         </x-slot:actions>
                     </x-carte.entete>
 
-                    @if ($ligneBatiment->chambres->isEmpty())
+                    @php $parEtage = $ligneBatiment->chambres->groupBy('etage'); @endphp
+                    @if ($ligneBatiment->chambres->isEmpty() && ! $gerer)
                         <x-vide titre="Aucune chambre" class="py-8!" />
                     @else
-                        @foreach ($ligneBatiment->chambres->groupBy('etage') as $etage => $chambres)
-                            <div class="border-b border-bord-doux px-5 py-4 last:border-0">
-                                <p class="mb-3 text-xs font-medium tracking-wider text-discret uppercase">{{ (int) $etage === 0 ? 'Rez-de-chaussée' : 'Étage '.$etage }}</p>
+                        {{-- Chaque niveau du bâtiment, même vide : le gestionnaire y ajoute, renumérote ou supprime. --}}
+                        @foreach (range(0, $ligneBatiment->nombre_etages) as $etage)
+                            @php $chambres = $parEtage->get($etage, collect()); $nomEtage = $etage === 0 ? 'Rez-de-chaussée' : 'Étage '.$etage; @endphp
+                            @continue($chambres->isEmpty() && ! $gerer)
+                            <div class="border-b border-bord-doux px-5 py-4 last:border-0" wire:key="etage-{{ $ligneBatiment->id }}-{{ $etage }}">
+                                <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+                                    <p class="text-xs font-medium tracking-wider text-discret uppercase">{{ $nomEtage }}</p>
+                                    @if ($gerer)
+                                        <div class="flex flex-wrap gap-1">
+                                            <x-bouton taille="sm" variante="discret" icone="plus" wire:click="preparerChambre({{ $ligneBatiment->id }}, null, {{ $etage }})">Chambre</x-bouton>
+                                            @if ($chambres->isNotEmpty())
+                                                <x-bouton taille="sm" variante="discret" icone="pencil" wire:click="preparerEtage({{ $ligneBatiment->id }}, {{ $etage }})">Renuméroter</x-bouton>
+                                            @endif
+                                            <x-bouton taille="sm" variante="danger-discret" icone="trash" aria-label="Supprimer : {{ $nomEtage }}"
+                                                x-on:click="$confirmer({ titre: {{ Js::from('Supprimer : '.$nomEtage.' ?') }}, texte: {{ Js::from($chambres->count().' chambre(s) et leurs lits seront supprimés.'.($etage === $ligneBatiment->nombre_etages && $etage > 0 ? ' L’étage est retiré du bâtiment.' : ' Le niveau reste, vide.')) }}, libelle: 'Supprimer', destructif: true }).then(() => $wire.supprimerEtage({{ $ligneBatiment->id }}, {{ $etage }}))">Supprimer</x-bouton>
+                                        </div>
+                                    @endif
+                                </div>
+                                @if ($chambres->isEmpty())
+                                    <p class="text-sm text-discret">Aucune chambre à cet étage.</p>
+                                @endif
                                 <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
                                     @foreach ($chambres as $ligneChambre)
                                         <div class="rounded-md border border-bord bg-surface-2 px-3 py-2.5" wire:key="chambre-{{ $ligneChambre->id }}">
@@ -102,6 +125,8 @@
                                                         @if ($ligneChambre->lits->count() < $ligneChambre->capacite)
                                                             <x-bouton taille="icone" variante="discret" aria-label="Ajouter un lit à la chambre {{ $ligneChambre->numero }}" wire:click="preparerLit({{ $ligneChambre->id }})"><x-icone nom="plus" /></x-bouton>
                                                         @endif
+                                                        <x-bouton taille="icone" variante="discret" aria-label="Supprimer la chambre {{ $ligneChambre->numero }}"
+                                                            x-on:click="$confirmer({ titre: {{ Js::from('Supprimer la chambre '.$ligneChambre->numero.' ?') }}, texte: 'Ses lits seront supprimés. Impossible si un lit a déjà été attribué ou si la chambre a un historique de maintenance.', libelle: 'Supprimer', destructif: true }).then(() => $wire.supprimerChambre({{ $ligneChambre->id }}))"><x-icone nom="trash" /></x-bouton>
                                                     </div>
                                                 @endif
                                             </div>
@@ -164,6 +189,18 @@
         </x-dialogue>
     @endif
 
+    @if ($dialogue === 'etage' && $etageVise !== null)
+        <x-dialogue titre="Renuméroter l’étage" :description="($etageVise === 0 ? 'Rez-de-chaussée' : 'Étage '.$etageVise).' — ses chambres passent à l’étage choisi, qui doit être vide.'" largeur="sm">
+            <form wire:submit="renumeroterEtage" id="form-etage" novalidate>
+                <x-saisie libelle="Nouveau numéro d’étage" wire:model="nouvelEtage" type="number" min="0" requis autofocus aide="0 pour le rez-de-chaussée." />
+            </form>
+            <x-slot:pied>
+                <x-bouton wire:click="fermerDialogue">Annuler</x-bouton>
+                <x-bouton type="submit" form="form-etage" variante="primaire" cible="renumeroterEtage">Renuméroter</x-bouton>
+            </x-slot:pied>
+        </x-dialogue>
+    @endif
+
     @if ($dialogue === 'nouveau-lit')
         <x-dialogue titre="Ajouter un lit" largeur="sm">
             <form wire:submit="ajouterLit" id="form-lit" novalidate>
@@ -213,7 +250,17 @@
                     </div>
                 @endif
             </div>
+            @if ($gerer)
+                <form wire:submit="renommerLit" class="mt-5 flex items-end gap-2 border-t border-bord-doux pt-4" novalidate>
+                    <div class="w-40"><x-saisie libelle="Numéro du lit" wire:model="numeroLit" requis /></div>
+                    <x-bouton type="submit" icone="pencil" cible="renommerLit">Renommer</x-bouton>
+                </form>
+            @endif
             <x-slot:pied>
+                @if ($gerer && ! $litOuvert->affectationActive && $litOuvert->historique->isEmpty())
+                    <x-bouton variante="danger-discret" icone="trash" class="mr-auto"
+                        x-on:click="$confirmer({ titre: 'Supprimer ce lit ?', texte: 'Le lit n’a jamais été attribué : il est retiré du référentiel.', libelle: 'Supprimer', destructif: true }).then(() => $wire.supprimerLit())">Supprimer le lit</x-bouton>
+                @endif
                 @if ($gerer && $litOuvert->etat === 'hors_service')
                     <x-bouton icone="power" wire:click="basculerLit(false)" cible="basculerLit">Remettre en service</x-bouton>
                 @elseif ($gerer && ! $litOuvert->affectationActive)

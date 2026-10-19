@@ -52,6 +52,12 @@ class Plan extends PagePersonnel
 
     public string $numeroLit = '';
 
+    /** Étage visé par la fenêtre de renumérotation. */
+    #[Locked]
+    public ?int $etageVise = null;
+
+    public string $nouvelEtage = '';
+
     public function mount(): void
     {
         $this->exiger('referentiel.consulter');
@@ -145,7 +151,7 @@ class Plan extends PagePersonnel
 
     /* ------------------------------------------------------------- Chambres */
 
-    public function preparerChambre(int $batiment, ?int $id = null): void
+    public function preparerChambre(int $batiment, ?int $id = null, ?int $etage = null): void
     {
         $parent = Batiment::findOrFail($batiment);
         $this->gerer($parent);
@@ -155,7 +161,7 @@ class Plan extends PagePersonnel
         $this->ligne = $chambre?->id;
         $this->chambre = [
             'numero' => $chambre->numero ?? '',
-            'etage' => $chambre->etage ?? 0,
+            'etage' => $chambre->etage ?? $etage ?? 0,
             'type_chambre' => $chambre?->type_chambre->value ?? TypeChambre::Standard->value,
             'capacite' => $chambre->capacite ?? 2,
             'equipements' => $chambre->equipements ?? '',
@@ -218,7 +224,89 @@ class Plan extends PagePersonnel
         $this->autoriser(Lit::findOrFail($lit), 'referentiel.consulter');
 
         $this->ligne = $lit;
+        $this->numeroLit = (string) Lit::findOrFail($lit)->numero;
         $this->ouvrirDialogue('lit');
+    }
+
+    public function renommerLit(Referentiel $referentiel): void
+    {
+        $lit = Lit::findOrFail($this->ligne);
+        $this->gerer($lit);
+
+        $numero = $this->validate(['numeroLit' => ['required', 'string', 'max:10']], attributes: ['numeroLit' => 'numéro du lit'])['numeroLit'];
+
+        $this->executer(fn () => $referentiel->renommerLit($lit, $numero), 'Lit renommé.');
+    }
+
+    public function supprimerLit(Referentiel $referentiel): void
+    {
+        $lit = Lit::findOrFail($this->ligne);
+        $this->gerer($lit);
+
+        if ($this->executer(fn () => $referentiel->supprimerLit($lit), 'Lit supprimé.')) {
+            $this->fermerDialogue();
+        }
+    }
+
+    public function supprimerChambre(Referentiel $referentiel, int $id): void
+    {
+        $chambre = Chambre::findOrFail($id);
+        $this->gerer($chambre);
+
+        $this->executer(fn () => $referentiel->supprimerChambre($chambre), 'Chambre supprimée avec ses lits.');
+    }
+
+    public function supprimerBatiment(Referentiel $referentiel, int $id): void
+    {
+        $batiment = Batiment::findOrFail($id);
+        $this->gerer($batiment);
+
+        $this->executer(fn () => $referentiel->supprimerBatiment($batiment), 'Bâtiment supprimé avec ses étages, chambres et lits.');
+    }
+
+    /* --------------------------------------------------------------- Étages */
+
+    public function ajouterEtage(Referentiel $referentiel, int $batiment): void
+    {
+        $modele = Batiment::findOrFail($batiment);
+        $this->gerer($modele);
+
+        $this->executer(fn () => $referentiel->ajouterEtage($modele), 'Étage ajouté au sommet du bâtiment.');
+    }
+
+    public function preparerEtage(int $batiment, int $etage): void
+    {
+        $modele = Batiment::findOrFail($batiment);
+        $this->gerer($modele);
+
+        $this->batimentId = $modele->id;
+        $this->etageVise = $etage;
+        $this->nouvelEtage = (string) $etage;
+        $this->ouvrirDialogue('etage');
+    }
+
+    public function renumeroterEtage(Referentiel $referentiel): void
+    {
+        $batiment = Batiment::findOrFail($this->batimentId);
+        $this->gerer($batiment);
+
+        $nouveau = (int) $this->validate(
+            ['nouvelEtage' => ['required', 'integer', 'min:0', 'max:'.$batiment->nombre_etages]],
+            ['nouvelEtage.max' => 'Le bâtiment compte les étages 0 à '.$batiment->nombre_etages.'.'],
+            ['nouvelEtage' => 'nouvel étage'],
+        )['nouvelEtage'];
+
+        if ($this->executer(fn () => $referentiel->renumeroterEtage($batiment, (int) $this->etageVise, $nouveau), 'Étage renuméroté : ses chambres ont été déplacées.')) {
+            $this->fermerDialogue();
+        }
+    }
+
+    public function supprimerEtage(Referentiel $referentiel, int $batiment, int $etage): void
+    {
+        $modele = Batiment::findOrFail($batiment);
+        $this->gerer($modele);
+
+        $this->executer(fn () => $referentiel->supprimerEtage($modele, $etage), 'Étage supprimé avec ses chambres et ses lits.');
     }
 
     public function basculerLit(Referentiel $referentiel, bool $horsService): void
@@ -233,6 +321,7 @@ class Plan extends PagePersonnel
     {
         $this->ligne = null;
         $this->batimentId = null;
+        $this->etageVise = null;
         $this->dialogue = null;
         $this->resetValidation();
     }
