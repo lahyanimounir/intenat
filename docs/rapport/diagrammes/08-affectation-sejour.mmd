@@ -1,0 +1,15 @@
+stateDiagram-v2
+  direction TB
+  [*] --> Confirme
+  Confirme: Place confirmée
+  Confirme --> Autorise: autorisation d'occuper
+  Autorise: Occupation autorisée
+  Autorise --> Affecte: affectation d'un lit
+  Affecte: Lit affecté (lit occupé)
+  Affecte --> Resident: arrivée enregistrée
+  Resident: Résident (séjour ouvert)
+  Resident --> Resident: changement de lit motivé
+  Resident --> Termine: départ ou exclusion
+  Affecte --> Termine: non présenté
+  Termine: Séjour terminé (lit libéré)
+  Termine --> [*]

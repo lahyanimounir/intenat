@@ -17,6 +17,9 @@
         <x-bouton taille="sm" :variante="$date->toDateString() === $demain ? 'primaire' : 'secondaire'" wire:click="choisir('demain')">Demain (J+1)</x-bouton>
         <div class="w-40"><x-saisie type="date" taille="sm" aria-label="Autre jour" wire:model.live="jour" /></div>
         <p class="ml-2 text-base font-medium" aria-live="polite">{{ Format::jour($date) }}</p>
+        @if ($menus->isNotEmpty())
+            <x-bouton taille="sm" icone="printer" class="ml-auto" :href="$impressionJournee" :navigation="false" target="_blank">Imprimer les absents de la journée</x-bouton>
+        @endif
     </div>
 
     @if ($menus->isEmpty())
@@ -55,19 +58,51 @@
 
                     @if ($service?->observation)<p class="mt-3 text-sm text-encre-2">Observation : {{ $service->observation }}</p>@endif
 
-                    @if ($gerer && ! $clos)
-                        <div class="mt-4 flex flex-wrap gap-2">
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        @if ($gerer && ! $clos)
                             @if ($confirme === null)
                                 <x-bouton variante="primaire" taille="sm" icone="users" wire:click="preparerEffectif({{ $menu->id }})">Confirmer l’effectif</x-bouton>
                             @else
                                 <x-bouton variante="primaire" taille="sm" icone="clipboard-check" :disabled="$futur" wire:click="preparerCloture({{ $menu->id }})">Clore le service</x-bouton>
-                                @if ($futur)<p class="self-center text-sm text-discret">Le service se clôt le jour du repas.</p>@endif
                             @endif
-                        </div>
-                    @endif
+                        @endif
+                        <x-bouton taille="sm" icone="user-round" wire:click="voirAbsents({{ $menu->id }})">Voir les absents</x-bouton>
+                        @if ($gerer && ! $clos && $confirme !== null && $futur)<p class="self-center text-sm text-discret">Le service se clôt le jour du repas.</p>@endif
+                    </div>
                 </x-carte>
             @endforeach
         </div>
+    @endif
+
+    @if ($dialogue === 'absents' && $choisi)
+        @php
+            $closAbsents = $choisi->service?->date_cloture_service !== null;
+        @endphp
+        <x-dialogue titre="Liste des absents"
+            :description="$choisi->type_repas->libelle().' du '.Format::dateLongue($choisi->date_repas).' — '.$choisi->internat->nom">
+            <div class="space-y-4">
+                @unless ($closAbsents)
+                    <x-alerte ton="alerte">Le service de ce repas n’est pas encore clôturé : la liste des absences n’est pas définitive. Les absents sont pointés à la clôture du service.</x-alerte>
+                @endunless
+                @if ($absents->isEmpty())
+                    <p class="rounded-md border border-bord bg-surface-2 px-3.5 py-3 text-base text-discret">Aucun stagiaire absent pour ce repas.</p>
+                @else
+                    <p class="text-sm text-discret"><strong class="chiffres text-encre">{{ $absents->count() }}</strong> stagiaire(s) absent(s)</p>
+                    <ul class="defilement-fin max-h-72 divide-y divide-bord-doux overflow-y-auto rounded-md border border-bord text-sm">
+                        @foreach ($absents as $absent)
+                            <li class="flex items-center justify-between gap-3 px-3.5 py-2" wire:key="absent-{{ $loop->index }}">
+                                <span class="font-medium">{{ $absent->nom }} {{ $absent->prenom }}</span>
+                                <span class="chiffres text-discret">{{ $absent->cef }}</span>
+                            </li>
+                        @endforeach
+                    </ul>
+                @endif
+            </div>
+            <x-slot:pied>
+                <x-bouton wire:click="fermerDialogue">Fermer</x-bouton>
+                <x-bouton variante="primaire" icone="printer" :href="route('restauration.absences.imprimer', ['menu' => $choisi->id])" :navigation="false" target="_blank">Imprimer la liste</x-bouton>
+            </x-slot:pied>
+        </x-dialogue>
     @endif
 
     @if ($dialogue === 'effectif' && $choisi)

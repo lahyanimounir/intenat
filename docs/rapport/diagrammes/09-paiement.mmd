@@ -1,0 +1,14 @@
+flowchart TB
+  classDef y fill:#f1f5f9,stroke:#475569,color:#0f172a
+  classDef s fill:#eff6ff,stroke:#1d4ed8,color:#0f172a
+  classDef g fill:#f0fdf4,stroke:#15803d,color:#0f172a
+  classDef d fill:#fff,stroke:#b45309,color:#0f172a
+  A[1er du mois : mensualité générée pour chaque résident]:::y --> B[En attente de paiement]:::y
+  B --> C[Le stagiaire paie et dépose le justificatif]:::s
+  C --> D[Justificatif déposé, en cours de vérification]:::y
+  D --> E{Contrôle par le gestionnaire}:::d
+  E -- Conforme --> F[Paiement validé]:::g
+  E -- Non conforme, motif --> G[Justificatif rejeté, à corriger]:::y
+  G --> C
+  B -. rappel, sans blocage .-> C
+  F --> H[Suivi par le chef de pôle et la direction]:::y

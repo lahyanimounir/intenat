@@ -1,0 +1,15 @@
+stateDiagram-v2
+  direction TB
+  [*] --> Brouillon
+  Brouillon --> Recu: dépôt
+  Recu --> Complet: validation
+  Recu --> RetourRectification: correction demandée
+  Recu --> Rejete: rejet motivé
+  RetourRectification --> Recu: nouveau dépôt
+  RetourRectification --> Rejete: rejet motivé
+  Complet --> Recu: validation annulée
+  Complet --> [*]: vers la sélection
+  Rejete --> [*]
+  Recu: Reçu
+  RetourRectification: Retour pour rectification
+  Rejete: Rejeté

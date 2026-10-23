@@ -58,7 +58,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('notifications/{notification}/lue', [PilotageController::class, 'lireNotification']);
 
     // ================================================================ STAGIAIRE
-    Route::middleware('stagiaire')->prefix('stagiaire')->group(function () {
+    Route::middleware(['stagiaire', 'mot_de_passe.definitif'])->prefix('stagiaire')->group(function () {
         Route::get('tableau-de-bord', [DossierStagiaireController::class, 'tableauDeBord']);
         Route::get('profil', [DossierStagiaireController::class, 'profil']);
         Route::put('profil', [DossierStagiaireController::class, 'majProfil']);
@@ -98,7 +98,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // ================================================================ PERSONNEL
-    Route::middleware('personnel')->group(function () {
+    Route::middleware(['personnel', 'mot_de_passe.definitif'])->group(function () {
         Route::get('tableau-de-bord', [PilotageController::class, 'tableauDeBord']);
         Route::get('organisation', [OrganisationController::class, 'arbre']);
 

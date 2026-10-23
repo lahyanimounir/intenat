@@ -19,6 +19,8 @@ final class Permissions
     {
         return [
             'utilisateurs.gerer' => 'Créer et gérer les comptes du personnel et leurs rôles',
+            'mots_de_passe.personnel' => 'Réinitialiser le mot de passe des comptes du personnel placés sous sa responsabilité',
+            'mots_de_passe.stagiaires' => 'Réinitialiser le mot de passe des stagiaires de son périmètre',
             'stagiaires.gerer' => 'Consulter les comptes stagiaires, les suspendre, les rétablir et leur envoyer un lien de réinitialisation',
             'inscriptions.verifier' => 'Vérifier l\'inscription en formation déclarée par les stagiaires de son périmètre',
             'organisation.gerer' => 'Gérer régions, complexes, établissements (codes EFP) et internats',
@@ -57,7 +59,7 @@ final class Permissions
     {
         return [
             RoleCode::Admin->value => [
-                'utilisateurs.gerer', 'stagiaires.gerer', 'organisation.gerer', 'parametres.gerer', 'audit.consulter',
+                'utilisateurs.gerer', 'stagiaires.gerer', 'mots_de_passe.personnel', 'mots_de_passe.stagiaires', 'organisation.gerer', 'parametres.gerer', 'audit.consulter',
                 'campagnes.consulter', 'criteres.gerer', 'referentiel.consulter',
             ],
             RoleCode::Gestionnaire->value => [
@@ -68,6 +70,8 @@ final class Permissions
                 'paiements.consulter', 'paiements.controler',
                 'referentiel.consulter', 'referentiel.gerer', 'hebergement.consulter', 'hebergement.gerer',
                 'vie_internat.gerer', 'documents.gerer', 'reclamations.traiter', 'exports.creer',
+                // Il réinitialise le mot de passe des stagiaires de son internat.
+                'mots_de_passe.stagiaires',
             ],
             RoleCode::ChefPole->value => [
                 'campagnes.consulter', 'campagnes.gerer',
@@ -80,9 +84,13 @@ final class Permissions
                 // Il valide les menus de la semaine transmis par le responsable restauration.
                 'restauration.consulter', 'restauration.valider_menus',
                 'documents.gerer', 'reclamations.traiter', 'pilotage.consulter', 'exports.creer',
+                // Il réinitialise le mot de passe des gestionnaires, de la restauration et des stagiaires de son établissement.
+                'mots_de_passe.personnel', 'mots_de_passe.stagiaires',
             ],
             RoleCode::Restauration->value => [
                 'restauration.consulter', 'restauration.gerer', 'reclamations.traiter', 'exports.creer',
+                // Il réinitialise le mot de passe des stagiaires de son établissement.
+                'mots_de_passe.stagiaires',
             ],
             RoleCode::Directeur->value => [
                 'campagnes.consulter', 'referentiel.consulter',
@@ -90,6 +98,8 @@ final class Permissions
                 // après clôture et annuler une validation.
                 'demandes.consulter', 'admissions.consulter', 'admissions.noter', 'admissions.deliberer', 'admissions.annuler_validation',
                 'pilotage.consulter', 'exports.creer',
+                // Il réinitialise le mot de passe des chefs de pôle, gestionnaires et responsables restauration de son complexe.
+                'mots_de_passe.personnel',
             ],
             RoleCode::DirRegionale->value => [
                 'campagnes.consulter', 'pilotage.consulter', 'exports.creer',

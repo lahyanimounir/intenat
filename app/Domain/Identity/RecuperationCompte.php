@@ -55,7 +55,7 @@ class RecuperationCompte
                     throw $this->lienInvalide();
                 }
 
-                $compte->forceFill(['mot_de_passe_hash' => $motDePasse, 'remember_token' => Str::random(60)]);
+                $compte->forceFill(['mot_de_passe_hash' => $motDePasse, 'mot_de_passe_provisoire' => false, 'remember_token' => Str::random(60)]);
 
                 if ($compte instanceof Stagiaire) {
                     $compte->mot_de_passe_modifie_le = now();

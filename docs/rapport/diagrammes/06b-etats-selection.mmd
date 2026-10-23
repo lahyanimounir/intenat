@@ -1,0 +1,21 @@
+stateDiagram-v2
+  direction TB
+  [*] --> Complet: dossier validé
+  Complet --> Admis: délibération
+  Complet --> EnAttente: délibération
+  Complet --> Refuse: délibération
+  EnAttente --> Admis: transfert en liste principale
+  EnAttente --> Refuse
+  EnAttente --> Desiste
+  Admis --> Confirme: place confirmée
+  Admis --> Desiste: désistement
+  Confirme --> Desiste
+  Confirme --> SejourTermine: départ
+  Refuse --> [*]
+  Desiste --> [*]
+  SejourTermine --> [*]
+  EnAttente: En attente
+  Refuse: Refusé
+  Desiste: Désisté
+  Confirme: Confirmé
+  SejourTermine: Séjour terminé

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\FichierController;
 use App\Http\Controllers\ImpressionClassementController;
+use App\Http\Controllers\AbsencesRepasController;
 use App\Http\Controllers\ListeDesRepasController;
 use App\Http\Controllers\SessionController;
 use App\Livewire\Administration;
@@ -56,7 +57,7 @@ Route::get('adresse/confirmation/{stagiaire}/{empreinte}', [SessionController::c
     ->middleware(['signed', 'throttle:12,1'])->name('stagiaire.adresse.confirmer');
 
 // ====================================================================== STAGIAIRE
-Route::middleware(['auth:stagiaire', 'auth.session', 'stagiaire'])->prefix('stagiaire')->name('stagiaire.')->group(function () {
+Route::middleware(['auth:stagiaire', 'auth.session', 'stagiaire', 'mot_de_passe.definitif'])->prefix('stagiaire')->name('stagiaire.')->group(function () {
     Route::get('adresse', Stagiaire\ConfirmationAdresse::class)->name('adresse');
 
     Route::middleware('adresse.verifiee')->group(function () {
@@ -98,10 +99,13 @@ Route::middleware(['auth:stagiaire', 'auth.session', 'stagiaire'])->prefix('stag
 });
 
 // ============================================================ Les deux populations
-Route::get('notifications', Notifications::class)->middleware(['auth:web,stagiaire', 'auth.session'])->name('notifications');
+Route::get('notifications', Notifications::class)->middleware(['auth:web,stagiaire', 'auth.session', 'mot_de_passe.definitif'])->name('notifications');
+
+// Mot de passe provisoire (fixé par un responsable) : à remplacer avant tout autre écran.
+Route::get('mot-de-passe/changement', Auth\ChangementMotDePasse::class)->middleware(['auth:web,stagiaire', 'auth.session'])->name('mot-de-passe.changement');
 
 // ====================================================================== PERSONNEL
-Route::middleware(['auth:web', 'auth.session', 'personnel'])->group(function () {
+Route::middleware(['auth:web', 'auth.session', 'personnel', 'mot_de_passe.definitif'])->group(function () {
     Route::get('backend/tableau-de-bord', Personnel\TableauDeBord::class)->name('tableau-de-bord');
 
     // ------------------------------------------ Vérification des inscriptions en formation
@@ -180,6 +184,7 @@ Route::middleware(['auth:web', 'auth.session', 'personnel'])->group(function () 
         Route::get('service', Personnel\ServiceDesRepas::class)->name('service');
         Route::get('liste-j1', Personnel\ListeRepasJ1::class)->name('liste-j1');
         Route::get('liste-j1/imprimer', ListeDesRepasController::class)->name('liste-j1.imprimer');
+        Route::get('service/absences/imprimer', AbsencesRepasController::class)->name('absences.imprimer');
         Route::get('statistiques', Personnel\StatistiquesRepas::class)->name('statistiques');
         Route::get('regimes/{regime}/justificatif', [FichierController::class, 'justificatifDuRegime'])
             ->middleware('permission:restauration.gerer')->name('regimes.justificatif')->whereNumber('regime');
@@ -198,9 +203,9 @@ Route::middleware(['auth:web', 'auth.session', 'personnel'])->group(function () 
 
     // ------------------------------------------------------------------ Administration
     Route::prefix('administration')->name('administration.')->group(function () {
-        Route::get('utilisateurs', Administration\Utilisateurs::class)->middleware('permission:utilisateurs.gerer')->name('utilisateurs');
+        Route::get('utilisateurs', Administration\Utilisateurs::class)->middleware('permission:utilisateurs.gerer|mots_de_passe.personnel')->name('utilisateurs');
         Route::get('permissions', Administration\RolesEtPermissions::class)->middleware('permission:utilisateurs.gerer')->name('permissions');
-        Route::get('comptes-stagiaires', Administration\ComptesStagiaires::class)->middleware('permission:stagiaires.gerer')->name('comptes-stagiaires');
+        Route::get('comptes-stagiaires', Administration\ComptesStagiaires::class)->middleware('permission:stagiaires.gerer|mots_de_passe.stagiaires')->name('comptes-stagiaires');
         Route::get('organisation', Administration\Organisation::class)->middleware('permission:organisation.gerer')->name('organisation');
         Route::get('parametres', Administration\Parametres::class)->middleware('permission:parametres.gerer')->name('parametres');
         Route::get('audit', Administration\Audit::class)->middleware('permission:audit.consulter')->name('audit');

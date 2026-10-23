@@ -50,8 +50,8 @@ final class Menu
             ['Rapports et exports', '/rapports', 'file-chart-column-increasing', ['exports.creer']],
         ]],
         ['titre' => 'Administration', 'entrees' => [
-            ['Utilisateurs', '/administration/utilisateurs', 'users', ['utilisateurs.gerer']],
-            ['Comptes stagiaires', '/administration/comptes-stagiaires', 'user-check', ['stagiaires.gerer']],
+            ['Utilisateurs', '/administration/utilisateurs', 'users', ['utilisateurs.gerer', 'mots_de_passe.personnel']],
+            ['Comptes stagiaires', '/administration/comptes-stagiaires', 'user-check', ['stagiaires.gerer', 'mots_de_passe.stagiaires']],
             ['Rôles et permissions', '/administration/permissions', 'shield-check', ['utilisateurs.gerer']],
             ['Organisation', '/administration/organisation', 'network', ['organisation.gerer']],
             ['Paramètres', '/administration/parametres', 'settings-2', ['parametres.gerer']],

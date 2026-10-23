@@ -1,0 +1,352 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 1835" width="1500" height="1835" font-family="Segoe UI, Inter, Arial, sans-serif">
+<title>Workflow INTERNAT — de A à Z</title>
+<defs><marker id="fleche" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#94a3b8"/></marker><marker id="fleche-fonce" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#0f172a"/></marker></defs>
+<rect width="1500" height="1835" fill="#ffffff"/>
+<text x="40" y="48" font-size="26" font-weight="800" fill="#0f172a">Workflow INTERNAT — de A à Z</text>
+<text x="40" y="74" font-size="13.5" fill="#475569">De la préparation de la campagne à la fin du séjour : qui fait quoi, dans quel ordre, avec quels statuts du dossier.</text>
+<rect x="40" y="88" width="14" height="14" rx="3" fill="#f0fdfa" stroke="#0f766e" stroke-width="1.6"/>
+<text x="60" y="100" font-size="12" fill="#334155">Administrateur</text>
+<rect x="166.39999999999998" y="88" width="14" height="14" rx="3" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.6"/>
+<text x="186.39999999999998" y="100" font-size="12" fill="#334155">Chef de pôle</text>
+<rect x="279.59999999999997" y="88" width="14" height="14" rx="3" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.6"/>
+<text x="299.59999999999997" y="100" font-size="12" fill="#334155">Stagiaire</text>
+<rect x="373.0" y="88" width="14" height="14" rx="3" fill="#f0fdf4" stroke="#15803d" stroke-width="1.6"/>
+<text x="393.0" y="100" font-size="12" fill="#334155">Gestionnaire d’internat</text>
+<rect x="558.8" y="88" width="14" height="14" rx="3" fill="#fffbeb" stroke="#b45309" stroke-width="1.6"/>
+<text x="578.8" y="100" font-size="12" fill="#334155">Directeur</text>
+<rect x="652.1999999999999" y="88" width="14" height="14" rx="3" fill="#f1f5f9" stroke="#475569" stroke-width="1.6"/>
+<text x="672.1999999999999" y="100" font-size="12" fill="#334155">Application (automatique)</text>
+<rect x="40" y="120" width="1420" height="186" rx="10" fill="#ffffff" stroke="#e2e8f0"/>
+<circle cx="70" cy="152" r="15" fill="#0f172a"/>
+<text x="70" y="157" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">1</text>
+<text x="94" y="150" font-size="15" font-weight="700" fill="#0f172a">Préparation</text>
+<text x="94" y="174" font-size="11.5" fill="#64748b">Avant toute campagne</text>
+<rect x="265" y="140" width="266" height="116" rx="8" fill="#f0fdfa" stroke="#0f766e" stroke-width="1.4"/>
+<rect x="265" y="140" width="6" height="116" rx="3" fill="#0f766e"/>
+<text x="281" y="157" font-size="10.5" font-weight="700" fill="#0f766e" letter-spacing="0.4">ADMINISTRATEUR</text>
+<text x="281" y="179" font-size="13.5" font-weight="700" fill="#0f172a">Organisation et comptes</text>
+<text x="281" y="197" font-size="11.5" fill="#334155">Régions → provinces → complexes</text>
+<text x="281" y="214" font-size="11.5" fill="#334155">→ établissements → internats</text>
+<text x="281" y="231" font-size="11.5" fill="#334155">Comptes du personnel par rôle</text>
+<text x="281" y="248" font-size="11.5" fill="#334155">et périmètre hiérarchique</text>
+<line x1="534" y1="174" x2="560" y2="174" stroke="#94a3b8" stroke-width="2" marker-end="url(#fleche)"/>
+<rect x="565" y="140" width="266" height="116" rx="8" fill="#f0fdf4" stroke="#15803d" stroke-width="1.4"/>
+<rect x="565" y="140" width="6" height="116" rx="3" fill="#15803d"/>
+<text x="581" y="157" font-size="10.5" font-weight="700" fill="#15803d" letter-spacing="0.4">GESTIONNAIRE D’INTERNAT</text>
+<text x="581" y="179" font-size="13.5" font-weight="700" fill="#0f172a">Référentiel d’hébergement</text>
+<text x="581" y="197" font-size="11.5" fill="#334155">Plan d’occupation de son internat :</text>
+<text x="581" y="214" font-size="11.5" fill="#334155">bâtiments, étages, chambres, lits</text>
+<text x="581" y="231" font-size="11.5" fill="#334155">(ajout, modification, suppression</text>
+<text x="581" y="248" font-size="11.5" fill="#334155">si aucun historique)</text>
+<line x1="834" y1="174" x2="860" y2="174" stroke="#94a3b8" stroke-width="2" marker-end="url(#fleche)"/>
+<rect x="865" y="140" width="266" height="116" rx="8" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.4"/>
+<rect x="865" y="140" width="6" height="116" rx="3" fill="#7c3aed"/>
+<text x="881" y="157" font-size="10.5" font-weight="700" fill="#7c3aed" letter-spacing="0.4">CHEF DE PÔLE</text>
+<text x="881" y="179" font-size="13.5" font-weight="700" fill="#0f172a">Créer la campagne</text>
+<text x="881" y="197" font-size="11.5" fill="#334155">Plusieurs campagnes par année</text>
+<text x="881" y="214" font-size="11.5" fill="#334155">scolaire, sans chevauchement</text>
+<text x="881" y="231" font-size="11.5" fill="#334155">Places, frais mensuels, période</text>
+<text x="881" y="248" font-size="11.5" fill="#334155">Grille de critères du score</text>
+<line x1="1134" y1="174" x2="1160" y2="174" stroke="#94a3b8" stroke-width="2" marker-end="url(#fleche)"/>
+<rect x="1165" y="140" width="266" height="146" rx="8" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.4"/>
+<rect x="1165" y="140" width="6" height="146" rx="3" fill="#7c3aed"/>
+<text x="1181" y="157" font-size="10.5" font-weight="700" fill="#7c3aed" letter-spacing="0.4">CHEF DE PÔLE</text>
+<text x="1181" y="179" font-size="13.5" font-weight="700" fill="#0f172a">Ouvrir la campagne</text>
+<text x="1181" y="197" font-size="11.5" fill="#334155">Préparée → Ouverte</text>
+<text x="1181" y="214" font-size="11.5" fill="#334155">Inscription possible avant la date</text>
+<text x="1181" y="231" font-size="11.5" fill="#334155">d’ouverture si le chef de pôle</text>
+<text x="1181" y="248" font-size="11.5" fill="#334155">l’a ouverte</text>
+<rect x="1179" y="256" width="51" height="20" rx="10" fill="#dcfce7"/>
+<text x="1204" y="270" text-anchor="middle" font-size="10.5" font-weight="600" fill="#166534">Ouverte</text>
+<line x1="750.0" y1="308" x2="750.0" y2="326" stroke="#0f172a" stroke-width="2.2" marker-end="url(#fleche-fonce)"/>
+<rect x="40" y="330" width="1420" height="186" rx="10" fill="#f8fafc" stroke="#e2e8f0"/>
+<circle cx="70" cy="362" r="15" fill="#0f172a"/>
+<text x="70" y="367" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">2</text>
+<text x="94" y="360" font-size="15" font-weight="700" fill="#0f172a">Inscription</text>
+<text x="94" y="378" font-size="15" font-weight="700" fill="#0f172a">et dépôt</text>
+<text x="94" y="402" font-size="11.5" fill="#64748b">Espace stagiaire ( / )</text>
+<rect x="265" y="350" width="266" height="82" rx="8" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.4"/>
+<rect x="265" y="350" width="6" height="82" rx="3" fill="#1d4ed8"/>
+<text x="281" y="367" font-size="10.5" font-weight="700" fill="#1d4ed8" letter-spacing="0.4">STAGIAIRE</text>
+<text x="281" y="389" font-size="13.5" font-weight="700" fill="#0f172a">Créer son compte</text>
+<text x="281" y="407" font-size="11.5" fill="#334155">Identité, CEF, établissement</text>
+<text x="281" y="424" font-size="11.5" fill="#334155">Profil complet, adresse vérifiée</text>
+<line x1="534" y1="384" x2="560" y2="384" stroke="#94a3b8" stroke-width="2" marker-end="url(#fleche)"/>
+<rect x="565" y="350" width="266" height="112" rx="8" fill="#f0fdf4" stroke="#15803d" stroke-width="1.4"/>
+<rect x="565" y="350" width="6" height="112" rx="3" fill="#15803d"/>
+<text x="581" y="367" font-size="10.5" font-weight="700" fill="#15803d" letter-spacing="0.4">GESTIONNAIRE D’INTERNAT</text>
+<text x="581" y="389" font-size="13.5" font-weight="700" fill="#0f172a">Vérifier l’inscription</text>
+<text x="581" y="407" font-size="11.5" fill="#334155">Contrôle de l’identité déclarée</text>
+<text x="581" y="424" font-size="11.5" fill="#334155">avant tout dépôt de dossier</text>
+<rect x="579" y="432" width="57" height="20" rx="10" fill="#dcfce7"/>
+<text x="607" y="446" text-anchor="middle" font-size="10.5" font-weight="600" fill="#166534">Vérifiée</text>
+<rect x="641.8" y="432" width="69" height="20" rx="10" fill="#fef3c7"/>
+<text x="676" y="446" text-anchor="middle" font-size="10.5" font-weight="600" fill="#92400e">À corriger</text>
+<line x1="834" y1="384" x2="860" y2="384" stroke="#94a3b8" stroke-width="2" marker-end="url(#fleche)"/>
+<rect x="865" y="350" width="266" height="146" rx="8" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.4"/>
+<rect x="865" y="350" width="6" height="146" rx="3" fill="#1d4ed8"/>
+<text x="881" y="367" font-size="10.5" font-weight="700" fill="#1d4ed8" letter-spacing="0.4">STAGIAIRE</text>
+<text x="881" y="389" font-size="13.5" font-weight="700" fill="#0f172a">Constituer le dossier</text>
+<text x="881" y="407" font-size="11.5" fill="#334155">Déclarations pour le score</text>
+<text x="881" y="424" font-size="11.5" fill="#334155">Pièces justificatives</text>
+<text x="881" y="441" font-size="11.5" fill="#334155">Nouvelle candidature seulement si</text>
+<text x="881" y="458" font-size="11.5" fill="#334155">le dossier précédent est clos</text>
+<rect x="879" y="466" width="63" height="20" rx="10" fill="#e2e8f0"/>
+<text x="910" y="480" text-anchor="middle" font-size="10.5" font-weight="600" fill="#334155">Brouillon</text>
+<line x1="1134" y1="384" x2="1160" y2="384" stroke="#94a3b8" stroke-width="2" marker-end="url(#fleche)"/>
+<rect x="1165" y="350" width="266" height="112" rx="8" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.4"/>
+<rect x="1165" y="350" width="6" height="112" rx="3" fill="#1d4ed8"/>
+<text x="1181" y="367" font-size="10.5" font-weight="700" fill="#1d4ed8" letter-spacing="0.4">STAGIAIRE</text>
+<text x="1181" y="389" font-size="13.5" font-weight="700" fill="#0f172a">Déposer le dossier</text>
+<text x="1181" y="407" font-size="11.5" fill="#334155">Dépôt pendant l’ouverture</text>
+<text x="1181" y="424" font-size="11.5" fill="#334155">Accusé et notification</text>
+<rect x="1179" y="432" width="32" height="20" rx="10" fill="#e2e8f0"/>
+<text x="1195" y="446" text-anchor="middle" font-size="10.5" font-weight="600" fill="#334155">Reçu</text>
+<line x1="750.0" y1="518" x2="750.0" y2="536" stroke="#0f172a" stroke-width="2.2" marker-end="url(#fleche-fonce)"/>
+<rect x="40" y="540" width="1420" height="187" rx="10" fill="#ffffff" stroke="#e2e8f0"/>
+<circle cx="70" cy="572" r="15" fill="#0f172a"/>
+<text x="70" y="577" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">3</text>
+<text x="94" y="570" font-size="15" font-weight="700" fill="#0f172a">Instruction</text>
+<text x="94" y="594" font-size="11.5" fill="#64748b">Espace personnel ( /backend )</text>
+<rect x="265" y="560" width="266" height="99" rx="8" fill="#f0fdf4" stroke="#15803d" stroke-width="1.4"/>
+<rect x="265" y="560" width="6" height="99" rx="3" fill="#15803d"/>
+<text x="281" y="577" font-size="10.5" font-weight="700" fill="#15803d" letter-spacing="0.4">GESTIONNAIRE D’INTERNAT</text>
+<text x="281" y="599" font-size="13.5" font-weight="700" fill="#0f172a">Contrôler les pièces</text>
+<text x="281" y="617" font-size="11.5" fill="#334155">Chaque pièce : acceptée ou</text>
+<text x="281" y="634" font-size="11.5" fill="#334155">à remplacer (avec commentaire)</text>
+<text x="281" y="651" font-size="11.5" fill="#334155">Filtres hiérarchiques de dossiers</text>
+<line x1="534" y1="594" x2="560" y2="594" stroke="#94a3b8" stroke-width="2" marker-end="url(#fleche)"/>
+<rect x="565" y="560" width="266" height="129" rx="8" fill="#f0fdf4" stroke="#15803d" stroke-width="1.4"/>
+<rect x="565" y="560" width="6" height="129" rx="3" fill="#15803d"/>
+<text x="581" y="577" font-size="10.5" font-weight="700" fill="#15803d" letter-spacing="0.4">GESTIONNAIRE D’INTERNAT</text>
+<text x="581" y="599" font-size="13.5" font-weight="700" fill="#0f172a">Décider du dossier</text>
+<text x="581" y="617" font-size="11.5" fill="#334155">Valider le dossier complet,</text>
+<text x="581" y="634" font-size="11.5" fill="#334155">le renvoyer pour rectification</text>
+<text x="581" y="651" font-size="11.5" fill="#334155">ou le rejeter (motivé)</text>
+<rect x="579" y="659" width="51" height="20" rx="10" fill="#dcfce7"/>
+<text x="604" y="673" text-anchor="middle" font-size="10.5" font-weight="600" fill="#166534">Complet</text>
+<rect x="635.7" y="659" width="87" height="20" rx="10" fill="#fef3c7"/>
+<text x="679" y="673" text-anchor="middle" font-size="10.5" font-weight="600" fill="#92400e">Rectification</text>
+<rect x="729.0" y="659" width="45" height="20" rx="10" fill="#fee2e2"/>
+<text x="751" y="673" text-anchor="middle" font-size="10.5" font-weight="600" fill="#991b1b">Rejeté</text>
+<line x1="834" y1="594" x2="860" y2="594" stroke="#94a3b8" stroke-width="2" marker-end="url(#fleche)"/>
+<rect x="865" y="560" width="266" height="99" rx="8" fill="#f1f5f9" stroke="#475569" stroke-width="1.4"/>
+<rect x="865" y="560" width="6" height="99" rx="3" fill="#475569"/>
+<text x="881" y="577" font-size="10.5" font-weight="700" fill="#475569" letter-spacing="0.4">APPLICATION (AUTOMATIQUE)</text>
+<text x="881" y="599" font-size="13.5" font-weight="700" fill="#0f172a">Score et classement</text>
+<text x="881" y="617" font-size="11.5" fill="#334155">Score calculé selon la grille</text>
+<text x="881" y="634" font-size="11.5" fill="#334155">Rang actualisé automatiquement</text>
+<text x="881" y="651" font-size="11.5" fill="#334155">dès la validation du dossier</text>
+<line x1="1134" y1="594" x2="1160" y2="594" stroke="#94a3b8" stroke-width="2" marker-end="url(#fleche)"/>
+<rect x="1165" y="560" width="266" height="116" rx="8" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.4"/>
+<rect x="1165" y="560" width="6" height="116" rx="3" fill="#7c3aed"/>
+<text x="1181" y="577" font-size="10.5" font-weight="700" fill="#7c3aed" letter-spacing="0.4">CHEF DE PÔLE</text>
+<text x="1181" y="599" font-size="13.5" font-weight="700" fill="#0f172a">Rectifier une note</text>
+<text x="1181" y="617" font-size="11.5" fill="#334155">Depuis « Détail du score »,</text>
+<text x="1181" y="634" font-size="11.5" fill="#334155">pour tout statut, même après</text>
+<text x="1181" y="651" font-size="11.5" fill="#334155">délibération : le rang est recalculé</text>
+<text x="1181" y="668" font-size="11.5" fill="#334155">sans annuler admission ni lit</text>
+<text x="1444" y="717" text-anchor="end" font-size="11.5" font-style="italic" fill="#7c3aed">↻ Retour pour rectification : le stagiaire corrige puis redépose, le gestionnaire réinstruit</text>
+<line x1="750.0" y1="729" x2="750.0" y2="747" stroke="#0f172a" stroke-width="2.2" marker-end="url(#fleche-fonce)"/>
+<rect x="40" y="751" width="1420" height="169" rx="10" fill="#f8fafc" stroke="#e2e8f0"/>
+<circle cx="70" cy="783" r="15" fill="#0f172a"/>
+<text x="70" y="788" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">4</text>
+<text x="94" y="781" font-size="15" font-weight="700" fill="#0f172a">Classement</text>
+<text x="94" y="799" font-size="15" font-weight="700" fill="#0f172a">et délibération</text>
+<text x="94" y="823" font-size="11.5" fill="#64748b">Après la clôture des dépôts</text>
+<rect x="265" y="771" width="266" height="112" rx="8" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.4"/>
+<rect x="265" y="771" width="6" height="112" rx="3" fill="#7c3aed"/>
+<text x="281" y="788" font-size="10.5" font-weight="700" fill="#7c3aed" letter-spacing="0.4">CHEF DE PÔLE</text>
+<text x="281" y="810" font-size="13.5" font-weight="700" fill="#0f172a">Clôturer la campagne</text>
+<text x="281" y="828" font-size="11.5" fill="#334155">Ouverte → Clôturée</text>
+<text x="281" y="845" font-size="11.5" fill="#334155">Fin des dépôts</text>
+<rect x="279" y="853" width="57" height="20" rx="10" fill="#e2e8f0"/>
+<text x="307" y="867" text-anchor="middle" font-size="10.5" font-weight="600" fill="#334155">Clôturée</text>
+<line x1="534" y1="805" x2="560" y2="805" stroke="#94a3b8" stroke-width="2" marker-end="url(#fleche)"/>
+<rect x="565" y="771" width="266" height="116" rx="8" fill="#f1f5f9" stroke="#475569" stroke-width="1.4"/>
+<rect x="565" y="771" width="6" height="116" rx="3" fill="#475569"/>
+<text x="581" y="788" font-size="10.5" font-weight="700" fill="#475569" letter-spacing="0.4">APPLICATION (AUTOMATIQUE)</text>
+<text x="581" y="810" font-size="13.5" font-weight="700" fill="#0f172a">Proposer les listes</text>
+<text x="581" y="828" font-size="11.5" fill="#334155">Liste principale (places)</text>
+<text x="581" y="845" font-size="11.5" fill="#334155">Liste d’attente (rangs suivants)</text>
+<text x="581" y="862" font-size="11.5" fill="#334155">Gestionnaire : lecture seule du</text>
+<text x="581" y="879" font-size="11.5" fill="#334155">score et du classement</text>
+<line x1="834" y1="805" x2="860" y2="805" stroke="#94a3b8" stroke-width="2" marker-end="url(#fleche)"/>
+<rect x="865" y="771" width="266" height="129" rx="8" fill="#fffbeb" stroke="#b45309" stroke-width="1.4"/>
+<rect x="865" y="771" width="6" height="129" rx="3" fill="#b45309"/>
+<text x="881" y="788" font-size="10.5" font-weight="700" fill="#b45309" letter-spacing="0.4">DIRECTEUR</text>
+<text x="881" y="810" font-size="13.5" font-weight="700" fill="#0f172a">Délibérer</text>
+<text x="881" y="828" font-size="11.5" fill="#334155">Ajustements motivés possibles</text>
+<text x="881" y="845" font-size="11.5" fill="#334155">Validation de la liste des admis</text>
+<text x="881" y="862" font-size="11.5" fill="#334155">dans son périmètre</text>
+<rect x="879" y="870" width="38" height="20" rx="10" fill="#dcfce7"/>
+<text x="898" y="884" text-anchor="middle" font-size="10.5" font-weight="600" fill="#166534">Admis</text>
+<rect x="923.5" y="870" width="69" height="20" rx="10" fill="#fef3c7"/>
+<text x="958" y="884" text-anchor="middle" font-size="10.5" font-weight="600" fill="#92400e">En attente</text>
+<rect x="998.5" y="870" width="45" height="20" rx="10" fill="#fee2e2"/>
+<text x="1021" y="884" text-anchor="middle" font-size="10.5" font-weight="600" fill="#991b1b">Refusé</text>
+<line x1="1134" y1="805" x2="1160" y2="805" stroke="#94a3b8" stroke-width="2" marker-end="url(#fleche)"/>
+<rect x="1165" y="771" width="266" height="82" rx="8" fill="#f1f5f9" stroke="#475569" stroke-width="1.4"/>
+<rect x="1165" y="771" width="6" height="82" rx="3" fill="#475569"/>
+<text x="1181" y="788" font-size="10.5" font-weight="700" fill="#475569" letter-spacing="0.4">APPLICATION (AUTOMATIQUE)</text>
+<text x="1181" y="810" font-size="13.5" font-weight="700" fill="#0f172a">Publier les résultats</text>
+<text x="1181" y="828" font-size="11.5" fill="#334155">Décision par dossier</text>
+<text x="1181" y="845" font-size="11.5" fill="#334155">Notification de chaque candidat</text>
+<line x1="750.0" y1="922" x2="750.0" y2="940" stroke="#0f172a" stroke-width="2.2" marker-end="url(#fleche-fonce)"/>
+<rect x="40" y="944" width="1420" height="169" rx="10" fill="#ffffff" stroke="#e2e8f0"/>
+<circle cx="70" cy="976" r="15" fill="#0f172a"/>
+<text x="70" y="981" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">5</text>
+<text x="94" y="974" font-size="15" font-weight="700" fill="#0f172a">Admission</text>
+<text x="94" y="998" font-size="11.5" fill="#64748b">Liste principale / d’attente</text>
+<rect x="265" y="964" width="266" height="112" rx="8" fill="#f0fdf4" stroke="#15803d" stroke-width="1.4"/>
+<rect x="265" y="964" width="6" height="112" rx="3" fill="#15803d"/>
+<text x="281" y="981" font-size="10.5" font-weight="700" fill="#15803d" letter-spacing="0.4">GESTIONNAIRE D’INTERNAT</text>
+<text x="281" y="1003" font-size="13.5" font-weight="700" fill="#0f172a">Confirmer la place</text>
+<text x="281" y="1021" font-size="11.5" fill="#334155">Le gestionnaire confirme la place</text>
+<text x="281" y="1038" font-size="11.5" fill="#334155">de l’admis (aucun délai de 48 h)</text>
+<rect x="279" y="1046" width="57" height="20" rx="10" fill="#dcfce7"/>
+<text x="307" y="1060" text-anchor="middle" font-size="10.5" font-weight="600" fill="#166534">Confirmé</text>
+<line x1="534" y1="998" x2="560" y2="998" stroke="#94a3b8" stroke-width="2" marker-end="url(#fleche)"/>
+<rect x="565" y="964" width="266" height="112" rx="8" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.4"/>
+<rect x="565" y="964" width="6" height="112" rx="3" fill="#1d4ed8"/>
+<text x="581" y="981" font-size="10.5" font-weight="700" fill="#1d4ed8" letter-spacing="0.4">STAGIAIRE</text>
+<text x="581" y="1003" font-size="13.5" font-weight="700" fill="#0f172a">Se désister (option)</text>
+<text x="581" y="1021" font-size="11.5" fill="#334155">Désistement motivé par le</text>
+<text x="581" y="1038" font-size="11.5" fill="#334155">candidat : la place se libère</text>
+<rect x="579" y="1046" width="51" height="20" rx="10" fill="#fee2e2"/>
+<text x="604" y="1060" text-anchor="middle" font-size="10.5" font-weight="600" fill="#991b1b">Désisté</text>
+<line x1="834" y1="998" x2="860" y2="998" stroke="#94a3b8" stroke-width="2" marker-end="url(#fleche)"/>
+<rect x="865" y="964" width="266" height="82" rx="8" fill="#f1f5f9" stroke="#475569" stroke-width="1.4"/>
+<rect x="865" y="964" width="6" height="82" rx="3" fill="#475569"/>
+<text x="881" y="981" font-size="10.5" font-weight="700" fill="#475569" letter-spacing="0.4">APPLICATION (AUTOMATIQUE)</text>
+<text x="881" y="1003" font-size="13.5" font-weight="700" fill="#0f172a">Signaler la place libre</text>
+<text x="881" y="1021" font-size="11.5" fill="#334155">Alerte au gestionnaire</text>
+<text x="881" y="1038" font-size="11.5" fill="#334155">Pas de promotion automatique</text>
+<line x1="1134" y1="998" x2="1160" y2="998" stroke="#94a3b8" stroke-width="2" marker-end="url(#fleche)"/>
+<rect x="1165" y="964" width="266" height="129" rx="8" fill="#f0fdf4" stroke="#15803d" stroke-width="1.4"/>
+<rect x="1165" y="964" width="6" height="129" rx="3" fill="#15803d"/>
+<text x="1181" y="981" font-size="10.5" font-weight="700" fill="#15803d" letter-spacing="0.4">GESTIONNAIRE D’INTERNAT</text>
+<text x="1181" y="1003" font-size="13.5" font-weight="700" fill="#0f172a">Passer en liste principale</text>
+<text x="1181" y="1021" font-size="11.5" fill="#334155">Choix d’un candidat en attente</text>
+<text x="1181" y="1038" font-size="11.5" fill="#334155">« Confirmer le transfert » :</text>
+<text x="1181" y="1055" font-size="11.5" fill="#334155">transfert direct, sans délai</text>
+<rect x="1179" y="1063" width="118" height="20" rx="10" fill="#dcfce7"/>
+<text x="1238" y="1077" text-anchor="middle" font-size="10.5" font-weight="600" fill="#166534">En attente → Admis</text>
+<line x1="750.0" y1="1115" x2="750.0" y2="1133" stroke="#0f172a" stroke-width="2.2" marker-end="url(#fleche-fonce)"/>
+<rect x="40" y="1137" width="1420" height="156" rx="10" fill="#f8fafc" stroke="#e2e8f0"/>
+<circle cx="70" cy="1169" r="15" fill="#0f172a"/>
+<text x="70" y="1174" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">6</text>
+<text x="94" y="1167" font-size="15" font-weight="700" fill="#0f172a">Hébergement</text>
+<text x="94" y="1191" font-size="11.5" fill="#64748b">Déclenche l’accès au séjour</text>
+<rect x="265" y="1157" width="266" height="82" rx="8" fill="#f0fdf4" stroke="#15803d" stroke-width="1.4"/>
+<rect x="265" y="1157" width="6" height="82" rx="3" fill="#15803d"/>
+<text x="281" y="1174" font-size="10.5" font-weight="700" fill="#15803d" letter-spacing="0.4">GESTIONNAIRE D’INTERNAT</text>
+<text x="281" y="1196" font-size="13.5" font-weight="700" fill="#0f172a">Autoriser l’occupation</text>
+<text x="281" y="1214" font-size="11.5" fill="#334155">Décision du gestionnaire,</text>
+<text x="281" y="1231" font-size="11.5" fill="#334155">indépendante du paiement</text>
+<line x1="534" y1="1191" x2="560" y2="1191" stroke="#94a3b8" stroke-width="2" marker-end="url(#fleche)"/>
+<rect x="565" y="1157" width="266" height="99" rx="8" fill="#f0fdf4" stroke="#15803d" stroke-width="1.4"/>
+<rect x="565" y="1157" width="6" height="99" rx="3" fill="#15803d"/>
+<text x="581" y="1174" font-size="10.5" font-weight="700" fill="#15803d" letter-spacing="0.4">GESTIONNAIRE D’INTERNAT</text>
+<text x="581" y="1196" font-size="13.5" font-weight="700" fill="#0f172a">Affecter un lit</text>
+<text x="581" y="1214" font-size="11.5" fill="#334155">Un lit = un occupant actif</text>
+<text x="581" y="1231" font-size="11.5" fill="#334155">Historique conservé</text>
+<text x="581" y="1248" font-size="11.5" fill="#334155">(changement de lit motivé)</text>
+<line x1="834" y1="1191" x2="860" y2="1191" stroke="#94a3b8" stroke-width="2" marker-end="url(#fleche)"/>
+<rect x="865" y="1157" width="266" height="82" rx="8" fill="#f0fdf4" stroke="#15803d" stroke-width="1.4"/>
+<rect x="865" y="1157" width="6" height="82" rx="3" fill="#15803d"/>
+<text x="881" y="1174" font-size="10.5" font-weight="700" fill="#15803d" letter-spacing="0.4">GESTIONNAIRE D’INTERNAT</text>
+<text x="881" y="1196" font-size="13.5" font-weight="700" fill="#0f172a">Enregistrer l’arrivée</text>
+<text x="881" y="1214" font-size="11.5" fill="#334155">Mouvement « arrivée »</text>
+<text x="881" y="1231" font-size="11.5" fill="#334155">Attestation d’hébergement (PDF)</text>
+<line x1="1134" y1="1191" x2="1160" y2="1191" stroke="#94a3b8" stroke-width="2" marker-end="url(#fleche)"/>
+<rect x="1165" y="1157" width="266" height="116" rx="8" fill="#f1f5f9" stroke="#475569" stroke-width="1.4"/>
+<rect x="1165" y="1157" width="6" height="116" rx="3" fill="#475569"/>
+<text x="1181" y="1174" font-size="10.5" font-weight="700" fill="#475569" letter-spacing="0.4">APPLICATION (AUTOMATIQUE)</text>
+<text x="1181" y="1196" font-size="13.5" font-weight="700" fill="#0f172a">Ouvrir l’espace séjour</text>
+<text x="1181" y="1214" font-size="11.5" fill="#334155">Rubriques visibles seulement</text>
+<text x="1181" y="1231" font-size="11.5" fill="#334155">après l’affectation d’un lit :</text>
+<text x="1181" y="1248" font-size="11.5" fill="#334155">Hébergement, Paiements, Repas,</text>
+<text x="1181" y="1265" font-size="11.5" fill="#334155">Sorties, Réclamations</text>
+<line x1="750.0" y1="1295" x2="750.0" y2="1313" stroke="#0f172a" stroke-width="2.2" marker-end="url(#fleche-fonce)"/>
+<rect x="40" y="1317" width="1420" height="204" rx="10" fill="#ffffff" stroke="#e2e8f0"/>
+<circle cx="70" cy="1349" r="15" fill="#0f172a"/>
+<text x="70" y="1354" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">7</text>
+<text x="94" y="1347" font-size="15" font-weight="700" fill="#0f172a">Séjour</text>
+<text x="94" y="1371" font-size="11.5" fill="#64748b">Vie quotidienne</text>
+<rect x="265" y="1337" width="266" height="146" rx="8" fill="#f1f5f9" stroke="#475569" stroke-width="1.4"/>
+<rect x="265" y="1337" width="6" height="146" rx="3" fill="#475569"/>
+<text x="281" y="1354" font-size="10.5" font-weight="700" fill="#475569" letter-spacing="0.4">APPLICATION (AUTOMATIQUE)</text>
+<text x="281" y="1376" font-size="13.5" font-weight="700" fill="#0f172a">Mensualités</text>
+<text x="281" y="1394" font-size="11.5" fill="#334155">Générées le 1er du mois</text>
+<text x="281" y="1411" font-size="11.5" fill="#334155">Stagiaire : dépose le justificatif</text>
+<text x="281" y="1428" font-size="11.5" fill="#334155">Gestionnaire : valide ou refuse</text>
+<text x="281" y="1445" font-size="11.5" fill="#334155">Rappel sans blocage</text>
+<rect x="279" y="1453" width="32" height="20" rx="10" fill="#dcfce7"/>
+<text x="295" y="1467" text-anchor="middle" font-size="10.5" font-weight="600" fill="#166534">Payé</text>
+<rect x="317.4" y="1453" width="69" height="20" rx="10" fill="#fef3c7"/>
+<text x="352" y="1467" text-anchor="middle" font-size="10.5" font-weight="600" fill="#92400e">À corriger</text>
+<rect x="565" y="1337" width="266" height="99" rx="8" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.4"/>
+<rect x="565" y="1337" width="6" height="99" rx="3" fill="#1d4ed8"/>
+<text x="581" y="1354" font-size="10.5" font-weight="700" fill="#1d4ed8" letter-spacing="0.4">STAGIAIRE</text>
+<text x="581" y="1376" font-size="13.5" font-weight="700" fill="#0f172a">Repas</text>
+<text x="581" y="1394" font-size="11.5" fill="#334155">Réservation J+1 ou semaine,</text>
+<text x="581" y="1411" font-size="11.5" fill="#334155">régimes et allergies</text>
+<text x="581" y="1428" font-size="11.5" fill="#334155">→ voir workflow Restauration</text>
+<rect x="865" y="1337" width="266" height="99" rx="8" fill="#f0fdf4" stroke="#15803d" stroke-width="1.4"/>
+<rect x="865" y="1337" width="6" height="99" rx="3" fill="#15803d"/>
+<text x="881" y="1354" font-size="10.5" font-weight="700" fill="#15803d" letter-spacing="0.4">GESTIONNAIRE D’INTERNAT</text>
+<text x="881" y="1376" font-size="13.5" font-weight="700" fill="#0f172a">Sorties et absences</text>
+<text x="881" y="1394" font-size="11.5" fill="#334155">Demandes de sortie acceptées</text>
+<text x="881" y="1411" font-size="11.5" fill="#334155">ou refusées, absences pointées</text>
+<text x="881" y="1428" font-size="11.5" fill="#334155">Incidents et maintenance</text>
+<rect x="1165" y="1337" width="266" height="116" rx="8" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.4"/>
+<rect x="1165" y="1337" width="6" height="116" rx="3" fill="#1d4ed8"/>
+<text x="1181" y="1354" font-size="10.5" font-weight="700" fill="#1d4ed8" letter-spacing="0.4">STAGIAIRE</text>
+<text x="1181" y="1376" font-size="13.5" font-weight="700" fill="#0f172a">Réclamations</text>
+<text x="1181" y="1394" font-size="11.5" fill="#334155">Orientées par domaine :</text>
+<text x="1181" y="1411" font-size="11.5" fill="#334155">hébergement → gestionnaire,</text>
+<text x="1181" y="1428" font-size="11.5" fill="#334155">restauration → responsable,</text>
+<text x="1181" y="1445" font-size="11.5" fill="#334155">sélection → chef de pôle (suit tout)</text>
+<text x="1444" y="1511" text-anchor="end" font-size="11.5" font-style="italic" fill="#475569">∥ Activités menées en parallèle, sans ordre imposé</text>
+<line x1="750.0" y1="1523" x2="750.0" y2="1541" stroke="#0f172a" stroke-width="2.2" marker-end="url(#fleche-fonce)"/>
+<rect x="40" y="1545" width="1420" height="152" rx="10" fill="#f8fafc" stroke="#e2e8f0"/>
+<circle cx="70" cy="1577" r="15" fill="#0f172a"/>
+<text x="70" y="1582" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">8</text>
+<text x="94" y="1575" font-size="15" font-weight="700" fill="#0f172a">Fin de séjour</text>
+<text x="94" y="1599" font-size="11.5" fill="#64748b">Clôture et pilotage</text>
+<rect x="265" y="1565" width="266" height="112" rx="8" fill="#f0fdf4" stroke="#15803d" stroke-width="1.4"/>
+<rect x="265" y="1565" width="6" height="112" rx="3" fill="#15803d"/>
+<text x="281" y="1582" font-size="10.5" font-weight="700" fill="#15803d" letter-spacing="0.4">GESTIONNAIRE D’INTERNAT</text>
+<text x="281" y="1604" font-size="13.5" font-weight="700" fill="#0f172a">Enregistrer le départ</text>
+<text x="281" y="1622" font-size="11.5" fill="#334155">Clôture motivée de l’affectation</text>
+<text x="281" y="1639" font-size="11.5" fill="#334155">Le lit redevient disponible</text>
+<rect x="279" y="1647" width="93" height="20" rx="10" fill="#e2e8f0"/>
+<text x="326" y="1661" text-anchor="middle" font-size="10.5" font-weight="600" fill="#334155">Séjour terminé</text>
+<line x1="534" y1="1599" x2="560" y2="1599" stroke="#94a3b8" stroke-width="2" marker-end="url(#fleche)"/>
+<rect x="565" y="1565" width="266" height="82" rx="8" fill="#f1f5f9" stroke="#475569" stroke-width="1.4"/>
+<rect x="565" y="1565" width="6" height="82" rx="3" fill="#475569"/>
+<text x="581" y="1582" font-size="10.5" font-weight="700" fill="#475569" letter-spacing="0.4">APPLICATION (AUTOMATIQUE)</text>
+<text x="581" y="1604" font-size="13.5" font-weight="700" fill="#0f172a">Libérer la place</text>
+<text x="581" y="1622" font-size="11.5" fill="#334155">Place libre signalée</text>
+<text x="581" y="1639" font-size="11.5" fill="#334155">si la campagne est en cours</text>
+<line x1="834" y1="1599" x2="860" y2="1599" stroke="#94a3b8" stroke-width="2" marker-end="url(#fleche)"/>
+<rect x="865" y="1565" width="266" height="82" rx="8" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.4"/>
+<rect x="865" y="1565" width="6" height="82" rx="3" fill="#7c3aed"/>
+<text x="881" y="1582" font-size="10.5" font-weight="700" fill="#7c3aed" letter-spacing="0.4">CHEF DE PÔLE</text>
+<text x="881" y="1604" font-size="13.5" font-weight="700" fill="#0f172a">Archiver la campagne</text>
+<text x="881" y="1622" font-size="11.5" fill="#334155">Historique conservé</text>
+<text x="881" y="1639" font-size="11.5" fill="#334155">Plus de modification</text>
+<line x1="1134" y1="1599" x2="1160" y2="1599" stroke="#94a3b8" stroke-width="2" marker-end="url(#fleche)"/>
+<rect x="1165" y="1565" width="266" height="99" rx="8" fill="#fffbeb" stroke="#b45309" stroke-width="1.4"/>
+<rect x="1165" y="1565" width="6" height="99" rx="3" fill="#b45309"/>
+<text x="1181" y="1582" font-size="10.5" font-weight="700" fill="#b45309" letter-spacing="0.4">DIRECTEUR</text>
+<text x="1181" y="1604" font-size="13.5" font-weight="700" fill="#0f172a">Pilotage et exports</text>
+<text x="1181" y="1622" font-size="11.5" fill="#334155">Tableaux de bord, rapports,</text>
+<text x="1181" y="1639" font-size="11.5" fill="#334155">exports dans le périmètre</text>
+<text x="1181" y="1656" font-size="11.5" fill="#334155">(directions régionale et centrale)</text>
+<rect x="40" y="1713" width="1420" height="46" rx="10" fill="#0f172a"/>
+<text x="750.0" y="1742" text-anchor="middle" font-size="15" font-weight="700" fill="#fff">Dossier clos — le stagiaire peut candidater à une nouvelle campagne</text>
+<text x="40" y="1779" font-size="11.5" fill="#64748b">Statuts du dossier : Brouillon → Reçu → Complet / Retour pour rectification / Rejeté → Admis / En attente / Refusé → Confirmé (ou Désisté) → Séjour terminé.</text>
+<text x="40" y="1795" font-size="11.5" fill="#64748b">Chaque action est tracée au journal d’audit ; chaque compte n’agit que dans son périmètre (internat, établissement, complexe, région).</text>
+</svg>

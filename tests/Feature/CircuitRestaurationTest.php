@@ -236,6 +236,59 @@ class CircuitRestaurationTest extends TestCase
         $this->assertRegle('modification_impossible', fn () => app(Restauration::class)->modifierAllergie($demain, 'Autre'));
     }
 
+    public function test_les_absents_se_consultent_par_repas_et_s_impriment_par_repas_ou_par_journee(): void
+    {
+        // Lundi (aujourd'hui) : trois repas validés, réservés par les deux résidentes.
+        $menus = $this->proposerJour(0);
+        $this->ecran($this->restauration, Menus::class)->call('transmettreSemaine');
+        $this->ecran($this->chefDePole, Menus::class)->call('validerSemaine');
+        [$aya, $sara] = [$this->residentes[0]->demande->stagiaire, $this->residentes[1]->demande->stagiaire];
+        $reservations = [];
+        foreach ($menus as $menu) {
+            foreach ([$aya, $sara] as $stagiaire) {
+                $reservations[$menu->id][$stagiaire->id] = ReservationRepas::create([
+                    'menu_id' => $menu->id, 'stagiaire_id' => $stagiaire->id, 'statut' => StatutReservation::Reserve, 'date_reservation' => now()->subDay(),
+                ]);
+            }
+        }
+
+        // Petit-déjeuner : Aya absente ; déjeuner : les deux absentes ; dîner : service pas encore clos.
+        $this->agirEnTantQue($this->restauration);
+        $restauration = app(Restauration::class);
+        foreach ([0 => [$aya->id], 1 => [$aya->id, $sara->id]] as $i => $absentes) {
+            $menu = $menus[$i]->fresh();
+            $restauration->confirmerEffectif($menu, null, $this->restauration);
+            $pointage = collect($reservations[$menu->id])->mapWithKeys(fn ($r, $id) => [$r->id => in_array($id, $absentes, true) ? 'absent' : 'servi'])->all();
+            $restauration->cloturerService($menu, $pointage, null, null, $this->restauration);
+        }
+
+        // Fenêtre par repas : date, internat et type de repas de la carte.
+        $ecran = $this->ecran($this->restauration, ServiceDesRepas::class)->assertSee('Imprimer les absents de la journée');
+        $ecran->call('voirAbsents', $menus[0]->id)->assertSet('dialogue', 'absents')
+            ->assertSee($aya->nom)->assertSee($aya->cef)->assertDontSee($sara->cef)->assertDontSee('n’est pas encore clôturé');
+        $ecran->call('voirAbsents', $menus[2]->id)
+            ->assertSee('Aucun stagiaire absent pour ce repas.')->assertSee('la liste des absences n’est pas définitive');
+        $this->ecran($this->chefDePole, ServiceDesRepas::class)->call('voirAbsents', $menus[1]->id)->assertSee($sara->cef);
+        $this->ecran($this->gestionnaireFilles, ServiceDesRepas::class)->assertForbidden();
+
+        // Domaine : une absence par repas manqué, même stagiaire comptée deux fois.
+        $jour = app(\App\Domain\Catering\AbsencesRepas::class)->duJour($this->restauration, $this->lundi);
+        $this->assertCount(1, $jour);
+        $this->assertSame(3, $jour[0]->total);
+        $this->assertSame([1, 2, 0], array_values(array_map(fn ($r) => $r->absents->count(), $jour[0]->repas)));
+        $this->assertSame([true, true, false], array_values(array_map(fn ($r) => $r->clos, $jour[0]->repas)));
+        $this->assertSame('Établissement de test', $jour[0]->etablissement);
+
+        // Impressions PDF : un repas, puis la journée.
+        $this->connecter($this->restauration)->get(route('restauration.absences.imprimer', ['menu' => $menus[1]->id]))
+            ->assertOk()->assertHeader('content-type', 'application/pdf');
+        $this->connecter($this->restauration)->get(route('restauration.absences.imprimer', ['jour' => $this->lundi->toDateString(), 'internat' => $this->filles->id]))
+            ->assertOk()->assertHeader('content-type', 'application/pdf');
+        $this->assertSame(2, JournalAudit::where('action', 'restauration.absences_imprimees')->count());
+        $this->connecter($this->restauration)->get(route('restauration.absences.imprimer', ['jour' => $this->lundi->toDateString(), 'internat' => $this->ailleurs->id]))->assertForbidden();
+        $this->connecter($this->gestionnaireAilleurs)->get(route('restauration.absences.imprimer', ['menu' => $menus[0]->id]))->assertForbidden();
+    }
+
     public function test_les_regimes_vegetarien_et_autre_se_declarent_sans_justificatif(): void
     {
         $residente = $this->residentes[0]->demande->stagiaire;

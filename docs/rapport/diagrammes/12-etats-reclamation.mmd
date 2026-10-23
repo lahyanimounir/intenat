@@ -1,0 +1,15 @@
+stateDiagram-v2
+  direction TB
+  [*] --> Ouverte: dépôt par le stagiaire (domaine choisi)
+  Ouverte --> EnCours: prise en charge
+  Ouverte --> Traitee: réponse directe
+  EnCours --> Traitee: réponse au stagiaire
+  Traitee --> [*]
+  Ouverte: Ouverte (en attente)
+  EnCours: En cours de traitement
+  Traitee: Traitée et clôturée
+  note right of Ouverte
+    Hébergement : gestionnaire
+    Restauration : responsable restauration
+    Sélection : chef de pôle
+  end note

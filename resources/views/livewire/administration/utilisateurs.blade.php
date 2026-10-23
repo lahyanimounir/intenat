@@ -1,10 +1,14 @@
 @php use App\Support\Affichage\Format; @endphp
 <div>
     <x-page.entete titre="Utilisateurs"
-        description="Comptes du personnel. Chaque compte porte un rôle et un périmètre : il n’accède qu’aux données de l’internat, de l’établissement ou de la région dont il a la charge. Les stagiaires n’ont pas de compte ici : ils créent le leur eux-mêmes.">
-        <x-slot:actions>
-            <x-bouton variante="primaire" icone="plus" wire:click="creer">Nouveau compte</x-bouton>
-        </x-slot:actions>
+        :description="$gestion
+            ? 'Comptes du personnel. Chaque compte porte un rôle et un périmètre : il n’accède qu’aux données de l’internat, de l’établissement ou de la région dont il a la charge. Les stagiaires n’ont pas de compte ici : ils créent le leur eux-mêmes.'
+            : 'Comptes du personnel placés sous votre responsabilité, dans votre périmètre. Vous pouvez en réinitialiser le mot de passe ; leur création et leur modification relèvent de l’administrateur.'">
+        @if ($gestion)
+            <x-slot:actions>
+                <x-bouton variante="primaire" icone="plus" wire:click="creer">Nouveau compte</x-bouton>
+            </x-slot:actions>
+        @endif
     </x-page.entete>
 
     <x-tableau legende="Comptes du personnel" :lignes="$comptes" :tri="$tri" :sens="$sens" vide="Aucun compte ne correspond aux filtres">
@@ -46,8 +50,14 @@
                 <x-tableau.cellule><x-badge :ton="$compte->actif ? 'succes' : 'neutre'">{{ $compte->actif ? 'Actif' : 'Désactivé' }}</x-badge></x-tableau.cellule>
                 <x-tableau.cellule droite>
                     <div class="flex justify-end gap-1">
-                        <x-bouton variante="discret" taille="icone" icone="pencil" aria-label="Modifier {{ $nomComplet }}" wire:click="modifier({{ $compte->id }})" />
-                        @if ($compte->id !== $moi)
+                        @if (in_array($compte->id, $reinitialisables, true))
+                            <x-bouton variante="discret" taille="icone" icone="key-round" aria-label="Réinitialiser le mot de passe de {{ $nomComplet }}" title="Réinitialiser le mot de passe"
+                                wire:click="preparerReinitialisation({{ $compte->id }})" />
+                        @endif
+                        @if ($gestion)
+                            <x-bouton variante="discret" taille="icone" icone="pencil" aria-label="Modifier {{ $nomComplet }}" wire:click="modifier({{ $compte->id }})" />
+                        @endif
+                        @if ($gestion && $compte->id !== $moi)
                             <x-bouton variante="discret" taille="icone" icone="power" aria-label="{{ $compte->actif ? 'Désactiver' : 'Réactiver' }} {{ $nomComplet }}"
                                 x-on:click="$confirmer({
                                     titre: {{ Js::from($compte->actif ? 'Désactiver ce compte ?' : 'Réactiver ce compte ?') }},
@@ -103,4 +113,6 @@
             </x-slot:pied>
         </x-dialogue>
     @endif
+
+    @include('livewire.administration.partiels.reinitialisation')
 </div>

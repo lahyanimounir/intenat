@@ -3,10 +3,12 @@
 namespace App\Livewire\Administration;
 
 use App\Domain\Identity\ComptesStagiaires as Comptes;
+use App\Domain\Identity\Perimetre;
 use App\Enums\EtatCompte;
 use App\Enums\ResultatVerification;
 use App\Enums\StatutInscription;
 use App\Livewire\Concerns\AvecHierarchie;
+use App\Livewire\Concerns\AvecReinitialisationMotDePasse;
 use App\Livewire\Concerns\AvecTableau;
 use App\Livewire\PagePersonnel;
 use App\Models\Stagiaire;
@@ -23,13 +25,19 @@ use Livewire\Attributes\Url;
  * Le second onglet est une archive : les premières connexions par MyWay qui
  * n'avaient pas abouti, du temps où l'identité venait de ce service. Elle se
  * consulte, sans plus rien y décider.
+ *
+ * Le chef de pôle, le gestionnaire et le responsable restauration y accèdent pour la seule réinitialisation
+ * du mot de passe des stagiaires de leur périmètre : ils ne voient que ces stagiaires.
  */
 #[Title('Comptes stagiaires')]
 class ComptesStagiaires extends PagePersonnel
 {
-    use AvecHierarchie, AvecTableau;
+    use AvecHierarchie, AvecReinitialisationMotDePasse, AvecTableau;
 
     private const PERMISSION = 'stagiaires.gerer';
+
+    /** Réinitialiser le mot de passe des stagiaires de son périmètre. */
+    private const REINITIALISER = 'mots_de_passe.stagiaires';
 
     #[Url(except: 'comptes')]
     public string $onglet = 'comptes';
@@ -42,8 +50,15 @@ class ComptesStagiaires extends PagePersonnel
 
     public function mount(): void
     {
-        $this->exiger(self::PERMISSION);
-        $this->onglet = $this->onglet === 'archive' ? 'archive' : 'comptes';
+        $this->exiger(self::PERMISSION, self::REINITIALISER);
+        $this->onglet = $this->onglet === 'archive' && $this->peut(self::PERMISSION) ? 'archive' : 'comptes';
+    }
+
+    protected function compteDeLaLigne(int $id): Stagiaire
+    {
+        $this->exiger(self::PERMISSION, self::REINITIALISER);
+
+        return Stagiaire::findOrFail($id);
     }
 
     protected function filtres(): array
@@ -59,7 +74,7 @@ class ComptesStagiaires extends PagePersonnel
 
     public function voir(string $onglet): void
     {
-        $this->onglet = $onglet === 'archive' ? 'archive' : 'comptes';
+        $this->onglet = $onglet === 'archive' && $this->peut(self::PERMISSION) ? 'archive' : 'comptes';
         $this->resetPage();
     }
 
@@ -94,8 +109,13 @@ class ComptesStagiaires extends PagePersonnel
 
     public function render()
     {
-        $this->exiger(self::PERMISSION);
-        $donnees = ['archives' => VerificationIdentite::where('resultat', '!=', ResultatVerification::Verifiee->value)->count()];
+        $this->exiger(self::PERMISSION, self::REINITIALISER);
+        $gestion = $this->peut(self::PERMISSION);
+        $donnees = [
+            'gestion' => $gestion,
+            'cibleMdp' => $this->compteEnReinitialisation(),
+            'archives' => $gestion ? VerificationIdentite::where('resultat', '!=', ResultatVerification::Verifiee->value)->count() : 0,
+        ];
 
         if ($this->onglet === 'archive') {
             $donnees['verifications'] = VerificationIdentite::query()->with('examinateur:id,nom,prenom')
@@ -109,6 +129,8 @@ class ComptesStagiaires extends PagePersonnel
 
             // Un stagiaire relève de la hiérarchie par l'établissement qu'il a déclaré.
             $requete = Stagiaire::query()->with('etablissement:id,code_efp,nom_efp')
+                // Sans la gestion des comptes, la liste se limite aux stagiaires du périmètre du responsable.
+                ->when(! $gestion, fn (Builder $q) => app(Perimetre::class)->restreindreStagiaires($q, $this->utilisateur()))
                 ->when($this->etablissementsFiltres(), fn (Builder $q, Builder $etablissements) => $q->whereIn('stagiaire.etablissement_id', $etablissements))
                 ->when(EtatCompte::tryFrom($this->etat), fn (Builder $q, EtatCompte $etat) => $q->where('etat_compte', $etat->value))
                 ->when(StatutInscription::tryFrom($this->inscription), fn (Builder $q, StatutInscription $statut) => $q->where('statut_inscription', $statut->value))
@@ -118,6 +140,7 @@ class ComptesStagiaires extends PagePersonnel
             $this->appliquerTri($requete, ['nom' => 'nom', 'cef' => 'cef', 'cree_le' => 'inscrit_le'], 'nom')->orderBy('id');
 
             $donnees['comptes'] = $this->paginer($requete);
+            $donnees['reinitialisables'] = $this->reinitialisables($donnees['comptes']->getCollection());
             $donnees['filtresActifs'] = $terme !== '' || $this->etat !== '' || $this->inscription !== '' || $this->hierarchieFiltree();
         }
 

@@ -1,0 +1,22 @@
+sequenceDiagram
+  autonumber
+  participant R as Responsable restauration
+  participant S as Application
+  participant P as Chef de pôle
+  participant T as Stagiaire résident
+  R->>S: Propose les menus de la semaine
+  R->>S: Transmet la semaine
+  S-->>P: Notification : menus à valider
+  alt Correction nécessaire
+    P->>S: Renvoie un repas, une journée ou la semaine (commentaire)
+    S-->>R: Notification et commentaire visible sur les menus
+    R->>S: Corrige puis retransmet
+  end
+  P->>S: Valide le menu ou la semaine
+  S-->>R: Notification : menus validés
+  S-->>T: Menus visibles et réservables
+  T->>S: Réserve (J+1 ou semaine) et signale une allergie
+  R->>S: Consulte et imprime la liste J+1
+  R->>S: Confirme l'effectif (veille)
+  R->>S: Pointe et clôt le service (jour J)
+  R->>S: Imprime les absents du repas ou de la journée

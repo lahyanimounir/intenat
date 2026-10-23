@@ -10,6 +10,7 @@ use App\Domain\Identity\Perimetre;
 use App\Domain\Shared\Parametres;
 use App\Http\Middleware\ExigerAdresseVerifiee;
 use App\Http\Middleware\ExigerLitAffecte;
+use App\Http\Middleware\ExigerMotDePasseDefinitif;
 use App\Http\Middleware\ExigerPermission;
 use App\Http\Middleware\ExigerPersonnel;
 use App\Http\Middleware\ExigerProfilComplet;
@@ -91,6 +92,7 @@ class AppServiceProvider extends ServiceProvider
             AuthenticateSession::class,
             ExigerPersonnel::class, ExigerStagiaire::class, ExigerPermission::class,
             ExigerAdresseVerifiee::class, ExigerProfilComplet::class, ExigerLitAffecte::class,
+            ExigerMotDePasseDefinitif::class,
         ]);
 
         $this->limitesDeDebit();

@@ -1,0 +1,12 @@
+flowchart TB
+  classDef s fill:#eff6ff,stroke:#1d4ed8,color:#0f172a,stroke-width:2px
+  classDef y fill:#f1f5f9,stroke:#475569,color:#0f172a,stroke-width:2px
+  classDef g fill:#f0fdf4,stroke:#15803d,color:#0f172a,stroke-width:2px
+  classDef d fill:#fff,stroke:#b45309,color:#0f172a,stroke-width:2px
+  J((Dossier Reçu)) --> K[Vérification de l'inscription en formation]:::g
+  K --> L[Instruction du dossier par le gestionnaire]:::g
+  L --> M{Décision}:::d
+  M -- Complet --> N[Score calculé, classement actualisé]:::y
+  M -- Retour pour rectification --> O[Le stagiaire corrige et redépose]:::s --> L
+  M -- Rejet motivé --> Z((Dossier rejeté))
+  N --> FIN((Attente de la délibération))

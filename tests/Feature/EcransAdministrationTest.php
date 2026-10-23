@@ -244,14 +244,22 @@ class EcransAdministrationTest extends TestCase
 
     public function test_l_administration_est_fermee_aux_autres_roles(): void
     {
-        foreach (['utilisateurs', 'permissions', 'comptes-stagiaires', 'organisation', 'parametres', 'audit'] as $ecran) {
+        foreach (['permissions', 'organisation', 'parametres', 'audit'] as $ecran) {
             $this->connecter($this->chefDePole)->get("/administration/{$ecran}")->assertForbidden();
             $this->connecter($this->gestionnaireFilles)->get("/administration/{$ecran}")->assertForbidden();
             $this->connecter($this->admin)->get("/administration/{$ecran}")->assertOk();
         }
 
+        // « Utilisateurs » et « Comptes stagiaires » s'ouvrent aux responsables pour la seule réinitialisation des mots de passe.
+        $this->connecter($this->admin)->get('/administration/utilisateurs')->assertOk();
+        $this->connecter($this->chefDePole)->get('/administration/utilisateurs')->assertOk();
+        $this->connecter($this->gestionnaireFilles)->get('/administration/utilisateurs')->assertForbidden();
+        $this->connecter($this->gestionnaireFilles)->get('/administration/comptes-stagiaires')->assertOk();
+        $this->connecter($this->directionRegionale)->get('/administration/comptes-stagiaires')->assertForbidden();
+        Livewire::actingAs($this->chefDePole, 'web')->test(Utilisateurs::class)->call('creer')->assertForbidden();
+
         // Appeler l'action sans passer par l'écran ne contourne rien.
-        Livewire::actingAs($this->chefDePole, 'web')->test(Utilisateurs::class)->assertForbidden();
+        Livewire::actingAs($this->chefDePole, 'web')->test(Utilisateurs::class)->call('basculer', $this->gestionnaireFilles->id)->assertForbidden();
         Livewire::actingAs($this->directeur, 'web')->test(Parametres::class)->assertForbidden();
 
         // L'administrateur gère les comptes, pas les dossiers ni les paiements.
@@ -297,8 +305,9 @@ class EcransAdministrationTest extends TestCase
         $this->assertSame(['stagiaire.suspension', 'stagiaire.retablissement', 'stagiaire.reinitialisation_envoyee'],
             JournalAudit::where('action', 'like', 'stagiaire.%')->orderBy('id')->pluck('action')->all());
 
-        // Le chef de pôle vérifie les inscriptions ; il n'administre pas les comptes.
-        Livewire::actingAs($this->chefDePole, 'web')->test(ComptesStagiaires::class)->assertForbidden();
+        // Le chef de pôle vérifie les inscriptions ; il réinitialise les mots de passe mais n'administre pas les comptes.
+        Livewire::actingAs($this->chefDePole, 'web')->test(ComptesStagiaires::class)->call('suspendre', $stagiaire->id, 'Motif de test')->assertForbidden();
+        Livewire::actingAs($this->chefDePole, 'web')->test(ComptesStagiaires::class)->call('envoyerLien', $stagiaire->id)->assertForbidden();
     }
 
     public function test_les_comptes_stagiaires_se_filtrent_par_la_hierarchie_sans_creation_possible(): void

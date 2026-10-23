@@ -1,0 +1,9 @@
+flowchart TB
+  classDef n fill:#eef3fa,stroke:#183153,color:#0f172a,font-weight:bold
+  classDef r fill:#fff,stroke:#94a3b8,color:#334155
+  R[Région]:::n --> P[Province]:::n --> C["Complexe / CMC"]:::n --> E["Établissement (code EFP)"]:::n --> I["Internat (Maison des Stagiaires, filles ou garçons)"]:::n
+  R -.-> R1[Direction régionale]:::r
+  C -.-> C1[Directeur]:::r
+  E -.-> E1["Chef de pôle, Responsable restauration"]:::r
+  I -.-> I1[Gestionnaire d'internat]:::r
+  I -.-> I2["Campagnes, bâtiments, lits, menus"]:::r

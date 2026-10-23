@@ -1,0 +1,22 @@
+flowchart TB
+  classDef acteur fill:#183153,color:#fff,stroke:#183153,font-weight:bold
+  classDef cas fill:#eef3fa,stroke:#183153,color:#0f172a,stroke-width:2px
+  GES["Gestionnaire d'internat"]:::acteur
+  GES0(["Vérifier l'inscription, instruire le dossier"])
+  GES --- GES0
+  GES1(["Confirmer la place, transférer depuis l'attente"])
+  GES0 --- GES1
+  GES2(["Plan d'occupation, affecter un lit"])
+  GES1 --- GES2
+  GES3(["Contrôler les paiements"])
+  GES2 --- GES3
+  GES4(["Sorties, absences, incidents"])
+  GES3 --- GES4
+  RES["Responsable restauration"]:::acteur
+  RES0(["Composer et transmettre les menus"])
+  RES --- RES0
+  RES1(["Liste J+1, confirmer les effectifs"])
+  RES0 --- RES1
+  RES2(["Clore le service, listes d'absents"])
+  RES1 --- RES2
+  class GES0,GES1,GES2,GES3,GES4,RES0,RES1,RES2 cas

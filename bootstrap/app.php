@@ -8,6 +8,7 @@ use App\Http\Middleware\EnTetesSecurite;
 use App\Http\Middleware\ExigerAdresseVerifiee;
 use App\Http\Middleware\ExigerInscriptionVerifiee;
 use App\Http\Middleware\ExigerLitAffecte;
+use App\Http\Middleware\ExigerMotDePasseDefinitif;
 use App\Http\Middleware\ExigerPermission;
 use App\Http\Middleware\ExigerPersonnel;
 use App\Http\Middleware\ExigerProfilComplet;
@@ -46,6 +47,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'profil.complet' => ExigerProfilComplet::class,
             'inscription.verifiee' => ExigerInscriptionVerifiee::class,
             'lit.affecte' => ExigerLitAffecte::class,
+            'mot_de_passe.definitif' => ExigerMotDePasseDefinitif::class,
         ]);
 
         // Un visiteur est renvoyé à la connexion de l'espace demandé ; un compte déjà connecté, à l'accueil du sien.

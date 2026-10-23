@@ -60,6 +60,7 @@ class Stagiaire extends Authenticatable
     {
         return [
             'mot_de_passe_hash' => 'hashed',
+            'mot_de_passe_provisoire' => 'boolean',
             'genre' => Genre::class,
             'niveau_formation' => NiveauFormation::class,
             'annee_formation' => AnneeFormation::class,

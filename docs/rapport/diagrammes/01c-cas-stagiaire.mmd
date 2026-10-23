@@ -1,0 +1,18 @@
+flowchart TB
+  classDef acteur fill:#183153,color:#fff,stroke:#183153,font-weight:bold
+  classDef cas fill:#eef3fa,stroke:#183153,color:#0f172a,stroke-width:2px
+  STG["Stagiaire / candidat"]:::acteur
+  STG0(["S'inscrire et candidater"])
+  STG --- STG0
+  STG1(["Payer ses mensualités"])
+  STG0 --- STG1
+  STG2(["Réserver ses repas, déclarer ses régimes"])
+  STG1 --- STG2
+  STG3(["Déposer une réclamation"])
+  STG2 --- STG3
+  DRC["Directions régionale et centrale"]:::acteur
+  DRC0(["Indicateurs et exports"])
+  DRC --- DRC0
+  DRC1(["Grille nationale de référence"])
+  DRC0 --- DRC1
+  class STG0,STG1,STG2,STG3,DRC0,DRC1 cas

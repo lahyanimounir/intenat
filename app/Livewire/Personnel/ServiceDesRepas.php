@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Personnel;
 
+use App\Domain\Catering\AbsencesRepas;
 use App\Domain\Catering\Restauration;
 use App\Enums\StatutMenu;
 use App\Enums\StatutReservation;
@@ -78,6 +79,17 @@ class ServiceDesRepas extends PagePersonnel
         return ReservationRepas::where('menu_id', $menu->id)->where('statut', StatutReservation::Reserve->value)
             ->with('stagiaire:id,nom,prenom,cef', 'stagiaire.regimes')->get()
             ->sortBy(fn (ReservationRepas $r) => $r->stagiaire->nom.' '.$r->stagiaire->prenom)->values();
+    }
+
+    /* ------------------------------------------------------------- Absents */
+
+    /** Liste nominative des absents d'un repas : consultable par qui suit la restauration. */
+    public function voirAbsents(int $id): void
+    {
+        $menu = Menu::findOrFail($id);
+        $this->autoriser($menu, self::CONSULTER);
+        $this->ligne = $menu->id;
+        $this->ouvrirDialogue('absents');
     }
 
     /* ----------------------------------------------- Effectif prévisionnel (J+1) */
@@ -169,6 +181,10 @@ class ServiceDesRepas extends PagePersonnel
             'gerer' => $this->peut(self::GERER),
             'choisi' => $choisi,
             'reservations' => $choisi && in_array($this->dialogue, ['cloture', 'effectif'], true) ? $this->aPointer($choisi) : collect(),
+            'absents' => $choisi && $this->dialogue === 'absents'
+                ? collect(app(AbsencesRepas::class)->duJour($this->utilisateur(), $date, menuId: $choisi->id)->first()?->repas ?? [])->flatMap->absents->values()
+                : collect(),
+            'impressionJournee' => route('restauration.absences.imprimer', array_filter(['jour' => $date->toDateString(), 'internat' => $this->internat])),
         ]);
     }
 }

@@ -50,6 +50,7 @@ class Profil extends PageStagiaire
         $stagiaire->forceFill([
             'mot_de_passe_hash' => $this->mot_de_passe,
             'mot_de_passe_modifie_le' => now(),
+            'mot_de_passe_provisoire' => false,
             'remember_token' => Str::random(60),
         ])->save();
 

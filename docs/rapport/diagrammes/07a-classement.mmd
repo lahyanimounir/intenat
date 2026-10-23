@@ -1,0 +1,10 @@
+flowchart TB
+  classDef y fill:#f1f5f9,stroke:#475569,color:#0f172a,stroke-width:2px
+  classDef p fill:#f5f3ff,stroke:#7c3aed,color:#0f172a,stroke-width:2px
+  classDef g fill:#f0fdf4,stroke:#15803d,color:#0f172a,stroke-width:2px
+  A[Grille de critères de la campagne]:::p --> B[Dossier validé Complet]:::g
+  B --> C[Calcul automatique du score]:::y
+  C --> D[Classement calculé et rangs]:::y
+  D --> E[Correction manuelle d'une note par le chef de pôle, rang recalculé]:::p
+  E --> D
+  D --> F[Clôture de la campagne]:::p

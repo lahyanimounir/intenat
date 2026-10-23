@@ -3,8 +3,10 @@
 namespace App\Livewire\Administration;
 
 use App\Domain\Identity\ComptesPersonnel;
+use App\Domain\Identity\ReinitialisationMotDePasse;
 use App\Enums\RoleCode;
 use App\Livewire\Concerns\AvecHierarchie;
+use App\Livewire\Concerns\AvecReinitialisationMotDePasse;
 use App\Livewire\Concerns\AvecTableau;
 use App\Livewire\PagePersonnel;
 use App\Models\Internat;
@@ -18,13 +20,19 @@ use Livewire\Attributes\Url;
  * Comptes du personnel. Chaque compte porte un rôle et un périmètre : il
  * n'accède qu'aux données de l'internat, de l'établissement ou de la région
  * dont il a la charge. Les stagiaires créent eux-mêmes leur compte, ailleurs.
+ *
+ * Le directeur et le chef de pôle y accèdent aussi, pour la seule réinitialisation des mots de passe des
+ * comptes placés sous leur responsabilité : ils ne voient que ces comptes et n'en modifient rien d'autre.
  */
 #[Title('Utilisateurs')]
 class Utilisateurs extends PagePersonnel
 {
-    use AvecHierarchie, AvecTableau;
+    use AvecHierarchie, AvecReinitialisationMotDePasse, AvecTableau;
 
     private const PERMISSION = 'utilisateurs.gerer';
+
+    /** Réinitialiser les mots de passe des comptes du personnel placés sous sa responsabilité. */
+    private const REINITIALISER = 'mots_de_passe.personnel';
 
     /** Ce que chaque rôle fait, et le niveau de périmètre qu'il exige. */
     public const ROLES = [
@@ -58,7 +66,14 @@ class Utilisateurs extends PagePersonnel
 
     public function mount(): void
     {
-        $this->exiger(self::PERMISSION);
+        $this->exiger(self::PERMISSION, self::REINITIALISER);
+    }
+
+    protected function compteDeLaLigne(int $id): Utilisateur
+    {
+        $this->exiger(self::PERMISSION, self::REINITIALISER);
+
+        return Utilisateur::with('roles')->findOrFail($id);
     }
 
     protected function filtres(): array
@@ -206,7 +221,8 @@ class Utilisateurs extends PagePersonnel
 
     public function render()
     {
-        $this->exiger(self::PERMISSION);
+        $this->exiger(self::PERMISSION, self::REINITIALISER);
+        $gestion = $this->peut(self::PERMISSION);
 
         $hierarchie = $this->listesDesFiltres();
         $terme = trim($this->recherche);
@@ -217,7 +233,9 @@ class Utilisateurs extends PagePersonnel
             ->tap(fn (Builder $q) => $this->restreindreAuRattachement($q))
             ->when($terme !== '', fn (Builder $q) => $q->where(fn (Builder $s) => $s->where('nom', 'like', $motif)->orWhere('prenom', 'like', $motif)->orWhere('email', 'like', $motif)))
             ->when($roleFiltre !== null, fn (Builder $q) => $q->role($roleFiltre->value))
-            ->when(in_array($this->actif, ['0', '1'], true), fn (Builder $q) => $q->where('actif', $this->actif === '1'));
+            ->when(in_array($this->actif, ['0', '1'], true), fn (Builder $q) => $q->where('actif', $this->actif === '1'))
+            // Sans la gestion des comptes, seuls les comptes que l'on peut réinitialiser sont listés.
+            ->when(! $gestion, fn (Builder $q) => app(ReinitialisationMotDePasse::class)->restreindrePersonnel($q, $this->utilisateur()));
 
         $this->appliquerTri($requete, ['nom' => 'nom', 'email' => 'email', 'derniere_connexion' => 'derniere_connexion_le'], 'nom')->orderBy('id');
 
@@ -226,8 +244,13 @@ class Utilisateurs extends PagePersonnel
         [$listes, $choix] = $niveaux === [] ? [[], []] : $this->cascade($this->saisie, $niveaux);
         $this->saisie = $choix + $this->saisie;
 
+        $comptes = $this->paginer($requete);
+
         return view('livewire.administration.utilisateurs', [
-            'comptes' => $this->paginer($requete),
+            'comptes' => $comptes,
+            'gestion' => $gestion,
+            'reinitialisables' => $this->reinitialisables($comptes->getCollection()),
+            'cibleMdp' => $this->compteEnReinitialisation(),
             'moi' => $this->utilisateur()->id,
             'roles' => collect(RoleCode::cases())->mapWithKeys(fn (RoleCode $r) => [$r->value => $r->libelle()]),
             'niveaux' => $niveaux,

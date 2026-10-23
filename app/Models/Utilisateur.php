@@ -35,6 +35,7 @@ class Utilisateur extends Authenticatable
     {
         return [
             'mot_de_passe_hash' => 'hashed',
+            'mot_de_passe_provisoire' => 'boolean',
             'actif' => 'boolean',
             'derniere_connexion_le' => 'datetime',
         ];

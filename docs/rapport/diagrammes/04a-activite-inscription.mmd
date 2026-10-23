@@ -1,0 +1,14 @@
+flowchart TB
+  classDef s fill:#eff6ff,stroke:#1d4ed8,color:#0f172a,stroke-width:2px
+  classDef y fill:#f1f5f9,stroke:#475569,color:#0f172a,stroke-width:2px
+  classDef d fill:#fff,stroke:#b45309,color:#0f172a,stroke-width:2px
+  A((Début)) --> B[1. Compte : e-mail, mot de passe]:::s
+  B --> C[2. Identité : nom, CIN, genre, contact]:::s
+  C --> D[3. Formation : établissement, filière, campagne ouverte]:::s
+  D --> E[4. Situation : critères déclarés pour le score]:::s
+  E --> F[5. Pièces justificatives]:::s
+  F --> G[6. Vérification du récapitulatif]:::s
+  G --> H{Champs et pièces obligatoires complets ?}:::d
+  H -- Non --> X[Retour à l'étape concernée]:::y --> C
+  H -- Oui --> I[Soumettre ma candidature]:::s
+  I --> J((Compte et dossier créés : statut Reçu))

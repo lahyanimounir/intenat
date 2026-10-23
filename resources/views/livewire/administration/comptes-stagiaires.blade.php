@@ -8,7 +8,9 @@
 @endphp
 <div>
     <x-page.entete titre="Comptes stagiaires"
-        description="Chaque stagiaire crée lui-même son compte : personne d’autre ne choisit ni ne voit son mot de passe. Un compte actif ne prouve pas l’inscription en formation, qui est vérifiée à part par les agents habilités." />
+        :description="$gestion
+            ? 'Chaque stagiaire crée lui-même son compte : personne ne voit son mot de passe. En cas d’oubli, un responsable habilité peut le réinitialiser par un mot de passe provisoire, que le stagiaire remplace à sa connexion suivante. Un compte actif ne prouve pas l’inscription en formation, qui est vérifiée à part par les agents habilités.'
+            : 'Stagiaires de votre périmètre. Vous pouvez réinitialiser leur mot de passe : le stagiaire reçoit un mot de passe provisoire, qu’il remplace à sa connexion suivante. Personne ne voit l’ancien mot de passe.'" />
 
     @if ($archives > 0)
         <x-onglets libelle="Sections">
@@ -67,7 +69,11 @@
                         </x-tableau.cellule>
                         <x-tableau.cellule droite>
                             <div class="flex justify-end gap-1.5">
-                                @if ($compte->etat_compte === EtatCompte::Actif)
+                                @if (in_array($compte->id, $reinitialisables, true))
+                                    <x-bouton taille="sm" variante="discret" icone="key-round" wire:click="preparerReinitialisation({{ $compte->id }})">Réinitialiser le mot de passe</x-bouton>
+                                @endif
+                                @if (! $gestion)
+                                @elseif ($compte->etat_compte === EtatCompte::Actif)
                                     <x-bouton taille="sm" variante="discret"
                                         x-on:click="$confirmer({ titre: 'Envoyer un lien de réinitialisation ?', texte: {{ Js::from('Un lien à usage unique, valable 30 minutes, sera envoyé à '.$compte->email.'. Vous ne choisissez ni ne voyez le mot de passe.') }}, libelle: 'Envoyer' }).then(() => $wire.envoyerLien({{ $compte->id }}))">
                                         Envoyer un lien
@@ -135,4 +141,6 @@
             </x-tableau>
         @endif
     </div>
+
+    @include('livewire.administration.partiels.reinitialisation')
 </div>

@@ -1,0 +1,268 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 1466" width="1500" height="1466" font-family="Segoe UI, Inter, Arial, sans-serif">
+<title>Workflow RESTAURATION — de A à Z</title>
+<defs><marker id="fleche" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#94a3b8"/></marker><marker id="fleche-fonce" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#0f172a"/></marker></defs>
+<rect width="1500" height="1466" fill="#ffffff"/>
+<text x="40" y="48" font-size="26" font-weight="800" fill="#0f172a">Workflow RESTAURATION — de A à Z</text>
+<text x="40" y="74" font-size="13.5" fill="#475569">Du menu de la semaine au service du repas : composition, validation par le chef de pôle, réservation, effectifs J+1 et service.</text>
+<rect x="40" y="88" width="14" height="14" rx="3" fill="#fff7ed" stroke="#c2410c" stroke-width="1.6"/>
+<text x="60" y="100" font-size="12" fill="#334155">Responsable restauration</text>
+<rect x="232.39999999999998" y="88" width="14" height="14" rx="3" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.6"/>
+<text x="252.39999999999998" y="100" font-size="12" fill="#334155">Chef de pôle</text>
+<rect x="345.59999999999997" y="88" width="14" height="14" rx="3" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.6"/>
+<text x="365.59999999999997" y="100" font-size="12" fill="#334155">Stagiaire</text>
+<rect x="439.0" y="88" width="14" height="14" rx="3" fill="#f1f5f9" stroke="#475569" stroke-width="1.6"/>
+<text x="459.0" y="100" font-size="12" fill="#334155">Application (automatique)</text>
+<rect x="40" y="120" width="1420" height="186" rx="10" fill="#ffffff" stroke="#e2e8f0"/>
+<circle cx="70" cy="152" r="15" fill="#0f172a"/>
+<text x="70" y="157" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">1</text>
+<text x="94" y="150" font-size="15" font-weight="700" fill="#0f172a">Composer</text>
+<text x="94" y="168" font-size="15" font-weight="700" fill="#0f172a">la semaine</text>
+<text x="94" y="192" font-size="11.5" fill="#64748b">/restauration/menus</text>
+<rect x="265" y="140" width="266" height="146" rx="8" fill="#fff7ed" stroke="#c2410c" stroke-width="1.4"/>
+<rect x="265" y="140" width="6" height="146" rx="3" fill="#c2410c"/>
+<text x="281" y="157" font-size="10.5" font-weight="700" fill="#c2410c" letter-spacing="0.4">RESPONSABLE RESTAURATION</text>
+<text x="281" y="179" font-size="13.5" font-weight="700" fill="#0f172a">Proposer les menus</text>
+<text x="281" y="197" font-size="11.5" fill="#334155">Chaque jour : petit-déjeuner,</text>
+<text x="281" y="214" font-size="11.5" fill="#334155">déjeuner, dîner</text>
+<text x="281" y="231" font-size="11.5" fill="#334155">Un même repas pour un ou</text>
+<text x="281" y="248" font-size="11.5" fill="#334155">plusieurs internats</text>
+<rect x="279" y="256" width="93" height="20" rx="10" fill="#fef3c7"/>
+<text x="326" y="270" text-anchor="middle" font-size="10.5" font-weight="600" fill="#92400e">En préparation</text>
+<line x1="534" y1="174" x2="560" y2="174" stroke="#94a3b8" stroke-width="2" marker-end="url(#fleche)"/>
+<rect x="565" y="140" width="266" height="99" rx="8" fill="#fff7ed" stroke="#c2410c" stroke-width="1.4"/>
+<rect x="565" y="140" width="6" height="99" rx="3" fill="#c2410c"/>
+<text x="581" y="157" font-size="10.5" font-weight="700" fill="#c2410c" letter-spacing="0.4">RESPONSABLE RESTAURATION</text>
+<text x="581" y="179" font-size="13.5" font-weight="700" fill="#0f172a">Corriger au besoin</text>
+<text x="581" y="197" font-size="11.5" fill="#334155">Modifier ou supprimer un menu</text>
+<text x="581" y="214" font-size="11.5" fill="#334155">tant qu’il n’est pas validé</text>
+<text x="581" y="231" font-size="11.5" fill="#334155">(suppression : sans réservation)</text>
+<line x1="834" y1="174" x2="860" y2="174" stroke="#94a3b8" stroke-width="2" marker-end="url(#fleche)"/>
+<rect x="865" y="140" width="266" height="129" rx="8" fill="#fff7ed" stroke="#c2410c" stroke-width="1.4"/>
+<rect x="865" y="140" width="6" height="129" rx="3" fill="#c2410c"/>
+<text x="881" y="157" font-size="10.5" font-weight="700" fill="#c2410c" letter-spacing="0.4">RESPONSABLE RESTAURATION</text>
+<text x="881" y="179" font-size="13.5" font-weight="700" fill="#0f172a">Transmettre la semaine</text>
+<text x="881" y="197" font-size="11.5" fill="#334155">« Transmettre la semaine au</text>
+<text x="881" y="214" font-size="11.5" fill="#334155">chef de pôle » : tous les menus</text>
+<text x="881" y="231" font-size="11.5" fill="#334155">proposés non encore transmis</text>
+<rect x="879" y="239" width="57" height="20" rx="10" fill="#e2e8f0"/>
+<text x="907" y="253" text-anchor="middle" font-size="10.5" font-weight="600" fill="#334155">Transmis</text>
+<line x1="1134" y1="174" x2="1160" y2="174" stroke="#94a3b8" stroke-width="2" marker-end="url(#fleche)"/>
+<rect x="1165" y="140" width="266" height="99" rx="8" fill="#f1f5f9" stroke="#475569" stroke-width="1.4"/>
+<rect x="1165" y="140" width="6" height="99" rx="3" fill="#475569"/>
+<text x="1181" y="157" font-size="10.5" font-weight="700" fill="#475569" letter-spacing="0.4">APPLICATION (AUTOMATIQUE)</text>
+<text x="1181" y="179" font-size="13.5" font-weight="700" fill="#0f172a">Prévenir le chef de pôle</text>
+<text x="1181" y="197" font-size="11.5" fill="#334155">Notification « Menus de la</text>
+<text x="1181" y="214" font-size="11.5" fill="#334155">semaine à valider »</text>
+<text x="1181" y="231" font-size="11.5" fill="#334155">Trace au journal</text>
+<line x1="750.0" y1="308" x2="750.0" y2="326" stroke="#0f172a" stroke-width="2.2" marker-end="url(#fleche-fonce)"/>
+<rect x="40" y="330" width="1420" height="204" rx="10" fill="#f8fafc" stroke="#e2e8f0"/>
+<circle cx="70" cy="362" r="15" fill="#0f172a"/>
+<text x="70" y="367" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">2</text>
+<text x="94" y="360" font-size="15" font-weight="700" fill="#0f172a">Vérifier</text>
+<text x="94" y="378" font-size="15" font-weight="700" fill="#0f172a">et valider</text>
+<text x="94" y="402" font-size="11.5" fill="#64748b">Chef de pôle</text>
+<rect x="265" y="350" width="266" height="99" rx="8" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.4"/>
+<rect x="265" y="350" width="6" height="99" rx="3" fill="#7c3aed"/>
+<text x="281" y="367" font-size="10.5" font-weight="700" fill="#7c3aed" letter-spacing="0.4">CHEF DE PÔLE</text>
+<text x="281" y="389" font-size="13.5" font-weight="700" fill="#0f172a">Consulter la semaine</text>
+<text x="281" y="407" font-size="11.5" fill="#334155">Menus transmis, par jour</text>
+<text x="281" y="424" font-size="11.5" fill="#334155">et par internat (filtre)</text>
+<text x="281" y="441" font-size="11.5" fill="#334155">Historique des validations</text>
+<line x1="534" y1="384" x2="560" y2="384" stroke="#94a3b8" stroke-width="2" marker-end="url(#fleche)"/>
+<rect x="565" y="350" width="266" height="129" rx="8" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.4"/>
+<rect x="565" y="350" width="6" height="129" rx="3" fill="#7c3aed"/>
+<text x="581" y="367" font-size="10.5" font-weight="700" fill="#7c3aed" letter-spacing="0.4">CHEF DE PÔLE</text>
+<text x="581" y="389" font-size="13.5" font-weight="700" fill="#0f172a">Valider</text>
+<text x="581" y="407" font-size="11.5" fill="#334155">« Valider ce menu » ou</text>
+<text x="581" y="424" font-size="11.5" fill="#334155">« Valider la semaine »</text>
+<text x="581" y="441" font-size="11.5" fill="#334155">Un menu validé ne se modifie plus</text>
+<rect x="579" y="449" width="45" height="20" rx="10" fill="#dcfce7"/>
+<text x="601" y="463" text-anchor="middle" font-size="10.5" font-weight="600" fill="#166534">Validé</text>
+<line x1="834" y1="384" x2="860" y2="384" stroke="#94a3b8" stroke-width="2" marker-end="url(#fleche)"/>
+<rect x="865" y="350" width="266" height="146" rx="8" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.4"/>
+<rect x="865" y="350" width="6" height="146" rx="3" fill="#7c3aed"/>
+<text x="881" y="367" font-size="10.5" font-weight="700" fill="#7c3aed" letter-spacing="0.4">CHEF DE PÔLE</text>
+<text x="881" y="389" font-size="13.5" font-weight="700" fill="#0f172a">Renvoyer pour correction</text>
+<text x="881" y="407" font-size="11.5" fill="#334155">Un repas, une journée (internat</text>
+<text x="881" y="424" font-size="11.5" fill="#334155">précisé si plusieurs) ou la</text>
+<text x="881" y="441" font-size="11.5" fill="#334155">semaine — commentaire obligatoire</text>
+<text x="881" y="458" font-size="11.5" fill="#334155">Les autres menus gardent leur statut</text>
+<rect x="879" y="466" width="69" height="20" rx="10" fill="#fee2e2"/>
+<text x="914" y="480" text-anchor="middle" font-size="10.5" font-weight="600" fill="#991b1b">À corriger</text>
+<line x1="1134" y1="384" x2="1160" y2="384" stroke="#94a3b8" stroke-width="2" marker-end="url(#fleche)"/>
+<rect x="1165" y="350" width="266" height="116" rx="8" fill="#f1f5f9" stroke="#475569" stroke-width="1.4"/>
+<rect x="1165" y="350" width="6" height="116" rx="3" fill="#475569"/>
+<text x="1181" y="367" font-size="10.5" font-weight="700" fill="#475569" letter-spacing="0.4">APPLICATION (AUTOMATIQUE)</text>
+<text x="1181" y="389" font-size="13.5" font-weight="700" fill="#0f172a">Notifier et tracer</text>
+<text x="1181" y="407" font-size="11.5" fill="#334155">Restauration prévenue : validation</text>
+<text x="1181" y="424" font-size="11.5" fill="#334155">ou renvoi avec commentaire,</text>
+<text x="1181" y="441" font-size="11.5" fill="#334155">date et auteur conservés</text>
+<text x="1181" y="458" font-size="11.5" fill="#334155">dans l’historique</text>
+<text x="1444" y="524" text-anchor="end" font-size="11.5" font-style="italic" fill="#7c3aed">↻ Renvoi : la restauration corrige seulement les menus renvoyés, retransmet, le chef de pôle revalide</text>
+<line x1="750.0" y1="536" x2="750.0" y2="554" stroke="#0f172a" stroke-width="2.2" marker-end="url(#fleche-fonce)"/>
+<rect x="40" y="558" width="1420" height="186" rx="10" fill="#ffffff" stroke="#e2e8f0"/>
+<circle cx="70" cy="590" r="15" fill="#0f172a"/>
+<text x="70" y="595" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">3</text>
+<text x="94" y="588" font-size="15" font-weight="700" fill="#0f172a">Préparer</text>
+<text x="94" y="606" font-size="15" font-weight="700" fill="#0f172a">ses repas</text>
+<text x="94" y="630" font-size="11.5" fill="#64748b">Résident avec un lit</text>
+<rect x="265" y="578" width="266" height="116" rx="8" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.4"/>
+<rect x="265" y="578" width="6" height="116" rx="3" fill="#1d4ed8"/>
+<text x="281" y="595" font-size="10.5" font-weight="700" fill="#1d4ed8" letter-spacing="0.4">STAGIAIRE</text>
+<text x="281" y="617" font-size="13.5" font-weight="700" fill="#0f172a">Déclarer ses régimes</text>
+<text x="281" y="635" font-size="11.5" fill="#334155">Végétarien, allergie, restriction</text>
+<text x="281" y="652" font-size="11.5" fill="#334155">médicale ou religieuse, autre</text>
+<text x="281" y="669" font-size="11.5" fill="#334155">Justificatif : allergie et médical</text>
+<text x="281" y="686" font-size="11.5" fill="#334155">« Autre » : précision requise</text>
+<line x1="534" y1="612" x2="560" y2="612" stroke="#94a3b8" stroke-width="2" marker-end="url(#fleche)"/>
+<rect x="565" y="578" width="266" height="99" rx="8" fill="#f1f5f9" stroke="#475569" stroke-width="1.4"/>
+<rect x="565" y="578" width="6" height="99" rx="3" fill="#475569"/>
+<text x="581" y="595" font-size="10.5" font-weight="700" fill="#475569" letter-spacing="0.4">APPLICATION (AUTOMATIQUE)</text>
+<text x="581" y="617" font-size="13.5" font-weight="700" fill="#0f172a">Diffuser les menus validés</text>
+<text x="581" y="635" font-size="11.5" fill="#334155">Seuls les menus validés des</text>
+<text x="581" y="652" font-size="11.5" fill="#334155">14 prochains jours s’affichent</text>
+<text x="581" y="669" font-size="11.5" fill="#334155">Non validé = non réservable</text>
+<line x1="834" y1="612" x2="860" y2="612" stroke="#94a3b8" stroke-width="2" marker-end="url(#fleche)"/>
+<rect x="865" y="578" width="266" height="146" rx="8" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.4"/>
+<rect x="865" y="578" width="6" height="146" rx="3" fill="#1d4ed8"/>
+<text x="881" y="595" font-size="10.5" font-weight="700" fill="#1d4ed8" letter-spacing="0.4">STAGIAIRE</text>
+<text x="881" y="617" font-size="13.5" font-weight="700" fill="#0f172a">Réserver</text>
+<text x="881" y="635" font-size="11.5" fill="#334155">Un repas, tous les repas de</text>
+<text x="881" y="652" font-size="11.5" fill="#334155">demain (J+1) ou toute la semaine</text>
+<text x="881" y="669" font-size="11.5" fill="#334155">Allergie à signaler pour</text>
+<text x="881" y="686" font-size="11.5" fill="#334155">chaque repas réservé</text>
+<rect x="879" y="694" width="51" height="20" rx="10" fill="#dcfce7"/>
+<text x="904" y="708" text-anchor="middle" font-size="10.5" font-weight="600" fill="#166534">Réservé</text>
+<line x1="1134" y1="612" x2="1160" y2="612" stroke="#94a3b8" stroke-width="2" marker-end="url(#fleche)"/>
+<rect x="1165" y="578" width="266" height="129" rx="8" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.4"/>
+<rect x="1165" y="578" width="6" height="129" rx="3" fill="#1d4ed8"/>
+<text x="1181" y="595" font-size="10.5" font-weight="700" fill="#1d4ed8" letter-spacing="0.4">STAGIAIRE</text>
+<text x="1181" y="617" font-size="13.5" font-weight="700" fill="#0f172a">Modifier ou annuler</text>
+<text x="1181" y="635" font-size="11.5" fill="#334155">Jusqu’à la veille, heure limite</text>
+<text x="1181" y="652" font-size="11.5" fill="#334155">(18 h par défaut, paramétrable)</text>
+<text x="1181" y="669" font-size="11.5" fill="#334155">Récapitulatif « Mes réservations »</text>
+<rect x="1179" y="677" width="45" height="20" rx="10" fill="#fee2e2"/>
+<text x="1201" y="691" text-anchor="middle" font-size="10.5" font-weight="600" fill="#991b1b">Annulé</text>
+<line x1="750.0" y1="746" x2="750.0" y2="764" stroke="#0f172a" stroke-width="2.2" marker-end="url(#fleche-fonce)"/>
+<rect x="40" y="768" width="1420" height="186" rx="10" fill="#f8fafc" stroke="#e2e8f0"/>
+<circle cx="70" cy="800" r="15" fill="#0f172a"/>
+<text x="70" y="805" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">4</text>
+<text x="94" y="798" font-size="15" font-weight="700" fill="#0f172a">Veille du repas</text>
+<text x="94" y="816" font-size="15" font-weight="700" fill="#0f172a">(J-1)</text>
+<text x="94" y="840" font-size="11.5" fill="#64748b">/restauration/liste-j1</text>
+<text x="94" y="855" font-size="11.5" fill="#64748b">/restauration/service</text>
+<rect x="265" y="788" width="266" height="116" rx="8" fill="#fff7ed" stroke="#c2410c" stroke-width="1.4"/>
+<rect x="265" y="788" width="6" height="116" rx="3" fill="#c2410c"/>
+<text x="281" y="805" font-size="10.5" font-weight="700" fill="#c2410c" letter-spacing="0.4">RESPONSABLE RESTAURATION</text>
+<text x="281" y="827" font-size="13.5" font-weight="700" fill="#0f172a">Consulter la liste J+1</text>
+<text x="281" y="845" font-size="11.5" fill="#334155">Nom, prénom, CEF, établissement,</text>
+<text x="281" y="862" font-size="11.5" fill="#334155">internat, date, repas, régime,</text>
+<text x="281" y="879" font-size="11.5" fill="#334155">allergie — « Aucun régime déclaré »</text>
+<text x="281" y="896" font-size="11.5" fill="#334155">Lignes à surveiller en évidence</text>
+<line x1="534" y1="822" x2="560" y2="822" stroke="#94a3b8" stroke-width="2" marker-end="url(#fleche)"/>
+<rect x="565" y="788" width="266" height="99" rx="8" fill="#fff7ed" stroke="#c2410c" stroke-width="1.4"/>
+<rect x="565" y="788" width="6" height="99" rx="3" fill="#c2410c"/>
+<text x="581" y="805" font-size="10.5" font-weight="700" fill="#c2410c" letter-spacing="0.4">RESPONSABLE RESTAURATION</text>
+<text x="581" y="827" font-size="13.5" font-weight="700" fill="#0f172a">Imprimer la liste J+1</text>
+<text x="581" y="845" font-size="11.5" fill="#334155">PDF filtrable par type de repas</text>
+<text x="581" y="862" font-size="11.5" fill="#334155">Total par petit-déjeuner,</text>
+<text x="581" y="879" font-size="11.5" fill="#334155">déjeuner et dîner</text>
+<line x1="834" y1="822" x2="860" y2="822" stroke="#94a3b8" stroke-width="2" marker-end="url(#fleche)"/>
+<rect x="865" y="788" width="266" height="146" rx="8" fill="#fff7ed" stroke="#c2410c" stroke-width="1.4"/>
+<rect x="865" y="788" width="6" height="146" rx="3" fill="#c2410c"/>
+<text x="881" y="805" font-size="10.5" font-weight="700" fill="#c2410c" letter-spacing="0.4">RESPONSABLE RESTAURATION</text>
+<text x="881" y="827" font-size="13.5" font-weight="700" fill="#0f172a">Confirmer l’effectif</text>
+<text x="881" y="845" font-size="11.5" fill="#334155">Sur les réservations réelles :</text>
+<text x="881" y="862" font-size="11.5" fill="#334155">stagiaires concernés, régimes</text>
+<text x="881" y="879" font-size="11.5" fill="#334155">et allergies affichés</text>
+<text x="881" y="896" font-size="11.5" fill="#334155">Effectif arrêté pour la cuisine</text>
+<rect x="879" y="904" width="57" height="20" rx="10" fill="#dcfce7"/>
+<text x="907" y="918" text-anchor="middle" font-size="10.5" font-weight="600" fill="#166534">Confirmé</text>
+<line x1="1134" y1="822" x2="1160" y2="822" stroke="#94a3b8" stroke-width="2" marker-end="url(#fleche)"/>
+<rect x="1165" y="788" width="266" height="99" rx="8" fill="#f1f5f9" stroke="#475569" stroke-width="1.4"/>
+<rect x="1165" y="788" width="6" height="99" rx="3" fill="#475569"/>
+<text x="1181" y="805" font-size="10.5" font-weight="700" fill="#475569" letter-spacing="0.4">APPLICATION (AUTOMATIQUE)</text>
+<text x="1181" y="827" font-size="13.5" font-weight="700" fill="#0f172a">Figer les réservations</text>
+<text x="1181" y="845" font-size="11.5" fill="#334155">Plus aucune réservation,</text>
+<text x="1181" y="862" font-size="11.5" fill="#334155">modification ni annulation</text>
+<text x="1181" y="879" font-size="11.5" fill="#334155">pour ce repas</text>
+<line x1="750.0" y1="956" x2="750.0" y2="974" stroke="#0f172a" stroke-width="2.2" marker-end="url(#fleche-fonce)"/>
+<rect x="40" y="978" width="1420" height="169" rx="10" fill="#ffffff" stroke="#e2e8f0"/>
+<circle cx="70" cy="1010" r="15" fill="#0f172a"/>
+<text x="70" y="1015" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">5</text>
+<text x="94" y="1008" font-size="15" font-weight="700" fill="#0f172a">Jour du repas</text>
+<text x="94" y="1026" font-size="15" font-weight="700" fill="#0f172a">(J)</text>
+<text x="94" y="1050" font-size="11.5" fill="#64748b">Service</text>
+<rect x="265" y="998" width="266" height="82" rx="8" fill="#fff7ed" stroke="#c2410c" stroke-width="1.4"/>
+<rect x="265" y="998" width="6" height="82" rx="3" fill="#c2410c"/>
+<text x="281" y="1015" font-size="10.5" font-weight="700" fill="#c2410c" letter-spacing="0.4">RESPONSABLE RESTAURATION</text>
+<text x="281" y="1037" font-size="13.5" font-weight="700" fill="#0f172a">Servir le repas</text>
+<text x="281" y="1055" font-size="11.5" fill="#334155">Attention aux régimes et</text>
+<text x="281" y="1072" font-size="11.5" fill="#334155">allergies signalés</text>
+<line x1="534" y1="1032" x2="560" y2="1032" stroke="#94a3b8" stroke-width="2" marker-end="url(#fleche)"/>
+<rect x="565" y="998" width="266" height="129" rx="8" fill="#fff7ed" stroke="#c2410c" stroke-width="1.4"/>
+<rect x="565" y="998" width="6" height="129" rx="3" fill="#c2410c"/>
+<text x="581" y="1015" font-size="10.5" font-weight="700" fill="#c2410c" letter-spacing="0.4">RESPONSABLE RESTAURATION</text>
+<text x="581" y="1037" font-size="13.5" font-weight="700" fill="#0f172a">Pointer les présences</text>
+<text x="581" y="1055" font-size="11.5" fill="#334155">Chaque réservation : servi</text>
+<text x="581" y="1072" font-size="11.5" fill="#334155">ou absent (ou nombre servi</text>
+<text x="581" y="1089" font-size="11.5" fill="#334155">sans réservation nominative)</text>
+<rect x="579" y="1097" width="38" height="20" rx="10" fill="#dcfce7"/>
+<text x="598" y="1111" text-anchor="middle" font-size="10.5" font-weight="600" fill="#166534">Servi</text>
+<rect x="623.5" y="1097" width="45" height="20" rx="10" fill="#fee2e2"/>
+<text x="646" y="1111" text-anchor="middle" font-size="10.5" font-weight="600" fill="#991b1b">Absent</text>
+<line x1="834" y1="1032" x2="860" y2="1032" stroke="#94a3b8" stroke-width="2" marker-end="url(#fleche)"/>
+<rect x="865" y="998" width="266" height="112" rx="8" fill="#fff7ed" stroke="#c2410c" stroke-width="1.4"/>
+<rect x="865" y="998" width="6" height="112" rx="3" fill="#c2410c"/>
+<text x="881" y="1015" font-size="10.5" font-weight="700" fill="#c2410c" letter-spacing="0.4">RESPONSABLE RESTAURATION</text>
+<text x="881" y="1037" font-size="13.5" font-weight="700" fill="#0f172a">Clore le service</text>
+<text x="881" y="1055" font-size="11.5" fill="#334155">Observation facultative</text>
+<text x="881" y="1072" font-size="11.5" fill="#334155">Comparaison servi / confirmé</text>
+<rect x="879" y="1080" width="57" height="20" rx="10" fill="#dcfce7"/>
+<text x="907" y="1094" text-anchor="middle" font-size="10.5" font-weight="600" fill="#166534">Conforme</text>
+<rect x="941.8" y="1080" width="38" height="20" rx="10" fill="#fef3c7"/>
+<text x="961" y="1094" text-anchor="middle" font-size="10.5" font-weight="600" fill="#92400e">Écart</text>
+<line x1="1134" y1="1032" x2="1160" y2="1032" stroke="#94a3b8" stroke-width="2" marker-end="url(#fleche)"/>
+<rect x="1165" y="998" width="266" height="82" rx="8" fill="#f1f5f9" stroke="#475569" stroke-width="1.4"/>
+<rect x="1165" y="998" width="6" height="82" rx="3" fill="#475569"/>
+<text x="1181" y="1015" font-size="10.5" font-weight="700" fill="#475569" letter-spacing="0.4">APPLICATION (AUTOMATIQUE)</text>
+<text x="1181" y="1037" font-size="13.5" font-weight="700" fill="#0f172a">Tracer</text>
+<text x="1181" y="1055" font-size="11.5" fill="#334155">Réservé, confirmé et servi</text>
+<text x="1181" y="1072" font-size="11.5" fill="#334155">restent trois effectifs distincts</text>
+<line x1="750.0" y1="1149" x2="750.0" y2="1167" stroke="#0f172a" stroke-width="2.2" marker-end="url(#fleche-fonce)"/>
+<rect x="40" y="1171" width="1420" height="157" rx="10" fill="#f8fafc" stroke="#e2e8f0"/>
+<circle cx="70" cy="1203" r="15" fill="#0f172a"/>
+<text x="70" y="1208" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">6</text>
+<text x="94" y="1201" font-size="15" font-weight="700" fill="#0f172a">Suivi</text>
+<text x="94" y="1225" font-size="11.5" fill="#64748b">/restauration/statistiques</text>
+<rect x="265" y="1191" width="266" height="82" rx="8" fill="#fff7ed" stroke="#c2410c" stroke-width="1.4"/>
+<rect x="265" y="1191" width="6" height="82" rx="3" fill="#c2410c"/>
+<text x="281" y="1208" font-size="10.5" font-weight="700" fill="#c2410c" letter-spacing="0.4">RESPONSABLE RESTAURATION</text>
+<text x="281" y="1230" font-size="13.5" font-weight="700" fill="#0f172a">Statistiques du mois</text>
+<text x="281" y="1248" font-size="11.5" fill="#334155">Réservés, confirmés, servis,</text>
+<text x="281" y="1265" font-size="11.5" fill="#334155">services conformes et écarts</text>
+<rect x="565" y="1191" width="266" height="82" rx="8" fill="#fff7ed" stroke="#c2410c" stroke-width="1.4"/>
+<rect x="565" y="1191" width="6" height="82" rx="3" fill="#c2410c"/>
+<text x="581" y="1208" font-size="10.5" font-weight="700" fill="#c2410c" letter-spacing="0.4">RESPONSABLE RESTAURATION</text>
+<text x="581" y="1230" font-size="13.5" font-weight="700" fill="#0f172a">Régimes déclarés</text>
+<text x="581" y="1248" font-size="11.5" fill="#334155">Liste nominative des régimes</text>
+<text x="581" y="1265" font-size="11.5" fill="#334155">et consultation des justificatifs</text>
+<rect x="865" y="1191" width="266" height="82" rx="8" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.4"/>
+<rect x="865" y="1191" width="6" height="82" rx="3" fill="#7c3aed"/>
+<text x="881" y="1208" font-size="10.5" font-weight="700" fill="#7c3aed" letter-spacing="0.4">CHEF DE PÔLE</text>
+<text x="881" y="1230" font-size="13.5" font-weight="700" fill="#0f172a">Consultation</text>
+<text x="881" y="1248" font-size="11.5" fill="#334155">Menus, effectifs, liste J+1</text>
+<text x="881" y="1265" font-size="11.5" fill="#334155">et statistiques du périmètre</text>
+<rect x="1165" y="1191" width="266" height="99" rx="8" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.4"/>
+<rect x="1165" y="1191" width="6" height="99" rx="3" fill="#1d4ed8"/>
+<text x="1181" y="1208" font-size="10.5" font-weight="700" fill="#1d4ed8" letter-spacing="0.4">STAGIAIRE</text>
+<text x="1181" y="1230" font-size="13.5" font-weight="700" fill="#0f172a">Réclamation (option)</text>
+<text x="1181" y="1248" font-size="11.5" fill="#334155">Domaine « restauration » :</text>
+<text x="1181" y="1265" font-size="11.5" fill="#334155">traitée par le responsable,</text>
+<text x="1181" y="1282" font-size="11.5" fill="#334155">suivie par le chef de pôle</text>
+<text x="1444" y="1318" text-anchor="end" font-size="11.5" font-style="italic" fill="#475569">∥ Activités menées en parallèle, sans ordre imposé</text>
+<rect x="40" y="1344" width="1420" height="46" rx="10" fill="#0f172a"/>
+<text x="750.0" y="1373" text-anchor="middle" font-size="15" font-weight="700" fill="#fff">Repas servi et clos — la semaine suivante recommence à l’étape 1</text>
+<text x="40" y="1410" font-size="11.5" fill="#64748b">Statuts du menu : En préparation → Transmis → Validé (ou À corriger → retransmis). Statuts de la réservation : Réservé → Servi / Absent (ou Annulé).</text>
+<text x="40" y="1426" font-size="11.5" fill="#64748b">Seul le chef de pôle valide les menus ; le responsable restauration les compose, les transmet, confirme les effectifs et suit le service.</text>
+</svg>
