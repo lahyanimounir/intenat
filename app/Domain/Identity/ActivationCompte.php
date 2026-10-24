@@ -55,7 +55,7 @@ class ActivationCompte
             );
         } catch (UniqueConstraintViolationException) {
             throw RegleMetierException::conflit(
-                'Votre compte INTERNAT est déjà activé. Connectez-vous avec votre adresse e-mail et votre mot de passe INTERNAT.',
+                'Votre compte Maisons des Stagiaires - OFPPT est déjà activé. Connectez-vous avec votre adresse e-mail et le mot de passe de ce compte.',
                 'compte_existant',
             );
         } catch (QueryException $e) {
@@ -101,7 +101,7 @@ class ActivationCompte
         if ($memesIdentifiants->contains(fn (Stagiaire $s) => $s->etat_compte !== EtatCompte::EnAttente)) {
             // Le mot de passe du compte existant n'est jamais écrasé par une nouvelle activation.
             throw RegleMetierException::conflit(
-                'Votre compte INTERNAT est déjà activé. Connectez-vous avec votre adresse e-mail et votre mot de passe INTERNAT.',
+                'Votre compte Maisons des Stagiaires - OFPPT est déjà activé. Connectez-vous avec votre adresse e-mail et le mot de passe de ce compte.',
                 'compte_existant',
             );
         }

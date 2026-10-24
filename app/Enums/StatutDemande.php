@@ -38,7 +38,7 @@ enum StatutDemande: string
             self::Refuse => 'Refusé',
             self::Desiste => 'Désisté',
             self::DelaiDepasse => 'Délai dépassé',
-            self::SejourTermine => 'Séjour terminé',
+            self::SejourTermine => 'Hébergement terminé',
         };
     }
 }

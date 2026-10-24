@@ -167,7 +167,7 @@ class HebergementController extends Controller
 
         $this->affectations->cloturer($affectation, TypeMouvement::from($donnees['type']), $donnees['motif'], $this->personnel());
 
-        return response()->json(['message' => 'Séjour clos, lit libéré.']);
+        return response()->json(['message' => 'Hébergement clos, lit libéré.']);
     }
 
     public function attestation(Affectation $affectation, DocumentsAdministratifs $documents): Response

@@ -7,7 +7,7 @@
     </div>
 </header>
 <footer>
-    Document produit par l'application INTERNAT{{ isset($auteur) && $auteur ? ' — édité par '.$auteur : '' }}
+    Document produit par l'application Maisons des Stagiaires - OFPPT{{ isset($auteur) && $auteur ? ' — édité par '.$auteur : '' }}
     <span class="droite page"></span>
 </footer>
 @if (config('internat.mode_demo'))

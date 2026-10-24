@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1090 1648" width="1090" height="1648" font-family="Arial, Helvetica, sans-serif">
+<rect width="1090" height="1648" fill="#ffffff"/>
+<g stroke="#183153" stroke-width="3" fill="none"><circle cx="175" cy="34" r="15"/><line x1="175" y1="49" x2="175" y2="88"/><line x1="151" y1="62" x2="199" y2="62"/><line x1="175" y1="88" x2="155" y2="116"/><line x1="175" y1="88" x2="195" y2="116"/></g>
+<text x="175" y="146" text-anchor="middle" font-size="19" font-weight="700" fill="#183153">Responsable restauration</text>
+<line x1="175" y1="162" x2="175" y2="1618" stroke="#183153" stroke-width="1.8" stroke-dasharray="8 6"/>
+<rect x="415" y="84" width="260" height="76" rx="6" fill="#eef3fa" stroke="#183153" stroke-width="2.4"/>
+<text x="545" y="116" text-anchor="middle" font-size="19" font-weight="700" fill="#183153">«système»</text>
+<text x="545" y="142" text-anchor="middle" font-size="19" font-weight="700" fill="#183153">Application INTERNAT</text>
+<line x1="545" y1="162" x2="545" y2="1618" stroke="#183153" stroke-width="1.8" stroke-dasharray="8 6"/>
+<g stroke="#183153" stroke-width="3" fill="none"><circle cx="915" cy="34" r="15"/><line x1="915" y1="49" x2="915" y2="88"/><line x1="891" y1="62" x2="939" y2="62"/><line x1="915" y1="88" x2="895" y2="116"/><line x1="915" y1="88" x2="935" y2="116"/></g>
+<text x="915" y="146" text-anchor="middle" font-size="19" font-weight="700" fill="#183153">Chef de pôle scolarité</text>
+<line x1="915" y1="162" x2="915" y2="1618" stroke="#183153" stroke-width="1.8" stroke-dasharray="8 6"/>
+<rect x="536" y="196" width="18" height="1382" fill="#eef3fa" stroke="#183153" stroke-width="2"/>
+<rect x="40" y="746" width="1010" height="812" fill="none" stroke="#183153" stroke-width="2"/>
+<polygon points="40,746 104,746 104,768 94,778 40,778" fill="#eef3fa" stroke="#183153" stroke-width="2"/>
+<text x="68" y="768" text-anchor="middle" font-size="18" font-weight="700" fill="#183153">alt</text>
+<rect x="114" y="751" width="170" height="26" fill="#ffffff"/>
+<text x="120" y="770" font-size="18" font-weight="700" fill="#183153">[menus conformes]</text>
+<line x1="40" y1="990" x2="1050" y2="990" stroke="#183153" stroke-width="2" stroke-dasharray="10 7"/>
+<rect x="48" y="997" width="212" height="26" fill="#ffffff"/>
+<text x="54" y="1016" font-size="18" font-weight="700" fill="#183153">[correction demandée]</text>
+<text x="355.5" y="208" text-anchor="middle" font-size="18" fill="#0f172a">1. Composer les menus de la semaine</text>
+<text x="355.5" y="230" text-anchor="middle" font-size="18" fill="#0f172a">(petit-déjeuner, déjeuner, dîner)</text>
+<line x1="175" y1="238" x2="536" y2="238" stroke="#1e293b" stroke-width="2"/>
+<polygon points="536,238 522,231 522,245" fill="#1e293b"/>
+<text x="606" y="280" font-size="18" fill="#0f172a">2. Enregistrer les menus au</text>
+<text x="606" y="302" font-size="18" fill="#0f172a">statut « Proposé »</text>
+<polyline points="554,264 596,264 596,316 568,316" fill="none" stroke="#1e293b" stroke-width="2"/>
+<polygon points="554,316 568,309 568,323" fill="#1e293b"/>
+<text x="355.5" y="356" text-anchor="middle" font-size="18" fill="#0f172a">3. Transmettre la semaine au chef de</text>
+<text x="355.5" y="378" text-anchor="middle" font-size="18" fill="#0f172a">pôle</text>
+<line x1="175" y1="386" x2="536" y2="386" stroke="#1e293b" stroke-width="2"/>
+<polygon points="536,386 522,379 522,393" fill="#1e293b"/>
+<text x="606" y="428" font-size="18" fill="#0f172a">4. Marquer les menus</text>
+<text x="606" y="450" font-size="18" fill="#0f172a">« transmis », tracer au</text>
+<text x="606" y="472" font-size="18" fill="#0f172a">journal</text>
+<polyline points="554,412 596,412 596,486 568,486" fill="none" stroke="#1e293b" stroke-width="2"/>
+<polygon points="554,486 568,479 568,493" fill="#1e293b"/>
+<text x="734.5" y="526" text-anchor="middle" font-size="18" fill="#0f172a">5. Notification « Menus de la semaine</text>
+<text x="734.5" y="548" text-anchor="middle" font-size="18" fill="#0f172a">à valider »</text>
+<line x1="554" y1="556" x2="915" y2="556" stroke="#1e293b" stroke-width="2"/>
+<polyline points="901,549 915,556 901,563" fill="none" stroke="#1e293b" stroke-width="2"/>
+<text x="355.5" y="594" text-anchor="middle" font-size="18" fill="#0f172a">6. Confirmation : semaine transmise</text>
+<line x1="536" y1="602" x2="175" y2="602" stroke="#1e293b" stroke-width="2" stroke-dasharray="9 6"/>
+<polyline points="189,595 175,602 189,609" fill="none" stroke="#1e293b" stroke-width="2"/>
+<text x="734.5" y="640" text-anchor="middle" font-size="18" fill="#0f172a">7. Consulter les menus transmis</text>
+<line x1="915" y1="648" x2="554" y2="648" stroke="#1e293b" stroke-width="2"/>
+<polygon points="554,648 568,641 568,655" fill="#1e293b"/>
+<text x="734.5" y="686" text-anchor="middle" font-size="18" fill="#0f172a">8. Menus de la semaine en attente de</text>
+<text x="734.5" y="708" text-anchor="middle" font-size="18" fill="#0f172a">validation</text>
+<line x1="554" y1="716" x2="915" y2="716" stroke="#1e293b" stroke-width="2" stroke-dasharray="9 6"/>
+<polyline points="901,709 915,716 901,723" fill="none" stroke="#1e293b" stroke-width="2"/>
+<text x="734.5" y="810" text-anchor="middle" font-size="18" fill="#0f172a">9. Valider la semaine</text>
+<line x1="915" y1="818" x2="554" y2="818" stroke="#1e293b" stroke-width="2"/>
+<polygon points="554,818 568,811 568,825" fill="#1e293b"/>
+<text x="606" y="860" font-size="18" fill="#0f172a">10. Passer les menus au statut</text>
+<text x="606" y="882" font-size="18" fill="#0f172a">« Validé », tracer au journal</text>
+<polyline points="554,844 596,844 596,896 568,896" fill="none" stroke="#1e293b" stroke-width="2"/>
+<polygon points="554,896 568,889 568,903" fill="#1e293b"/>
+<text x="355.5" y="936" text-anchor="middle" font-size="18" fill="#0f172a">11. Notification « Menus validés,</text>
+<text x="355.5" y="958" text-anchor="middle" font-size="18" fill="#0f172a">ouverts à la réservation »</text>
+<line x1="536" y1="966" x2="175" y2="966" stroke="#1e293b" stroke-width="2"/>
+<polyline points="189,959 175,966 189,973" fill="none" stroke="#1e293b" stroke-width="2"/>
+<text x="734.5" y="1048" text-anchor="middle" font-size="18" fill="#0f172a">12. Renvoyer un repas, une journée ou</text>
+<text x="734.5" y="1070" text-anchor="middle" font-size="18" fill="#0f172a">la semaine, avec un commentaire</text>
+<line x1="915" y1="1078" x2="554" y2="1078" stroke="#1e293b" stroke-width="2"/>
+<polygon points="554,1078 568,1071 568,1085" fill="#1e293b"/>
+<text x="606" y="1120" font-size="18" fill="#0f172a">13. Vérifier le commentaire (5</text>
+<text x="606" y="1142" font-size="18" fill="#0f172a">caractères au moins), marquer</text>
+<text x="606" y="1164" font-size="18" fill="#0f172a">les seuls menus concernés « à</text>
+<text x="606" y="1186" font-size="18" fill="#0f172a">corriger »</text>
+<polyline points="554,1104 596,1104 596,1200 568,1200" fill="none" stroke="#1e293b" stroke-width="2"/>
+<polygon points="554,1200 568,1193 568,1207" fill="#1e293b"/>
+<text x="355.5" y="1240" text-anchor="middle" font-size="18" fill="#0f172a">14. Notification du renvoi avec le</text>
+<text x="355.5" y="1262" text-anchor="middle" font-size="18" fill="#0f172a">motif</text>
+<line x1="536" y1="1270" x2="175" y2="1270" stroke="#1e293b" stroke-width="2"/>
+<polyline points="189,1263 175,1270 189,1277" fill="none" stroke="#1e293b" stroke-width="2"/>
+<text x="355.5" y="1308" text-anchor="middle" font-size="18" fill="#0f172a">15. Lire le motif, corriger les menus</text>
+<text x="355.5" y="1330" text-anchor="middle" font-size="18" fill="#0f172a">renvoyés</text>
+<line x1="175" y1="1338" x2="536" y2="1338" stroke="#1e293b" stroke-width="2"/>
+<polygon points="536,1338 522,1331 522,1345" fill="#1e293b"/>
+<text x="355.5" y="1376" text-anchor="middle" font-size="18" fill="#0f172a">16. Retransmettre la semaine</text>
+<line x1="175" y1="1384" x2="536" y2="1384" stroke="#1e293b" stroke-width="2"/>
+<polygon points="536,1384 522,1377 522,1391" fill="#1e293b"/>
+<text x="606" y="1426" font-size="18" fill="#0f172a">17. Effacer le commentaire</text>
+<text x="606" y="1448" font-size="18" fill="#0f172a">(conservé dans l’historique)</text>
+<polyline points="554,1410 596,1410 596,1462 568,1462" fill="none" stroke="#1e293b" stroke-width="2"/>
+<polygon points="554,1462 568,1455 568,1469" fill="#1e293b"/>
+<text x="734.5" y="1502" text-anchor="middle" font-size="18" fill="#0f172a">18. Notification « Menus de la</text>
+<text x="734.5" y="1524" text-anchor="middle" font-size="18" fill="#0f172a">semaine à valider » : nouvel examen</text>
+<line x1="554" y1="1532" x2="915" y2="1532" stroke="#1e293b" stroke-width="2"/>
+<polyline points="901,1525 915,1532 901,1539" fill="none" stroke="#1e293b" stroke-width="2"/>
+</svg>

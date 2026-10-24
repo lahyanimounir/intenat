@@ -23,7 +23,7 @@ class ExigerLitAffecte
             abort_if($request->hasHeader('X-Livewire'), 403);
 
             return redirect()->route('stagiaire.accueil')
-                ->with('info', 'Les services du séjour seront accessibles dès qu’un lit vous aura été affecté à l’internat.');
+                ->with('info', 'Les services liés à l’hébergement seront accessibles dès qu’un lit vous aura été affecté à l’internat.');
         }
 
         return $next($request);

@@ -74,7 +74,7 @@ class Connexion
             $this->journal->consigner('auth.refus_compte_suspendu', $stagiaire, acteur: $stagiaire);
 
             throw new RegleMetierException(
-                'Votre compte INTERNAT est suspendu. Contactez l\'administration de votre établissement.',
+                'Votre compte Maisons des Stagiaires - OFPPT est suspendu. Contactez l\'administration de votre établissement.',
                 'compte_suspendu',
                 statutHttp: 403,
             );

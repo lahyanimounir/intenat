@@ -187,7 +187,7 @@ class AuthentificationTest extends TestCase
 
         // La suspension n'est annoncée qu'après un mot de passe correct.
         $this->connexion('stagiaire', 'resident@exemple.test', 'faux')->assertHasErrors('email')->assertSet('refus', null);
-        $this->connexion('stagiaire', 'resident@exemple.test', self::MOT_DE_PASSE)->assertNoRedirect()->assertSee('Votre compte INTERNAT est suspendu');
+        $this->connexion('stagiaire', 'resident@exemple.test', self::MOT_DE_PASSE)->assertNoRedirect()->assertSee('Votre compte Maisons des Stagiaires - OFPPT est suspendu');
         $this->assertGuest('stagiaire');
     }
 

@@ -11,7 +11,7 @@
         :description="$affectation->demande->campagne->internat->nom.' — chambre '.$chambre->numero.', lit '.$affectation->lit->numero">
         <x-slot:marque>
             @if (! $affectation->estActive())
-                <x-badge>Séjour clos</x-badge>
+                <x-badge>Hébergement clos</x-badge>
             @elseif ($arrivee)
                 <x-badge ton="succes" point>Présent</x-badge>
             @else
@@ -28,21 +28,21 @@
                     </x-bouton>
                 @endif
                 <x-bouton icone="arrow-right-left" wire:click="preparer('lit')">Changer de lit</x-bouton>
-                <x-bouton variante="danger-discret" icone="door-closed" wire:click="preparer('fin')">Clore le séjour</x-bouton>
+                <x-bouton variante="danger-discret" icone="door-closed" wire:click="preparer('fin')">Clore l’hébergement</x-bouton>
             @endif
         </x-slot:actions>
     </x-page.entete>
 
     @if ($desiste && $affectation->estActive())
         <x-alerte ton="alerte" titre="Ce résident s’est désisté" class="mb-5">
-            Son lit reste attribué tant que le séjour n’est pas clos : enregistrez son départ pour libérer la place.
+            Son lit reste attribué tant que l’hébergement n’est pas clos : enregistrez son départ pour libérer la place.
         </x-alerte>
     @endif
 
     <div class="grid items-start gap-6 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <div class="space-y-6">
             <x-carte>
-                <x-carte.entete titre="Séjour">
+                <x-carte.entete titre="Hébergement">
                     <x-slot:actions>
                         <x-bouton taille="sm" variante="discret" :href="route('dossiers.fiche', $affectation->demande_id)" icone-fin="arrow-right">Dossier {{ $affectation->demande->numero_dossier }}</x-bouton>
                     </x-slot:actions>
@@ -60,7 +60,7 @@
                         <x-definition terme="Lit"><span class="chiffres">{{ $affectation->lit->numero }}</span></x-definition>
                         <x-definition terme="Entrée prévue le">{{ Format::date($affectation->date_debut) }}</x-definition>
                         <x-definition terme="Arrivée">{{ $arrivee ? Format::dateHeure($arrivee->date_mouvement) : '' }}</x-definition>
-                        <x-definition terme="Fin du séjour">{{ $affectation->date_fin ? Format::date($affectation->date_fin) : '' }}</x-definition>
+                        <x-definition terme="Fin de l’hébergement">{{ $affectation->date_fin ? Format::date($affectation->date_fin) : '' }}</x-definition>
                         @if ($affectation->motif_exceptionnel)
                             <x-definition terme="Motif de l’attribution exceptionnelle" class="sm:col-span-2 lg:col-span-3">{{ $affectation->motif_exceptionnel }}</x-definition>
                         @endif
@@ -89,7 +89,7 @@
             </x-carte>
 
             <x-carte>
-                <x-carte.entete titre="Mouvements" description="Historique du séjour." />
+                <x-carte.entete titre="Mouvements" description="Historique de l’hébergement." />
                 @if ($affectation->mouvements->isEmpty())
                     <x-vide titre="Aucun mouvement enregistré" class="py-8!" />
                 @else
@@ -143,14 +143,14 @@
     @endif
 
     @if ($dialogue === 'fin')
-        <x-dialogue titre="Clore le séjour" description="Le lit est libéré et le chef de pôle est alerté de la place libre. L’historique du séjour est conservé.">
+        <x-dialogue titre="Clore l’hébergement" description="Le lit est libéré et le chef de pôle est alerté de la place libre. L’historique de l’hébergement est conservé.">
             <form wire:submit="cloturer" id="form-fin" novalidate class="space-y-4">
-                <x-liste libelle="Type de fin de séjour" wire:model="type" :options="$fins" requis />
+                <x-liste libelle="Type de fin d’hébergement" wire:model="type" :options="$fins" requis />
                 <x-zone-texte libelle="Motif" wire:model="motif" rows="4" requis />
             </form>
             <x-slot:pied>
                 <x-bouton wire:click="fermerDialogue">Annuler</x-bouton>
-                <x-bouton type="submit" form="form-fin" variante="danger" cible="cloturer">Clore le séjour</x-bouton>
+                <x-bouton type="submit" form="form-fin" variante="danger" cible="cloturer">Clore l’hébergement</x-bouton>
             </x-slot:pied>
         </x-dialogue>
     @endif

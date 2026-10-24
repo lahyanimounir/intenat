@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1250 936" width="1250" height="936" font-family="Arial, Helvetica, sans-serif">
+<defs><marker id="ouvert" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="11" markerHeight="11" orient="auto"><path d="M1 1L11 6L1 11" fill="none" stroke="#475569" stroke-width="1.8"/></marker><marker id="triangle" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="14" markerHeight="14" orient="auto"><path d="M1 1L13 7L1 13z" fill="#ffffff" stroke="#183153" stroke-width="1.6"/></marker></defs>
+<rect width="1250" height="936" fill="#ffffff"/>
+<rect x="190" y="60" width="1000" height="826" rx="6" fill="#fbfcfe" stroke="#183153" stroke-width="2.2"/>
+<text x="690.0" y="90" text-anchor="middle" font-size="18" font-weight="700" fill="#183153">Cas d’utilisation — Administrateur</text>
+<line x1="115" y1="434.0" x2="400.5" y2="180.1" stroke="#1e293b" stroke-width="1.6"/>
+<line x1="115" y1="434.0" x2="385.1" y2="270.2" stroke="#1e293b" stroke-width="1.6"/>
+<line x1="115" y1="434.0" x2="355.6" y2="356.3" stroke="#1e293b" stroke-width="1.6"/>
+<line x1="115" y1="434.0" x2="316.1" y2="426.0" stroke="#1e293b" stroke-width="1.6"/>
+<line x1="115" y1="434.0" x2="343.4" y2="489.5" stroke="#1e293b" stroke-width="1.6"/>
+<line x1="115" y1="434.0" x2="378.7" y2="572.8" stroke="#1e293b" stroke-width="1.6"/>
+<line x1="115" y1="434.0" x2="397.1" y2="662.3" stroke="#1e293b" stroke-width="1.6"/>
+<line x1="115" y1="434.0" x2="407.3" y2="753.3" stroke="#1e293b" stroke-width="1.6"/>
+<line x1="565.0" y1="237.0" x2="815.0" y2="237.0" stroke="#475569" stroke-width="1.6" stroke-dasharray="7 5" marker-end="url(#ouvert)"/>
+<rect x="642.0" y="225.0" width="96" height="20" fill="#ffffff"/>
+<text x="690.0" y="240.0" text-anchor="middle" font-size="13" font-style="italic" fill="#475569">«include»</text>
+<line x1="815.0" y1="329.0" x2="565.0" y2="329.0" stroke="#475569" stroke-width="1.6" stroke-dasharray="7 5" marker-end="url(#ouvert)"/>
+<rect x="642.0" y="317.0" width="96" height="20" fill="#ffffff"/>
+<text x="690.0" y="332.0" text-anchor="middle" font-size="13" font-style="italic" fill="#475569">«extend»</text>
+<ellipse cx="440.0" cy="145.0" rx="125.0" ry="37.0" fill="#eef3fa" stroke="#183153" stroke-width="2"/>
+<text x="440.0" y="141.0" text-anchor="middle" font-size="15" fill="#0f172a">Gérer l’organisation</text>
+<text x="440.0" y="159.0" text-anchor="middle" font-size="15" fill="#0f172a">administrative</text>
+<ellipse cx="440.0" cy="237.0" rx="125.0" ry="37.0" fill="#eef3fa" stroke="#183153" stroke-width="2"/>
+<text x="440.0" y="233.0" text-anchor="middle" font-size="15" fill="#0f172a">Gérer les comptes</text>
+<text x="440.0" y="251.0" text-anchor="middle" font-size="15" fill="#0f172a">du personnel</text>
+<ellipse cx="440.0" cy="329.0" rx="125.0" ry="37.0" fill="#eef3fa" stroke="#183153" stroke-width="2"/>
+<text x="440.0" y="325.0" text-anchor="middle" font-size="15" fill="#0f172a">Gérer les comptes</text>
+<text x="440.0" y="343.0" text-anchor="middle" font-size="15" fill="#0f172a">stagiaires</text>
+<ellipse cx="440.0" cy="421.0" rx="125.0" ry="37.0" fill="#eef3fa" stroke="#183153" stroke-width="2"/>
+<text x="440.0" y="417.0" text-anchor="middle" font-size="15" fill="#0f172a">Réinitialiser</text>
+<text x="440.0" y="435.0" text-anchor="middle" font-size="15" fill="#0f172a">un mot de passe</text>
+<ellipse cx="440.0" cy="513.0" rx="125.0" ry="37.0" fill="#eef3fa" stroke="#183153" stroke-width="2"/>
+<text x="440.0" y="509.0" text-anchor="middle" font-size="15" fill="#0f172a">Paramétrer les règles</text>
+<text x="440.0" y="527.0" text-anchor="middle" font-size="15" fill="#0f172a">de gestion</text>
+<ellipse cx="440.0" cy="605.0" rx="125.0" ry="37.0" fill="#eef3fa" stroke="#183153" stroke-width="2"/>
+<text x="440.0" y="601.0" text-anchor="middle" font-size="15" fill="#0f172a">Saisir les critères d’une</text>
+<text x="440.0" y="619.0" text-anchor="middle" font-size="15" fill="#0f172a">campagne en préparation</text>
+<ellipse cx="440.0" cy="697.0" rx="125.0" ry="37.0" fill="#eef3fa" stroke="#183153" stroke-width="2"/>
+<text x="440.0" y="693.0" text-anchor="middle" font-size="15" fill="#0f172a">Consulter le journal</text>
+<text x="440.0" y="711.0" text-anchor="middle" font-size="15" fill="#0f172a">d’audit</text>
+<ellipse cx="440.0" cy="789.0" rx="125.0" ry="37.0" fill="#eef3fa" stroke="#183153" stroke-width="2"/>
+<text x="440.0" y="785.0" text-anchor="middle" font-size="15" fill="#0f172a">Consulter le tableau</text>
+<text x="440.0" y="803.0" text-anchor="middle" font-size="15" fill="#0f172a">de bord</text>
+<ellipse cx="940.0" cy="237.0" rx="125.0" ry="37.0" fill="#eef3fa" stroke="#183153" stroke-width="2"/>
+<text x="940.0" y="233.0" text-anchor="middle" font-size="15" fill="#0f172a">Attribuer rôle</text>
+<text x="940.0" y="251.0" text-anchor="middle" font-size="15" fill="#0f172a">et périmètre</text>
+<ellipse cx="940.0" cy="329.0" rx="125.0" ry="37.0" fill="#eef3fa" stroke="#183153" stroke-width="2"/>
+<text x="940.0" y="325.0" text-anchor="middle" font-size="15" fill="#0f172a">Suspendre /</text>
+<text x="940.0" y="343.0" text-anchor="middle" font-size="15" fill="#0f172a">rétablir un compte</text>
+<g stroke="#183153" stroke-width="2.4" fill="none" stroke-linecap="round">
+<circle cx="85" cy="408.0" r="13" fill="#ffffff"/>
+<line x1="85" y1="421.0" x2="85" y2="458.0"/>
+<line x1="61" y1="434.0" x2="109" y2="434.0"/>
+<line x1="85" y1="458.0" x2="65" y2="488.0"/>
+<line x1="85" y1="458.0" x2="105" y2="488.0"/>
+</g>
+<text x="85" y="510.0" text-anchor="middle" font-size="16" font-weight="700" fill="#183153">Administrateur</text>
+</svg>

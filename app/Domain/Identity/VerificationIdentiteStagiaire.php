@@ -118,7 +118,7 @@ class VerificationIdentiteStagiaire
         // La personne vient de prouver son identité : lui dire que son compte existe ne révèle rien à un tiers.
         if ($this->compteExistant($cef, $email)) {
             throw RegleMetierException::conflit(
-                'Votre compte INTERNAT est déjà activé. Connectez-vous avec votre adresse e-mail et votre mot de passe INTERNAT.',
+                'Votre compte Maisons des Stagiaires - OFPPT est déjà activé. Connectez-vous avec votre adresse e-mail et le mot de passe de ce compte.',
                 'compte_existant',
             );
         }
@@ -160,7 +160,7 @@ class VerificationIdentiteStagiaire
             $this->garderPourExamen(ResultatVerification::CandidatureAmbigue, $email, $cef);
 
             throw RegleMetierException::conflit(
-                'Plusieurs de vos inscriptions sont au statut « Inscrit Payé » : INTERNAT ne peut pas choisir à votre place. '
+                'Plusieurs de vos inscriptions sont au statut « Inscrit Payé » : l\'application Maisons des Stagiaires - OFPPT ne peut pas choisir à votre place. '
                     .'L\'administration de votre établissement en est informée.',
                 'candidature_ambigue',
             );
@@ -173,7 +173,7 @@ class VerificationIdentiteStagiaire
             $this->garderPourExamen(ResultatVerification::EfpInconnu, $email, $cef, $candidature['nom_efp']);
 
             throw new RegleMetierException(
-                'Votre établissement n\'est pas encore référencé dans INTERNAT. L\'administration en est informée : réessayez plus tard.',
+                'Votre établissement n\'est pas encore référencé dans l\'application Maisons des Stagiaires - OFPPT. L\'administration en est informée : réessayez plus tard.',
                 'efp_inconnu',
             );
         }

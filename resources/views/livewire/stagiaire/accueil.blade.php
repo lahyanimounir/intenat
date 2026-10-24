@@ -18,7 +18,7 @@
     }
 @endphp
 <div>
-    <x-page.entete :titre="'Bonjour '.$stagiaire->prenom" description="Votre demande de place, votre séjour et vos démarches à la Maison des Stagiaires." />
+    <x-page.entete :titre="'Bonjour '.$stagiaire->prenom" description="Votre demande de place, votre hébergement et vos démarches à la Maison des Stagiaires." />
 
     <div class="space-y-6">
         {{-- Ce qui attend une action du stagiaire, par ordre de priorité. --}}

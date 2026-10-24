@@ -4,7 +4,7 @@
     use App\Support\Affichage\Format;
 @endphp
 <div>
-    <x-page.entete titre="Résidents" description="Stagiaires hébergés à l’internat. Ouvrez une fiche pour enregistrer une arrivée, un changement de lit, une remise d’équipement ou une fin de séjour." />
+    <x-page.entete titre="Résidents" description="Stagiaires hébergés à l’internat. Ouvrez une fiche pour enregistrer une arrivée, un changement de lit, une remise d’équipement ou une fin d’hébergement." />
 
     @if ($arrivee === 'attendue')
         <x-alerte ton="info" class="mb-4">
@@ -13,11 +13,11 @@
         </x-alerte>
     @endif
 
-    <x-tableau legende="Résidents de l’internat" :lignes="$residents" :vide="$etat === 'clos' ? 'Aucun séjour clos' : 'Aucun résident'"
+    <x-tableau legende="Résidents de l’internat" :lignes="$residents" :vide="$etat === 'clos' ? 'Aucun hébergement clos' : 'Aucun résident'"
         vide-description="Un résident apparaît ici dès qu’un lit lui est attribué.">
         <x-slot:barre>
             <x-recherche placeholder="Nom, CEF ou n° de dossier" libelle="Rechercher un résident" />
-            <x-filtre libelle="Séjours" wire:model.live="etat" :options="['clos' => 'Séjours clos']" tous="en cours" :actif="$etat === 'clos'" />
+            <x-filtre libelle="Hébergements" wire:model.live="etat" :options="['clos' => 'Hébergements clos']" tous="en cours" :actif="$etat === 'clos'" />
             @if ($internats->count() > 1)
                 <x-filtre libelle="Internat" wire:model.live="internat" :options="$internats" :actif="$internat !== ''" />
             @endif
@@ -48,7 +48,7 @@
                 </x-tableau.cellule>
                 <x-tableau.cellule>
                     @if ($resident->date_fin)
-                        <x-badge>Séjour clos</x-badge>
+                        <x-badge>Hébergement clos</x-badge>
                     @elseif ($resident->demande->statut === StatutDemande::Desiste)
                         <x-badge ton="danger">Désisté</x-badge>
                     @elseif ($arriveeLe)

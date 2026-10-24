@@ -233,7 +233,7 @@ class AuthController extends Controller
             $journal->consigner('auth.refus_compte_suspendu', $stagiaire, acteur: $stagiaire);
 
             throw new RegleMetierException(
-                'Votre compte INTERNAT est suspendu. Contactez l\'administration de votre établissement.',
+                'Votre compte Maisons des Stagiaires - OFPPT est suspendu. Contactez l\'administration de votre établissement.',
                 'compte_suspendu',
                 statutHttp: 403,
             );
@@ -258,7 +258,7 @@ class AuthController extends Controller
         $recuperation->demander($donnees['espace'], $donnees['email']);
 
         return response()->json([
-            'message' => 'Si un compte INTERNAT correspond à cette adresse, un lien de réinitialisation vient de lui être envoyé.',
+            'message' => 'Si un compte Maisons des Stagiaires - OFPPT correspond à cette adresse, un lien de réinitialisation vient de lui être envoyé.',
         ]);
     }
 

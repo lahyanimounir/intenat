@@ -1,0 +1,20 @@
+flowchart TB
+  classDef stg fill:#eff6ff,stroke:#1d4ed8,color:#0f172a,stroke-width:2px
+  classDef ges fill:#f0fdf4,stroke:#15803d,color:#0f172a,stroke-width:2px
+  classDef chf fill:#f5f3ff,stroke:#7c3aed,color:#0f172a,stroke-width:2px
+  classDef dir fill:#fffbeb,stroke:#b45309,color:#0f172a,stroke-width:2px
+  classDef res fill:#fff7ed,stroke:#c2410c,color:#0f172a,stroke-width:2px
+  classDef app fill:#f1f5f9,stroke:#475569,color:#0f172a,stroke-width:2px
+  classDef fin fill:#183153,stroke:#183153,color:#ffffff,stroke-width:2px
+  classDef stop fill:#fee2e2,stroke:#b91c1c,color:#0f172a,stroke-width:2px
+
+  A["<b>Application</b><br/>Génère la mensualité<br/>le 1er du mois"]:::app
+  B["<b>Stagiaire</b><br/>Règle la mensualité"]:::stg
+  C["<b>Stagiaire</b><br/>Dépose le justificatif"]:::stg
+  D{"<b>Gestionnaire d'internat</b><br/>Justificatif<br/>conforme ?"}:::ges
+  E(["Paiement validé"]):::fin
+  F["Justificatif rejeté<br/>avec motif"]:::stop
+  G["<b>Chef de pôle</b><br/>Suit les paiements<br/>de l’établissement"]:::chf
+  A --> B --> C --> D
+  D -- "oui" --> E --> G
+  D -- "non" --> F --> C

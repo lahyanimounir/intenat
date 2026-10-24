@@ -11,7 +11,7 @@
 @endphp
 <div class="mx-auto max-w-4xl">
     <x-page.entete titre="Mon inscription"
-        description="Déposez toute votre candidature — identité, formation, situation et pièces justificatives — puis soumettez-la au gestionnaire de votre internat. Le séjour s’ouvre une fois votre candidature validée.">
+        description="Déposez toute votre candidature — identité, formation, situation et pièces justificatives — puis soumettez-la au gestionnaire de votre internat. L’hébergement s’ouvre une fois votre candidature validée.">
         <x-slot:marque><x-statut :etat="$statut" /></x-slot:marque>
     </x-page.entete>
 

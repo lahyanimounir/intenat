@@ -12,7 +12,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
-    <title>{{ $titre }} — INTERNAT</title>
+    <title>{{ $titre }} — Maisons des Stagiaires - OFPPT</title>
     <style>
         *, *::before, *::after { box-sizing: border-box; }
         body { margin: 0; min-height: 100dvh; display: grid; place-items: center; padding: 1.5rem; background: #f5f7fa; color: #172033;
@@ -32,7 +32,7 @@
 </head>
 <body>
     <main>
-        <p class="marque">INTERNAT</p>
+        <p class="marque">Maisons des Stagiaires - OFPPT</p>
         <p class="code">Erreur {{ $code }}</p>
         <h1>{{ $titre }}</h1>
         <p>{{ $message }}</p>

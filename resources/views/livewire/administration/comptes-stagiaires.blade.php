@@ -84,7 +84,7 @@
                                     </x-bouton>
                                 @elseif ($compte->etat_compte === EtatCompte::Suspendu)
                                     <x-bouton taille="sm"
-                                        x-on:click="$confirmer({ titre: 'Rétablir ce compte ?', texte: {{ Js::from($nomComplet.' pourra de nouveau se connecter avec son mot de passe INTERNAT.') }}, libelle: 'Rétablir' }).then(() => $wire.retablir({{ $compte->id }}))">
+                                        x-on:click="$confirmer({ titre: 'Rétablir ce compte ?', texte: {{ Js::from($nomComplet.' pourra de nouveau se connecter à son compte Maisons des Stagiaires - OFPPT.') }}, libelle: 'Rétablir' }).then(() => $wire.retablir({{ $compte->id }}))">
                                         Rétablir
                                     </x-bouton>
                                 @endif

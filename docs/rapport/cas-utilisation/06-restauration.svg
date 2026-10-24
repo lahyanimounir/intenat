@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1250 1060" width="1250" height="1060" font-family="Arial, Helvetica, sans-serif">
+<defs><marker id="ouvert" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="11" markerHeight="11" orient="auto"><path d="M1 1L11 6L1 11" fill="none" stroke="#475569" stroke-width="1.8"/></marker><marker id="triangle" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="14" markerHeight="14" orient="auto"><path d="M1 1L13 7L1 13z" fill="#ffffff" stroke="#183153" stroke-width="1.6"/></marker></defs>
+<rect width="1250" height="1060" fill="#ffffff"/>
+<rect x="190" y="60" width="1000" height="950" rx="6" fill="#fbfcfe" stroke="#183153" stroke-width="2.2"/>
+<text x="690.0" y="90" text-anchor="middle" font-size="18" font-weight="700" fill="#183153">Cas d’utilisation — Responsable restauration</text>
+<line x1="115" y1="496.0" x2="407.0" y2="180.7" stroke="#1e293b" stroke-width="1.6"/>
+<line x1="115" y1="496.0" x2="397.3" y2="265.8" stroke="#1e293b" stroke-width="1.6"/>
+<line x1="115" y1="496.0" x2="380.8" y2="349.6" stroke="#1e293b" stroke-width="1.6"/>
+<line x1="115" y1="496.0" x2="350.1" y2="428.7" stroke="#1e293b" stroke-width="1.6"/>
+<line x1="115" y1="496.0" x2="315.3" y2="491.7" stroke="#1e293b" stroke-width="1.6"/>
+<line x1="115" y1="496.0" x2="343.4" y2="551.5" stroke="#1e293b" stroke-width="1.6"/>
+<line x1="115" y1="496.0" x2="377.0" y2="629.0" stroke="#1e293b" stroke-width="1.6"/>
+<line x1="115" y1="496.0" x2="395.3" y2="712.5" stroke="#1e293b" stroke-width="1.6"/>
+<line x1="115" y1="496.0" x2="405.7" y2="797.4" stroke="#1e293b" stroke-width="1.6"/>
+<line x1="115" y1="496.0" x2="412.3" y2="882.9" stroke="#1e293b" stroke-width="1.6"/>
+<line x1="815.0" y1="403.0" x2="565.0" y2="403.0" stroke="#475569" stroke-width="1.6" stroke-dasharray="7 5" marker-end="url(#ouvert)"/>
+<rect x="642.0" y="391.0" width="96" height="20" fill="#ffffff"/>
+<text x="690.0" y="406.0" text-anchor="middle" font-size="13" font-style="italic" fill="#475569">«extend»</text>
+<line x1="815.0" y1="661.0" x2="565.0" y2="661.0" stroke="#475569" stroke-width="1.6" stroke-dasharray="7 5" marker-end="url(#ouvert)"/>
+<rect x="642.0" y="649.0" width="96" height="20" fill="#ffffff"/>
+<text x="690.0" y="664.0" text-anchor="middle" font-size="13" font-style="italic" fill="#475569">«extend»</text>
+<ellipse cx="440.0" cy="145.0" rx="125.0" ry="37.0" fill="#eef3fa" stroke="#183153" stroke-width="2"/>
+<text x="440.0" y="150.0" text-anchor="middle" font-size="15" fill="#0f172a">Composer les menus</text>
+<ellipse cx="440.0" cy="231.0" rx="125.0" ry="37.0" fill="#eef3fa" stroke="#183153" stroke-width="2"/>
+<text x="440.0" y="236.0" text-anchor="middle" font-size="15" fill="#0f172a">Transmettre la semaine</text>
+<ellipse cx="440.0" cy="317.0" rx="125.0" ry="37.0" fill="#eef3fa" stroke="#183153" stroke-width="2"/>
+<text x="440.0" y="313.0" text-anchor="middle" font-size="15" fill="#0f172a">Corriger les menus</text>
+<text x="440.0" y="331.0" text-anchor="middle" font-size="15" fill="#0f172a">renvoyés</text>
+<ellipse cx="440.0" cy="403.0" rx="125.0" ry="37.0" fill="#eef3fa" stroke="#183153" stroke-width="2"/>
+<text x="440.0" y="408.0" text-anchor="middle" font-size="15" fill="#0f172a">Consulter la liste J+1</text>
+<ellipse cx="440.0" cy="489.0" rx="125.0" ry="37.0" fill="#eef3fa" stroke="#183153" stroke-width="2"/>
+<text x="440.0" y="494.0" text-anchor="middle" font-size="15" fill="#0f172a">Confirmer l’effectif</text>
+<ellipse cx="440.0" cy="575.0" rx="125.0" ry="37.0" fill="#eef3fa" stroke="#183153" stroke-width="2"/>
+<text x="440.0" y="571.0" text-anchor="middle" font-size="15" fill="#0f172a">Pointer et clore</text>
+<text x="440.0" y="589.0" text-anchor="middle" font-size="15" fill="#0f172a">le service</text>
+<ellipse cx="440.0" cy="661.0" rx="125.0" ry="37.0" fill="#eef3fa" stroke="#183153" stroke-width="2"/>
+<text x="440.0" y="666.0" text-anchor="middle" font-size="15" fill="#0f172a">Consulter les absents</text>
+<ellipse cx="440.0" cy="747.0" rx="125.0" ry="37.0" fill="#eef3fa" stroke="#183153" stroke-width="2"/>
+<text x="440.0" y="752.0" text-anchor="middle" font-size="15" fill="#0f172a">Consulter les statistiques</text>
+<ellipse cx="440.0" cy="833.0" rx="125.0" ry="37.0" fill="#eef3fa" stroke="#183153" stroke-width="2"/>
+<text x="440.0" y="829.0" text-anchor="middle" font-size="15" fill="#0f172a">Traiter les réclamations</text>
+<text x="440.0" y="847.0" text-anchor="middle" font-size="15" fill="#0f172a">de restauration</text>
+<ellipse cx="440.0" cy="919.0" rx="125.0" ry="37.0" fill="#eef3fa" stroke="#183153" stroke-width="2"/>
+<text x="440.0" y="915.0" text-anchor="middle" font-size="15" fill="#0f172a">Réinitialiser le mot de</text>
+<text x="440.0" y="933.0" text-anchor="middle" font-size="15" fill="#0f172a">passe d’un stagiaire</text>
+<ellipse cx="940.0" cy="403.0" rx="125.0" ry="37.0" fill="#eef3fa" stroke="#183153" stroke-width="2"/>
+<text x="940.0" y="408.0" text-anchor="middle" font-size="15" fill="#0f172a">Imprimer la liste J+1</text>
+<ellipse cx="940.0" cy="661.0" rx="125.0" ry="37.0" fill="#eef3fa" stroke="#183153" stroke-width="2"/>
+<text x="940.0" y="657.0" text-anchor="middle" font-size="15" fill="#0f172a">Imprimer les absents</text>
+<text x="940.0" y="675.0" text-anchor="middle" font-size="15" fill="#0f172a">(repas ou journée)</text>
+<g stroke="#183153" stroke-width="2.4" fill="none" stroke-linecap="round">
+<circle cx="85" cy="470.0" r="13" fill="#ffffff"/>
+<line x1="85" y1="483.0" x2="85" y2="520.0"/>
+<line x1="61" y1="496.0" x2="109" y2="496.0"/>
+<line x1="85" y1="520.0" x2="65" y2="550.0"/>
+<line x1="85" y1="520.0" x2="105" y2="550.0"/>
+</g>
+<text x="85" y="572.0" text-anchor="middle" font-size="16" font-weight="700" fill="#183153">Responsable</text>
+<text x="85" y="591.0" text-anchor="middle" font-size="16" font-weight="700" fill="#183153">restauration</text>
+</svg>

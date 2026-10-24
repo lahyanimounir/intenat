@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1250 800" width="1250" height="800" font-family="Arial, Helvetica, sans-serif">
+<defs><marker id="ouvert" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="11" markerHeight="11" orient="auto"><path d="M1 1L11 6L1 11" fill="none" stroke="#475569" stroke-width="1.8"/></marker><marker id="triangle" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="14" markerHeight="14" orient="auto"><path d="M1 1L13 7L1 13z" fill="#ffffff" stroke="#183153" stroke-width="1.6"/></marker></defs>
+<rect width="1250" height="800" fill="#ffffff"/>
+<rect x="190" y="60" width="1000" height="690" rx="6" fill="#fbfcfe" stroke="#183153" stroke-width="2.2"/>
+<text x="690.0" y="90" text-anchor="middle" font-size="18" font-weight="700" fill="#183153">Cas d’utilisation — Directeur de complexe / CMC</text>
+<line x1="115" y1="366.0" x2="390.1" y2="178.9" stroke="#1e293b" stroke-width="1.6"/>
+<line x1="115" y1="366.0" x2="362.2" y2="274.0" stroke="#1e293b" stroke-width="1.6"/>
+<line x1="115" y1="366.0" x2="317.9" y2="352.9" stroke="#1e293b" stroke-width="1.6"/>
+<line x1="115" y1="366.0" x2="343.4" y2="421.5" stroke="#1e293b" stroke-width="1.6"/>
+<line x1="115" y1="366.0" x2="380.8" y2="512.4" stroke="#1e293b" stroke-width="1.6"/>
+<line x1="115" y1="366.0" x2="399.3" y2="610.0" stroke="#1e293b" stroke-width="1.6"/>
+<line x1="815.0" y1="245.0" x2="565.0" y2="245.0" stroke="#475569" stroke-width="1.6" stroke-dasharray="7 5" marker-end="url(#ouvert)"/>
+<rect x="642.0" y="233.0" width="96" height="20" fill="#ffffff"/>
+<text x="690.0" y="248.0" text-anchor="middle" font-size="13" font-style="italic" fill="#475569">«extend»</text>
+<ellipse cx="440.0" cy="145.0" rx="125.0" ry="37.0" fill="#eef3fa" stroke="#183153" stroke-width="2"/>
+<text x="440.0" y="141.0" text-anchor="middle" font-size="15" fill="#0f172a">Consulter dossiers</text>
+<text x="440.0" y="159.0" text-anchor="middle" font-size="15" fill="#0f172a">et classement</text>
+<ellipse cx="440.0" cy="245.0" rx="125.0" ry="37.0" fill="#eef3fa" stroke="#183153" stroke-width="2"/>
+<text x="440.0" y="241.0" text-anchor="middle" font-size="15" fill="#0f172a">Délibérer : valider</text>
+<text x="440.0" y="259.0" text-anchor="middle" font-size="15" fill="#0f172a">la liste des admis</text>
+<ellipse cx="440.0" cy="345.0" rx="125.0" ry="37.0" fill="#eef3fa" stroke="#183153" stroke-width="2"/>
+<text x="440.0" y="350.0" text-anchor="middle" font-size="15" fill="#0f172a">Rectifier une note</text>
+<ellipse cx="440.0" cy="445.0" rx="125.0" ry="37.0" fill="#eef3fa" stroke="#183153" stroke-width="2"/>
+<text x="440.0" y="450.0" text-anchor="middle" font-size="15" fill="#0f172a">Annuler une validation</text>
+<ellipse cx="440.0" cy="545.0" rx="125.0" ry="37.0" fill="#eef3fa" stroke="#183153" stroke-width="2"/>
+<text x="440.0" y="541.0" text-anchor="middle" font-size="15" fill="#0f172a">Réinitialiser le mot de passe</text>
+<text x="440.0" y="559.0" text-anchor="middle" font-size="15" fill="#0f172a">des responsables</text>
+<ellipse cx="440.0" cy="645.0" rx="125.0" ry="37.0" fill="#eef3fa" stroke="#183153" stroke-width="2"/>
+<text x="440.0" y="641.0" text-anchor="middle" font-size="15" fill="#0f172a">Consulter tableaux de bord</text>
+<text x="440.0" y="659.0" text-anchor="middle" font-size="15" fill="#0f172a">et exports</text>
+<ellipse cx="940.0" cy="245.0" rx="125.0" ry="37.0" fill="#eef3fa" stroke="#183153" stroke-width="2"/>
+<text x="940.0" y="241.0" text-anchor="middle" font-size="15" fill="#0f172a">Ajuster une proposition</text>
+<text x="940.0" y="259.0" text-anchor="middle" font-size="15" fill="#0f172a">(motivée)</text>
+<g stroke="#183153" stroke-width="2.4" fill="none" stroke-linecap="round">
+<circle cx="85" cy="340.0" r="13" fill="#ffffff"/>
+<line x1="85" y1="353.0" x2="85" y2="390.0"/>
+<line x1="61" y1="366.0" x2="109" y2="366.0"/>
+<line x1="85" y1="390.0" x2="65" y2="420.0"/>
+<line x1="85" y1="390.0" x2="105" y2="420.0"/>
+</g>
+<text x="85" y="442.0" text-anchor="middle" font-size="16" font-weight="700" fill="#183153">Directeur</text>
+<text x="85" y="461.0" text-anchor="middle" font-size="16" font-weight="700" fill="#183153">complexe / CMC</text>
+</svg>

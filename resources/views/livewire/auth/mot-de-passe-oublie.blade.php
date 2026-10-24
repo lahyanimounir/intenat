@@ -8,7 +8,7 @@
             </span>
             <h1 class="mt-4 text-xl font-semibold text-encre">Consultez votre messagerie</h1>
             <p role="status" class="mt-2 text-base text-encre-2">
-                Si un compte INTERNAT {{ $espace }} correspond à <strong class="font-medium break-all text-encre">{{ $envoyeA }}</strong>, un lien de
+                Si un compte de l’espace {{ $espace }} correspond à <strong class="font-medium break-all text-encre">{{ $envoyeA }}</strong>, un lien de
                 réinitialisation vient de lui être envoyé. Il est valable 30 minutes et ne sert qu’une fois.
             </p>
             <p class="mt-3 text-sm text-discret">
@@ -22,7 +22,7 @@
     @else
         <h1 class="text-xl font-semibold text-encre">Mot de passe oublié</h1>
         <p class="mt-1 mb-6 text-base text-discret">
-            Espace {{ $espace }}. Indiquez l’adresse e-mail de votre compte INTERNAT : vous y recevrez un lien pour choisir un nouveau mot de passe.
+            Espace {{ $espace }}. Indiquez l’adresse e-mail de votre compte Maisons des Stagiaires - OFPPT : vous y recevrez un lien pour choisir un nouveau mot de passe.
         </p>
         <form wire:submit="envoyer" novalidate class="space-y-4">
             <x-saisie libelle="Adresse e-mail" type="email" wire:model="email" autocomplete="username" inputmode="email" requis />

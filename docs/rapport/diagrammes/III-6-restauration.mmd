@@ -1,0 +1,21 @@
+flowchart TB
+  classDef stg fill:#eff6ff,stroke:#1d4ed8,color:#0f172a,stroke-width:2px
+  classDef ges fill:#f0fdf4,stroke:#15803d,color:#0f172a,stroke-width:2px
+  classDef chf fill:#f5f3ff,stroke:#7c3aed,color:#0f172a,stroke-width:2px
+  classDef dir fill:#fffbeb,stroke:#b45309,color:#0f172a,stroke-width:2px
+  classDef res fill:#fff7ed,stroke:#c2410c,color:#0f172a,stroke-width:2px
+  classDef app fill:#f1f5f9,stroke:#475569,color:#0f172a,stroke-width:2px
+  classDef fin fill:#183153,stroke:#183153,color:#ffffff,stroke-width:2px
+  classDef stop fill:#fee2e2,stroke:#b91c1c,color:#0f172a,stroke-width:2px
+
+  A["<b>Responsable restauration</b><br/>Compose les menus<br/>de la semaine"]:::res
+  B["<b>Responsable restauration</b><br/>Transmet la semaine"]:::res
+  C{"<b>Chef de pôle</b><br/>Menus<br/>conformes ?"}:::chf
+  D["<b>Responsable restauration</b><br/>Corrige les seuls<br/>menus renvoyés"]:::res
+  E["<b>Stagiaire résident</b><br/>Réserve ses repas,<br/>signale ses allergies"]:::stg
+  F["<b>Responsable restauration</b><br/>Confirme l’effectif J+1"]:::res
+  G["<b>Responsable restauration</b><br/>Sert le repas, pointe<br/>présents et absents"]:::res
+  H(["Listes des absents<br/>par repas et par journée"]):::fin
+  A --> B --> C
+  C -- "renvoi motivé" --> D --> B
+  C -- "validés" --> E --> F --> G --> H

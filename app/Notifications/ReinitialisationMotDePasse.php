@@ -49,7 +49,7 @@ class ReinitialisationMotDePasse extends Notification implements ShouldBeEncrypt
         return (new MailMessage)
             ->subject(config('app.name').' — Réinitialisation de votre mot de passe')
             ->greeting('Bonjour,')
-            ->line('Une réinitialisation du mot de passe de votre compte INTERNAT a été demandée.')
+            ->line('Une réinitialisation du mot de passe de votre compte Maisons des Stagiaires - OFPPT a été demandée.')
             ->action('Choisir un nouveau mot de passe', $this->lien())
             ->line("Ce lien est valable {$minutes} minutes et ne sert qu'une fois.")
             ->line('Si vous n\'êtes pas à l\'origine de cette demande, ignorez ce message : votre mot de passe reste inchangé.')

@@ -70,7 +70,7 @@ class DocumentsAdministratifs
                 ]],
             ],
             'paragraphes' => [
-                'Le stagiaire règle le montant indiqué selon les modalités de l\'établissement, puis téléverse son justificatif de paiement dans son espace INTERNAT. Le gestionnaire de l\'internat le vérifie.',
+                'Le stagiaire règle le montant indiqué selon les modalités de l\'établissement, puis téléverse son justificatif de paiement dans son espace stagiaire de l\'application Maisons des Stagiaires - OFPPT. Le gestionnaire de l\'internat le vérifie.',
             ],
             'signataire' => 'Le gestionnaire de l\'internat',
         ]);

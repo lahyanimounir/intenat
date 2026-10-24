@@ -152,7 +152,7 @@ class AffectationLits
                 $affectation = Affectation::lockForUpdate()->findOrFail($affectation->id);
 
                 if (! $affectation->estActive()) {
-                    throw new RegleMetierException('Ce séjour est déjà clos.', 'sejour_clos');
+                    throw new RegleMetierException('Cet hébergement est déjà clos.', 'sejour_clos');
                 }
 
                 if ($affectation->lit_id === $nouveauLit->id) {
@@ -216,7 +216,7 @@ class AffectationLits
             $affectation = Affectation::lockForUpdate()->findOrFail($affectation->id);
 
             if (! $affectation->estActive()) {
-                throw new RegleMetierException('Ce séjour est déjà clos.', 'sejour_clos');
+                throw new RegleMetierException('Cet hébergement est déjà clos.', 'sejour_clos');
             }
 
             if ($affectation->arriveeEnregistree()) {
@@ -243,7 +243,7 @@ class AffectationLits
     public function cloturer(Affectation $affectation, TypeMouvement $type, string $motif, Utilisateur $gestionnaire): Affectation
     {
         if (! in_array($type, [TypeMouvement::Depart, TypeMouvement::Exclusion, TypeMouvement::NonPresente], true)) {
-            throw new RegleMetierException('Type de fin de séjour invalide.', 'type_invalide');
+            throw new RegleMetierException('Type de fin d\'hébergement invalide.', 'type_invalide');
         }
 
         return DB::transaction(function () use ($affectation, $type, $motif, $gestionnaire) {
@@ -252,7 +252,7 @@ class AffectationLits
             $affectation = Affectation::lockForUpdate()->findOrFail($affectation->id);
 
             if (! $affectation->estActive()) {
-                throw RegleMetierException::conflit('Ce séjour est déjà clos.', 'sejour_clos');
+                throw RegleMetierException::conflit('Cet hébergement est déjà clos.', 'sejour_clos');
             }
 
             $arrive = $affectation->arriveeEnregistree();

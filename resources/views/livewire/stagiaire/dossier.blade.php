@@ -256,7 +256,7 @@
                             @if ($stagiaire->aUnLitAffecte())
                                 <x-slot:action><x-bouton taille="sm" :href="url('/stagiaire/paiements')">Mes paiements</x-bouton></x-slot:action>
                             @else
-                                Les services du séjour (hébergement, paiements, repas, sorties, réclamations) s’ouvriront dès qu’un lit vous sera affecté.
+                                Les services liés à l’hébergement (chambre, paiements, repas, sorties, réclamations) s’ouvriront dès qu’un lit vous sera affecté.
                             @endif
                         </x-alerte>
                         @break
@@ -272,7 +272,7 @@
                         <x-alerte ton="neutre" titre="Vous avez renoncé à votre place" />
                         @break
                     @case(StatutDemande::SejourTermine)
-                        <x-alerte ton="neutre" titre="Séjour terminé" />
+                        <x-alerte ton="neutre" titre="Hébergement terminé" />
                         @break
                 @endswitch
 

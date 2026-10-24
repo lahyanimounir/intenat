@@ -1,0 +1,25 @@
+flowchart TB
+  classDef stg fill:#eff6ff,stroke:#1d4ed8,color:#0f172a,stroke-width:2px
+  classDef ges fill:#f0fdf4,stroke:#15803d,color:#0f172a,stroke-width:2px
+  classDef chf fill:#f5f3ff,stroke:#7c3aed,color:#0f172a,stroke-width:2px
+  classDef dir fill:#fffbeb,stroke:#b45309,color:#0f172a,stroke-width:2px
+  classDef res fill:#fff7ed,stroke:#c2410c,color:#0f172a,stroke-width:2px
+  classDef app fill:#f1f5f9,stroke:#475569,color:#0f172a,stroke-width:2px
+  classDef fin fill:#183153,stroke:#183153,color:#ffffff,stroke-width:2px
+  classDef stop fill:#fee2e2,stroke:#b91c1c,color:#0f172a,stroke-width:2px
+
+  A1["<b>Candidat</b><br/>S'inscrit en ligne et dépose<br/>sa candidature"]:::stg
+  B1["<b>Gestionnaire d'internat</b><br/>Vérifie l'inscription<br/>et les pièces justificatives"]:::ges
+  B2{"Dossier<br/>conforme ?"}:::ges
+  A2["<b>Candidat</b><br/>Corrige et redépose"]:::stg
+  B3["Rejet motivé"]:::stop
+  C1["<b>Application</b><br/>Calcule le score<br/>et classe le candidat"]:::app
+  D1["<b>Chef de pôle</b><br/>Prépare les listes<br/>pour la délibération"]:::chf
+  E1["<b>Directeur</b><br/>Délibère et valide<br/>la liste des admis"]:::dir
+  F1["<b>Gestionnaire d'internat</b><br/>Confirme la place<br/>et affecte un lit"]:::ges
+  A1 --> B1 --> B2
+  B2 -- "à corriger" --> A2
+  A2 --> B1
+  B2 -- "non recevable" --> B3
+  B2 -- "complet" --> C1 --> D1 --> E1
+  E1 -- "admis" --> F1

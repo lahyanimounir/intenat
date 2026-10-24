@@ -1,7 +1,7 @@
 {{-- Accueil de l'espace stagiaires et candidats : se connecter, créer son compte, récupérer son mot de passe. --}}
 <div>
     <h1 class="text-xl font-semibold text-encre">Espace stagiaires</h1>
-    <p class="mt-1 mb-6 text-base text-discret">Demandez une place à l’internat et suivez votre séjour.</p>
+    <p class="mt-1 mb-6 text-base text-discret">Demandez une place à l’internat et suivez votre hébergement.</p>
 
     @if (session('succes'))
         <x-alerte ton="succes" class="mb-5">{{ session('succes') }}</x-alerte>
@@ -21,7 +21,7 @@
             @endif
 
             <x-saisie libelle="Adresse e-mail" type="email" wire:model="email" autocomplete="username" inputmode="email" requis />
-            <x-mot-de-passe libelle="Mot de passe INTERNAT" wire:model="mot_de_passe" autocomplete="current-password" requis />
+            <x-mot-de-passe libelle="Mot de passe de l’application" wire:model="mot_de_passe" autocomplete="current-password" requis />
 
             <x-bouton type="submit" variante="primaire" class="w-full" cible="connecter">Se connecter</x-bouton>
 

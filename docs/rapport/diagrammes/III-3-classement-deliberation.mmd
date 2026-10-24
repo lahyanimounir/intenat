@@ -1,0 +1,18 @@
+flowchart TB
+  classDef stg fill:#eff6ff,stroke:#1d4ed8,color:#0f172a,stroke-width:2px
+  classDef ges fill:#f0fdf4,stroke:#15803d,color:#0f172a,stroke-width:2px
+  classDef chf fill:#f5f3ff,stroke:#7c3aed,color:#0f172a,stroke-width:2px
+  classDef dir fill:#fffbeb,stroke:#b45309,color:#0f172a,stroke-width:2px
+  classDef res fill:#fff7ed,stroke:#c2410c,color:#0f172a,stroke-width:2px
+  classDef app fill:#f1f5f9,stroke:#475569,color:#0f172a,stroke-width:2px
+  classDef fin fill:#183153,stroke:#183153,color:#ffffff,stroke-width:2px
+  classDef stop fill:#fee2e2,stroke:#b91c1c,color:#0f172a,stroke-width:2px
+
+  A["<b>Gestionnaire d'internat</b><br/>Valide le dossier complet"]:::ges
+  B["<b>Application</b><br/>Calcule le score selon<br/>la grille de critères"]:::app
+  C["<b>Application</b><br/>Classe les candidats<br/>et propose deux listes :<br/>principale et attente"]:::app
+  D["<b>Chef de pôle</b><br/>Contrôle, rectifie une note<br/>si besoin, imprime la liste"]:::chf
+  E["<b>Directeur</b><br/>Examine la proposition,<br/>ajuste en motivant, valide"]:::dir
+  F(["Décisions publiées :<br/>admis · en attente · refusé"]):::fin
+  A --> B --> C --> D --> E --> F
+  D -. "note rectifiée :<br/>rang recalculé" .-> C

@@ -12,7 +12,7 @@
 @endphp
 <div>
     <x-page.entete titre="Suivi des paiements"
-        description="Frais d’internat mois par mois : le montant mensuel de la campagne est dû pour chaque mois de séjour. Le stagiaire paie directement et dépose son justificatif, que le gestionnaire vérifie ; aucune autorisation préalable. Le paiement ne conditionne ni l’affectation, ni l’arrivée. Aucun paiement en ligne. Les frais d’inscription en formation relèvent de l’établissement et ne sont pas suivis ici." />
+        description="Frais d’internat mois par mois : le montant mensuel de la campagne est dû pour chaque mois d’hébergement. Le stagiaire paie directement et dépose son justificatif, que le gestionnaire vérifie ; aucune autorisation préalable. Le paiement ne conditionne ni l’affectation, ni l’arrivée. Aucun paiement en ligne. Les frais d’inscription en formation relèvent de l’établissement et ne sont pas suivis ici." />
 
     <x-tableau legende="Paiements" :lignes="$paiements"
         :vide="$filtresActifs ? 'Aucun paiement ne correspond aux filtres' : 'Aucun paiement'"

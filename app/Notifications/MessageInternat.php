@@ -45,7 +45,7 @@ class MessageInternat extends Notification implements ShouldQueue
             ->line($notification->message);
 
         if ($notification->lien) {
-            $courriel->action('Ouvrir dans INTERNAT', rtrim((string) config('app.frontend_url'), '/').$notification->lien);
+            $courriel->action('Ouvrir l\'application', rtrim((string) config('app.frontend_url'), '/').$notification->lien);
         }
 
         return $courriel->salutation('Message automatique, merci de ne pas y répondre.');

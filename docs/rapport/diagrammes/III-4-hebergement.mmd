@@ -1,0 +1,18 @@
+flowchart TB
+  classDef stg fill:#eff6ff,stroke:#1d4ed8,color:#0f172a,stroke-width:2px
+  classDef ges fill:#f0fdf4,stroke:#15803d,color:#0f172a,stroke-width:2px
+  classDef chf fill:#f5f3ff,stroke:#7c3aed,color:#0f172a,stroke-width:2px
+  classDef dir fill:#fffbeb,stroke:#b45309,color:#0f172a,stroke-width:2px
+  classDef res fill:#fff7ed,stroke:#c2410c,color:#0f172a,stroke-width:2px
+  classDef app fill:#f1f5f9,stroke:#475569,color:#0f172a,stroke-width:2px
+  classDef fin fill:#183153,stroke:#183153,color:#ffffff,stroke-width:2px
+  classDef stop fill:#fee2e2,stroke:#b91c1c,color:#0f172a,stroke-width:2px
+
+  A(["Candidat admis"]):::fin
+  B["<b>Gestionnaire d'internat</b><br/>Confirme la place et<br/>autorise l’occupation"]:::ges
+  C["<b>Gestionnaire d'internat</b><br/>Affecte un lit disponible"]:::ges
+  D["<b>Gestionnaire d'internat</b><br/>Enregistre l’arrivée"]:::ges
+  E["<b>Stagiaire résident</b><br/>Occupe son lit ;<br/>son espace séjour s’ouvre"]:::stg
+  F["<b>Gestionnaire d'internat</b><br/>Gère le séjour : changement<br/>de lit, sorties, absences"]:::ges
+  G(["Départ : séjour terminé,<br/>lit libéré"]):::fin
+  A --> B --> C --> D --> E --> F --> G

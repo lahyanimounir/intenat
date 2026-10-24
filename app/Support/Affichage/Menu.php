@@ -67,7 +67,7 @@ final class Menu
             ['Mon profil', '/stagiaire/profil', 'user-round'],
         ]],
         // « sejour » : entrée réservée au stagiaire à qui un lit a été affecté.
-        ['titre' => 'Mon séjour', 'entrees' => [
+        ['titre' => 'Mon hébergement', 'entrees' => [
             ['Hébergement', '/stagiaire/hebergement', 'bed-double', ['sejour']],
             ['Paiements', '/stagiaire/paiements', 'credit-card', ['sejour']],
             ['Repas', '/stagiaire/repas', 'utensils-crossed', ['sejour']],

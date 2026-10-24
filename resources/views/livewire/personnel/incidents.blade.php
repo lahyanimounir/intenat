@@ -98,7 +98,7 @@
     </div>
 
     @if ($dialogue === 'incident')
-        <x-dialogue titre="Déclarer un incident" description="L’incident est rattaché au séjour du résident et consigné au journal.">
+        <x-dialogue titre="Déclarer un incident" description="L’incident est rattaché à l’hébergement du résident et consigné au journal.">
             <form wire:submit="enregistrerIncident" id="form-incident" novalidate class="grid gap-4 sm:grid-cols-2">
                 <x-liste libelle="Résident" wire:model="incident.affectation_id" :options="$residents" vide="Choisir…" requis class="sm:col-span-2" />
                 <x-liste libelle="Type" wire:model="incident.type" :options="TypeIncident::options()" vide="Choisir…" requis />

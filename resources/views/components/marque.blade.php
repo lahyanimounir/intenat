@@ -5,7 +5,7 @@
         <svg viewBox="0 0 32 32" class="size-5" fill="currentColor"><path d="M9 22V12.2L16 8l7 4.2V22h-4.6v-5.4h-4.8V22z" /></svg>
     </span>
     <div class="min-w-0 leading-tight" @if ($reductible) x-show="! reduit" @endif>
-        <p class="text-md font-semibold tracking-wide text-marine">INTERNAT</p>
-        <p class="truncate text-2xs text-discret">Maisons des Stagiaires</p>
+        <p class="text-md font-semibold text-marine">Maisons des Stagiaires&nbsp;-&nbsp;OFPPT</p>
+        <p class="text-2xs text-discret">Hébergement, restauration et vie des stagiaires</p>
     </div>
 </div>

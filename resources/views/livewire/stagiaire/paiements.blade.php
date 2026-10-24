@@ -4,7 +4,7 @@
 @endphp
 <div>
     <x-page.entete titre="Paiements"
-        description="Frais d’internat mensuels : chaque mois de séjour fait l’objet d’un paiement. Réglez le montant de chaque mois puis déposez votre justificatif de paiement : il est vérifié par le gestionnaire de l’internat." />
+        description="Frais d’internat mensuels : chaque mois d’hébergement fait l’objet d’un paiement. Réglez le montant de chaque mois puis déposez votre justificatif de paiement : il est vérifié par le gestionnaire de l’internat." />
 
     @if ($paiements->isEmpty())
         <x-carte>

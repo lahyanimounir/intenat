@@ -1,6 +1,6 @@
 @php use App\Support\Affichage\Format; @endphp
 <div>
-    <x-page.entete titre="Hébergement" description="Votre chambre, votre lit et le détail de votre séjour.">
+    <x-page.entete titre="Hébergement" description="Votre chambre, votre lit et le détail de votre hébergement.">
         @if ($affectation)
             <x-slot:actions>
                 <x-bouton icone="download" :href="route('stagiaire.hebergement.attestation')" :navigation="false">Attestation d’affectation</x-bouton>

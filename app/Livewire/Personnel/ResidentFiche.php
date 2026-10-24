@@ -92,11 +92,11 @@ class ResidentFiche extends PagePersonnel
         $valides = $this->validate([
             'type' => ['required', Rule::in(array_map(fn (TypeMouvement $t) => $t->value, self::FINS))],
             'motif' => ['required', 'string', 'min:5', 'max:1000'],
-        ], attributes: ['type' => 'type de fin de séjour', 'motif' => 'motif']);
+        ], attributes: ['type' => 'type de fin d’hébergement', 'motif' => 'motif']);
 
         if ($this->executer(
             fn () => $affectations->cloturer($affectation, TypeMouvement::from($valides['type']), $valides['motif'], $this->utilisateur()),
-            'Séjour clos, lit libéré. Le chef de pôle est alerté de la place libre.',
+            'Hébergement clos, lit libéré. Le chef de pôle est alerté de la place libre.',
         )) {
             $this->fermerDialogue();
         }

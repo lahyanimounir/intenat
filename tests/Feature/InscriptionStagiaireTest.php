@@ -597,7 +597,7 @@ class InscriptionStagiaireTest extends TestCase
         Livewire::test(Connexion::class)
             ->set('email', 'suspendu@exemple.ma')->set('mot_de_passe', 'Motdepasse-Test-1')
             ->call('connecter')
-            ->assertSee('Votre compte INTERNAT est suspendu')
+            ->assertSee('Votre compte Maisons des Stagiaires - OFPPT est suspendu')
             ->assertNoRedirect();
 
         $this->assertFalse(Auth::guard('stagiaire')->check());

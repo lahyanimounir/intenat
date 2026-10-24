@@ -1,7 +1,0 @@
-flowchart TB
-  classDef r fill:#fff7ed,stroke:#c2410c,color:#0f172a,stroke-width:2px
-  classDef d fill:#fff,stroke:#b45309,color:#0f172a,stroke-width:2px
-  A[Composer les menus de la semaine : petit-déjeuner, déjeuner, dîner]:::r --> B[Transmettre la semaine au chef de pôle]:::r
-  B --> C{Vérification par le chef de pôle}:::d
-  C -- Renvoi d'un repas, d'une journée ou de la semaine avec commentaire --> D[Corriger les seuls menus renvoyés]:::r --> B
-  C -- Validation --> E((Menus publiés et réservables))

@@ -42,7 +42,7 @@ class VerificationAdresse extends Notification implements ShouldQueue
         return (new MailMessage)
             ->subject(config('app.name').' — Confirmez votre adresse e-mail')
             ->greeting('Bonjour,')
-            ->line('Un compte INTERNAT vient d\'être créé avec cette adresse. Confirmez qu\'elle vous appartient pour poursuivre votre inscription.')
+            ->line('Un compte Maisons des Stagiaires - OFPPT vient d\'être créé avec cette adresse. Confirmez qu\'elle vous appartient pour poursuivre votre inscription.')
             ->action('Confirmer mon adresse', self::lien($notifiable))
             ->line('Ce lien est valable '.self::MINUTES.' minutes.')
             ->line('Si vous n\'êtes pas à l\'origine de cette création de compte, ignorez ce message.')

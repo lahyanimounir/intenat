@@ -24,7 +24,7 @@
                     </div>
                     <x-saisie libelle="Adresse e-mail" type="email" wire:model="compte.email" autocomplete="username" inputmode="email" requis
                         aide="Elle servira à vous connecter et à recevoir les notifications. Aucune confirmation ne vous sera demandée." />
-                    <x-nouveau-mot-de-passe :modele="'compte.mot_de_passe'" libelle="Mot de passe INTERNAT" />
+                    <x-nouveau-mot-de-passe :modele="'compte.mot_de_passe'" libelle="Mot de passe de l’application" />
                 </x-carte.corps>
                 <footer class="flex justify-end gap-2 border-t border-bord-doux bg-surface-2 px-5 py-3">
                     <x-bouton type="submit" variante="primaire" cible="continuerCompte" icone-fin="arrow-right">Continuer</x-bouton>

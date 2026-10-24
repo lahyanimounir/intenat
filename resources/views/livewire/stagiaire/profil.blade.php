@@ -1,6 +1,6 @@
 @php use App\Support\Affichage\Format; @endphp
 <div class="mx-auto max-w-4xl">
-    <x-page.entete titre="Mon profil" description="Votre compte INTERNAT. L’identité et la formation se déclarent dans « Mon inscription »." />
+    <x-page.entete titre="Mon profil" description="Votre compte Maisons des Stagiaires - OFPPT. L’identité et la formation se déclarent dans « Mon inscription »." />
 
     <div class="space-y-6">
         <x-carte>
